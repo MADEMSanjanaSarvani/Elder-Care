@@ -1,0 +1,494 @@
+<title>Project Setu — Elder Care Platform PRD (Part 1)</title>
+<style>
+  :root{
+    --paper:#F2F4F0;
+    --paper-raised:#FFFFFF;
+    --ink:#15181A;
+    --muted:#57625C;
+    --border:#DADFD8;
+    --accent:#B8691A;
+    --accent-ink:#5A3610;
+    --accent-2:#1D6C5F;
+    --danger:#A83F2A;
+    --danger-bg:#F7EAE4;
+    --decision-bg:#EFEAF6;
+    --decision-ink:#4B3B78;
+    --decision-border:#D6CCEA;
+    --radius:3px;
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+  }
+  :root[data-theme="dark"]{
+    --paper:#14181A;
+    --paper-raised:#1B211F;
+    --ink:#E9EDE9;
+    --muted:#9AA69E;
+    --border:#2A312C;
+    --accent:#E0A559;
+    --accent-ink:#F4DEB8;
+    --accent-2:#4BB6A3;
+    --danger:#E2705C;
+    --danger-bg:#3A2620;
+    --decision-bg:#2A2740;
+    --decision-ink:#D9CFEF;
+    --decision-border:#453D66;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#14181A;
+      --paper-raised:#1B211F;
+      --ink:#E9EDE9;
+      --muted:#9AA69E;
+      --border:#2A312C;
+      --accent:#E0A559;
+      --accent-ink:#F4DEB8;
+      --accent-2:#4BB6A3;
+      --danger:#E2705C;
+      --danger-bg:#3A2620;
+      --decision-bg:#2A2740;
+      --decision-ink:#D9CFEF;
+      --decision-border:#453D66;
+    }
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--font-body);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent-2);}
+  a:focus-visible, button:focus-visible, .tocLink:focus-visible{outline:2px solid var(--accent-2); outline-offset:2px;}
+
+  .shell{
+    display:grid;
+    grid-template-columns: 248px minmax(0,1fr);
+    gap:0;
+    max-width:1180px;
+    margin:0 auto;
+  }
+  @media (max-width: 880px){
+    .shell{grid-template-columns: 1fr;}
+    .toc{position:static !important; height:auto !important; border-right:none !important; border-bottom:1px solid var(--border);}
+  }
+
+  .toc{
+    position:sticky;
+    top:0;
+    align-self:start;
+    height:100vh;
+    overflow-y:auto;
+    padding:32px 20px 32px 28px;
+    border-right:1px solid var(--border);
+  }
+  .toc-kicker{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:6px;
+  }
+  .toc-title{
+    font-family:var(--font-display);
+    font-size:19px;
+    margin:0 0 2px;
+  }
+  .toc-sub{
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:22px;
+  }
+  .toc nav{display:flex; flex-direction:column; gap:2px;}
+  .tocLink{
+    font-size:13px;
+    color:var(--muted);
+    text-decoration:none;
+    padding:6px 8px;
+    border-radius:var(--radius);
+    display:flex;
+    gap:8px;
+  }
+  .tocLink:hover{background:var(--paper-raised); color:var(--ink);}
+  .tocLink .n{font-family:var(--font-mono); color:var(--accent); font-size:11px; padding-top:1px;}
+
+  .content{padding:48px 56px 96px; min-width:0;}
+  @media (max-width: 880px){.content{padding:32px 24px 72px;}}
+
+  .doc-header{margin-bottom:56px; border-bottom:1px solid var(--border); padding-bottom:32px;}
+  .doc-kicker{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--accent); margin-bottom:14px;
+  }
+  h1.doc-title{
+    font-family:var(--font-display);
+    font-size:clamp(30px,4vw,42px);
+    line-height:1.12;
+    margin:0 0 10px;
+    text-wrap:balance;
+  }
+  .doc-dek{font-size:16px; color:var(--muted); max-width:62ch; margin:0 0 20px;}
+  .meta-row{display:flex; flex-wrap:wrap; gap:20px; font-size:12px; font-family:var(--font-mono); color:var(--muted);}
+  .meta-row b{color:var(--ink); font-weight:600;}
+
+  section.doc-section{margin-bottom:64px; max-width:74ch;}
+  section.doc-section.wide{max-width:none;}
+  h2{
+    font-family:var(--font-display);
+    font-size:26px;
+    margin:0 0 6px;
+    padding-top:8px;
+    text-wrap:balance;
+  }
+  .section-eyebrow{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--muted); margin-bottom:8px;
+  }
+  h3{font-family:var(--font-display); font-size:19px; margin:28px 0 8px;}
+  p{margin:0 0 16px;}
+  ul,ol{margin:0 0 16px; padding-left:22px;}
+  li{margin-bottom:6px;}
+  strong{font-weight:600;}
+  .lede{font-size:17px; color:var(--ink);}
+
+  .stat-row{display:flex; gap:28px; flex-wrap:wrap; margin:24px 0 28px;}
+  .stat{min-width:140px;}
+  .stat .num{font-family:var(--font-display); font-size:32px; color:var(--accent-ink); font-variant-numeric:tabular-nums;}
+  .stat .label{font-size:12.5px; color:var(--muted); max-width:22ch;}
+
+  table{width:100%; border-collapse:collapse; font-size:14px; margin:8px 0 8px;}
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:12px;}
+  th,td{text-align:left; padding:11px 14px; border-bottom:1px solid var(--border); vertical-align:top;}
+  th{font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); background:var(--paper-raised); white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  td.muted{color:var(--muted);}
+
+  .card{
+    background:var(--paper-raised);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:20px 22px;
+  }
+
+  .risk{
+    border-left:3px solid var(--danger);
+    background:var(--danger-bg);
+    border-radius:0 var(--radius) var(--radius) 0;
+    padding:18px 20px;
+    margin:0 0 14px;
+  }
+  .risk h4{margin:0 0 6px; font-size:15px; font-family:var(--font-body); font-weight:700;}
+  .risk p{margin:0 0 10px; font-size:14.5px;}
+  .risk p:last-child{margin-bottom:0;}
+  .tag-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+  .tag{
+    font-family:var(--font-mono); font-size:10.5px; letter-spacing:.03em; text-transform:uppercase;
+    padding:3px 8px; border-radius:2px; display:inline-block;
+  }
+  .tag.decision{background:var(--decision-bg); color:var(--decision-ink); border:1px solid var(--decision-border);}
+  .tag.severity{background:transparent; color:var(--danger); border:1px solid var(--danger);}
+
+  .persona-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; margin:20px 0 8px;}
+  .persona{border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; background:var(--paper-raised);}
+  .persona .role{font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--accent);}
+  .persona h4{margin:6px 0 10px; font-family:var(--font-display); font-size:18px;}
+  .persona .quote{font-style:italic; color:var(--muted); font-size:13.5px; border-left:2px solid var(--border); padding-left:10px; margin:10px 0;}
+  .persona dl{margin:10px 0 0; font-size:13px;}
+  .persona dt{font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase; color:var(--muted); margin-top:8px;}
+  .persona dd{margin:2px 0 0;}
+
+  .phase-badge{
+    font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.04em;
+    padding:2px 8px; border-radius:2px; white-space:nowrap; display:inline-block;
+  }
+  .phase-badge.mvp{background:var(--accent); color:#2A1B08;}
+  :root[data-theme="dark"] .phase-badge.mvp, @media (prefers-color-scheme:dark){.phase-badge.mvp{color:#2A1B08;}}
+  .phase-badge.p2{border:1px solid var(--accent-2); color:var(--accent-2);}
+  .phase-badge.future{border:1px solid var(--border); color:var(--muted);}
+
+  .divider{height:1px; background:var(--border); margin:12px 0 28px;}
+  .next-box{
+    border:1px dashed var(--border);
+    border-radius:var(--radius);
+    padding:24px 26px;
+    margin-top:8px;
+  }
+  .next-box h3{margin-top:0;}
+  code{font-family:var(--font-mono); font-size:0.92em; background:var(--paper-raised); padding:1px 5px; border-radius:2px; border:1px solid var(--border);}
+  footer.doc-footer{margin-top:80px; padding-top:20px; border-top:1px solid var(--border); font-size:12px; color:var(--muted); font-family:var(--font-mono);}
+</style>
+
+<div class="shell">
+  <aside class="toc">
+    <div class="toc-kicker">Project Setu</div>
+    <div class="toc-title">PRD — Part 1</div>
+    <div class="toc-sub">Strategy &amp; Requirements</div>
+    <nav>
+      <a class="tocLink" href="#exec"><span class="n">01</span>Executive Summary</a>
+      <a class="tocLink" href="#market"><span class="n">02</span>Market Research</a>
+      <a class="tocLink" href="#competitors"><span class="n">03</span>Competitor Analysis</a>
+      <a class="tocLink" href="#risks"><span class="n">04</span>Critical Risks</a>
+      <a class="tocLink" href="#personas"><span class="n">05</span>User Personas</a>
+      <a class="tocLink" href="#stories"><span class="n">06</span>User Stories</a>
+      <a class="tocLink" href="#functional"><span class="n">07</span>Functional Reqs</a>
+      <a class="tocLink" href="#nonfunctional"><span class="n">08</span>Non-Functional Reqs</a>
+      <a class="tocLink" href="#features"><span class="n">09</span>Feature List &amp; Phasing</a>
+      <a class="tocLink" href="#next"><span class="n">→</span>What's Next</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="doc-header">
+      <div class="doc-kicker">Product Requirements Document · Draft for review</div>
+      <h1 class="doc-title">The AI-Powered Elder Care Platform</h1>
+      <p class="doc-dek">Working codename <strong>"Project Setu"</strong> (Hindi/Sanskrit for "bridge") — a placeholder for internal use only, not a brand decision. Part 1 covers strategy and requirements; Part 2 (system &amp; technical architecture) and Part 3 (execution, testing, deployment, scaling) follow once the open decisions below are resolved.</p>
+      <div class="meta-row">
+        <span><b>Status:</b> Awaiting founder review</span>
+        <span><b>Market:</b> India (pilot city TBD)</span>
+        <span><b>Stack:</b> Flutter · Supabase/PostgreSQL · Razorpay · GCM/FCM · OpenAI · n8n · PostHog</span>
+      </div>
+    </div>
+
+    <section class="doc-section" id="exec">
+      <div class="section-eyebrow">01 — Executive Summary</div>
+      <h2>A trust layer, not another booking app</h2>
+      <p class="lede">Millions of Indian families now live one city — or one continent — away from an aging parent. The services that parent needs already exist in fragments: a nurse from one app, a doctor's appointment from another, groceries from a third, an ambulance number nobody has saved. What doesn't exist is a single place where a distant adult child can see, arrange, and trust all of it — and where the parent isn't reduced to a dependent, but stays the primary person in the loop.</p>
+      <p>Project Setu is that place: a marketplace of verified caregivers and service providers, coordinated through an AI assistant that handles the busywork of care (reminders, scheduling, visit summaries, translation) without ever making a clinical judgment call. The wedge is not any single service — it's the trust infrastructure underneath all of them: identity verification, live accountability during a visit, an emergency escalation path, and a consent model where the elder, not just the paying child, has a say in what's shared.</p>
+      <p>The plan is to prove this in <strong>one city</strong> first. Every workflow — caregiver vetting, dispatch, emergency response, payments — has to work at neighborhood scale, with real caregivers and real families, before it's worth the engineering cost of scaling it. National and international expansion is a Part 3 concern; Part 1 is about getting the first 100 households and 50 caregivers right.</p>
+      <div class="stat-row">
+        <div class="stat"><div class="num">~11%</div><div class="label">of India's population is 60+ as of 2025</div></div>
+        <div class="stat"><div class="num">193M</div><div class="label">projected elderly population by 2031</div></div>
+        <div class="stat"><div class="num">1 in 6</div><div class="label">Indians will be 60+ by 2030</div></div>
+        <div class="stat"><div class="num">10</div><div class="label">Indian languages targeted for launch UI</div></div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="market">
+      <div class="section-eyebrow">02 — Market Research</div>
+      <h2>The demand curve is not speculative</h2>
+      <p>India's elderly population (60+) is growing faster than the population as a whole. It stood at roughly 104 million in 2011, is projected to reach <strong>193.4 million by 2031</strong> (Government of India, 2020 Population Projections Report), and the UN projects the 60+ share will exceed <strong>20% by 2050</strong> — roughly double today's share. In parallel, urban migration for work and the steady rise of NRI households means a growing fraction of that elderly population lives without an adult child in the same city, let alone the same house. This is the structural tailwind: demand for distance-spanning elder care isn't a bet on changing behavior, it's a bet on a demographic curve that is already committed.</p>
+      <p>The category has investor validation — Emoha (Series B), Samarth Elder Care, Yodda, Khyaal, and Age Care Labs (reported $9M Series B1) have all raised institutional capital, and press coverage routinely frames this as India's "silver economy." That's a double-edged signal: real demand, but also a market where several well-funded players already have multi-year head starts on caregiver networks and brand trust in specific cities.</p>
+      <h3>Where the gap actually is</h3>
+      <p>The competitive set below is mostly <strong>single-lane</strong>: home healthcare only, or emergency response only, or community/content only. None of the major players combine (a) on-demand booking across clinical <em>and</em> non-clinical services, (b) an AI layer that does real coordination work rather than a chatbot FAQ, and (c) a consent model designed around the elder as a person rather than as a dependent the paying child manages. That combination — not any single service line — is the differentiated position worth building toward, and it should be validated with real user interviews in the pilot city before being treated as fact.</p>
+    </section>
+
+    <section class="doc-section wide" id="competitors">
+      <div class="section-eyebrow">03 — Competitor Analysis</div>
+      <h2>Adjacent players, not yet a direct one</h2>
+      <p style="max-width:74ch">Figures below are drawn from public reporting and company materials found via search — treat them as directional, not diligence-grade, and re-verify anything used in a pitch deck.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Player</th><th>Model</th><th>Strength</th><th>Gap vs. Project Setu</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Emoha</strong></td><td class="muted">Subscription + IoT monitoring, Gurugram, founded 2018</td><td class="muted">100k+ users, 120 cities claimed, FY25 revenue ₹74.35 Cr, moved into senior living via Shremoha JV</td><td class="muted">Monitoring &amp; emergency-first; not an on-demand marketplace for daily services or household help</td></tr>
+            <tr><td><strong>Samarth Elder Care</strong></td><td class="muted">Managed home-based senior care, founded 2016</td><td class="muted">30,000+ elders across 110+ cities; family-facing wellness app</td><td class="muted">Care-management focused; thinner on-demand booking depth for ad-hoc household/errand needs</td></tr>
+            <tr><td><strong>Yodda</strong></td><td class="muted">Emergency response / SOS</td><td class="muted">Positioned as Emoha's closest competitor on the safety-response angle</td><td class="muted">Narrow to emergencies; not a daily-assistance or marketplace play</td></tr>
+            <tr><td><strong>Khyaal</strong></td><td class="muted">Agetech community app, 50+ demographic</td><td class="muted">3M+ users; loneliness/digital-literacy content, Khyaal Card fintech</td><td class="muted">Community &amp; content, not service fulfillment or caregiver dispatch</td></tr>
+            <tr><td><strong>Portea / Care24</strong></td><td class="muted">Home healthcare (nursing, diagnostics, physio)</td><td class="muted">Established clinical-service networks</td><td class="muted">Healthcare-only; no household services, no family coordination layer, no AI assistant</td></tr>
+            <tr><td><strong>Urban Company</strong></td><td class="muted">Generic on-demand home services</td><td class="muted">Deep logistics &amp; gig-ops playbook, strong brand trust</td><td class="muted">Not elder-specific: no verification tier for in-home care of a vulnerable adult, no health/emergency layer</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="doc-section wide" id="risks">
+      <div class="section-eyebrow">04 — Critical Risks &amp; Decisions Needed</div>
+      <h2>Get these wrong and the rest of the PRD is moot</h2>
+      <p style="max-width:74ch">This is the section a founding CTO owes you before touching a database schema. Several of the features requested — marketplace payments, police verification, live location tracking, AI visit summaries — carry regulatory and liability weight that changes the technical design underneath them. Each item below needs a decision before Part 2 (system architecture) can be written correctly; building the schema first and retrofitting these later will be materially more expensive.</p>
+
+      <div class="risk">
+        <h4>Marketplace commission vs. RBI's 2025 Payment Aggregator Directions</h4>
+        <p>RBI's Payment Aggregators Directions, 2025 (effective mid-September 2025) require non-bank PAs to hold merchant funds in escrow with a scheduled bank, and explicitly bar a PA from running "marketplace business" — aggregating funds for merchants with whom it has no direct contractual relationship. A gig caregiver is not a registered "merchant" in any conventional sense. Before Razorpay integration is designed, we need to know: does Setu operate as merchant-of-record and pay caregivers as contracted vendors (a payroll/vendor-payment ledger), or does it use a compliant marketplace settlement product (e.g. Razorpay Route) with every caregiver onboarded as a KYC'd sub-merchant? These produce different database schemas, different tax/TDS handling, and different onboarding friction.</p>
+        <div class="tag-row"><span class="tag severity">Blocks: DB schema, API design</span><span class="tag decision">Decision needed: settlement model, with payments counsel</span></div>
+      </div>
+
+      <div class="risk">
+        <h4>Who consents to the elder's data — the elder, or the paying child?</h4>
+        <p>Under the DPDP Act 2023 / DPDP Rules 2025, the elder is the data principal for their own health and location data — consent must be explicit and informed, and blanket or implied consent is invalid. Unlike a minor, an elderly parent with full mental capacity cannot lawfully have their data consented-for by an adult child by default. A "family dashboard" that silently gives the paying child full visibility into a competent adult's health notes and live location is both a compliance problem and a real elder-autonomy/trust problem — the exact failure mode this platform claims to solve, not create. This needs to be a first-class product decision: what does the elder actively grant, per data category, and can they revoke it.</p>
+        <div class="tag-row"><span class="tag severity">Blocks: data model, consent UX, family dashboard scope</span><span class="tag decision">Decision needed: consent model — elder-granted vs. child-managed, and how capacity/incapacity is handled</span></div>
+      </div>
+
+      <div class="risk">
+        <h4>"Verified caregiver" hides two very different risk tiers</h4>
+        <p>Nurses and physiotherapists are licensed professionals under statutes like the Indian Nursing Council Act and state physiotherapy councils, and in-home clinical procedures carry malpractice exposure. Companions, cooks, and household-service providers are a household-gig-labor risk profile — closer to Urban Company than to a hospital. Treating both as one "verification" pipeline under-vets the clinical tier and over-burdens the non-clinical tier. They need separate credential checks (professional-council registry lookups vs. police/background checks), separate insurance requirements, and likely separate legal engagement terms.</p>
+        <div class="tag-row"><span class="tag severity">Blocks: verification workflow, insurance strategy</span><span class="tag decision">Decision needed: split clinical vs. non-clinical vetting tracks; confirm platform-level liability insurance</span></div>
+      </div>
+
+      <div class="risk">
+        <h4>Police verification is not an instant API</h4>
+        <p>State-administered police verification can take weeks, which conflicts with wanting caregivers active for a city launch. A workable pattern is layered: an instant private background-check (e.g. a KYC/background vendor like IDfy, Karza, or AuthBridge) to unlock a probationary, supervised tier immediately, with full police verification required before a caregiver is eligible for unsupervised or overnight in-home work. Note also that criminal-record results are themselves sensitive data requiring strict access control and retention limits — this shouldn't be a plaintext column on the caregiver profile.</p>
+        <div class="tag-row"><span class="tag severity">Blocks: caregiver onboarding funnel, trust-tier design</span><span class="tag decision">Decision needed: background-check vendor; define trust tiers and what unlocks each</span></div>
+      </div>
+
+      <div class="risk">
+        <h4>Emergency SOS must not imply an ambulance dispatch guarantee</h4>
+        <p>The platform is not a licensed EMS provider. If the SOS button reads as "help is coming" without making clear that calling 108 (India's emergency number) is the primary action, a missed or delayed real emergency becomes a life-safety incident with direct legal exposure to the platform. The UX and Terms of Service need to be explicit that platform escalation (notifying family, nearby caregivers, on-call staff) runs in parallel with — never instead of — directing the user to call emergency services first.</p>
+        <div class="tag-row"><span class="tag severity">Blocks: SOS UX, ToS language</span><span class="tag decision">Decision needed: sign off on "call 108 first" as the mandatory primary SOS action</span></div>
+      </div>
+
+      <div class="risk">
+        <h4>AI boundaries need to be architecture, not just a policy sentence</h4>
+        <p>"The AI must never diagnose or replace licensed professionals" is a requirement everyone will agree with and no LLM will reliably self-enforce by default. Summarizing "medical instructions" is one prompt-drift away from restating a dosage or interpreting a symptom. This needs to be designed as a constrained AI architecture in Part 2 — scoped system prompts, an output filter/classifier for medical-advice-shaped text, mandatory disclaimers on any health-adjacent output, and a hard rule that anything touching medication or symptoms routes to a human (family member or the actual clinician), not the AI, for judgment calls.</p>
+        <div class="tag-row"><span class="tag severity">Blocks: AI architecture (Part 2)</span><span class="tag decision">No decision needed yet — flagged so it's designed in from the start, not bolted on</span></div>
+      </div>
+
+      <div class="risk">
+        <h4>Regulatory runway is real, but the design work isn't optional</h4>
+        <p>DPDP enforcement is phased: the Data Protection Board is active now, consent-manager registration opens November 2026, and full enforcement with penalties up to ₹250 crore starts May 13, 2027. That's genuine time to build correctly — but explicit consent flows, a Data Protection Officer, breach reporting within 72 hours, and DPIAs for high-risk processing (which this platform's health + location data almost certainly qualifies as) are far cheaper to design in now than to retrofit onto an entrenched data model in 2027.</p>
+        <div class="tag-row"><span class="tag decision">No decision needed yet — informs Non-Functional Requirements and Part 2 security architecture</span></div>
+      </div>
+    </section>
+
+    <section class="doc-section wide" id="personas">
+      <div class="section-eyebrow">05 — User Personas</div>
+      <h2>Seven people this product has to work for</h2>
+      <div class="persona-grid">
+        <div class="persona">
+          <div class="role">Payer &amp; coordinator</div>
+          <h4>Ananya, 34 — the distant daughter</h4>
+          <p class="quote">"I want to know Amma is okay without calling her three times a day and making her feel like I don't trust her."</p>
+          <dl><dt>Context</dt><dd>Works in Bengaluru or Toronto; parent lives alone in a tier-1/tier-2 city.</dd>
+          <dt>Goal</dt><dd>Arrange trustworthy help fast, see what happened after a visit, be reachable for emergencies.</dd>
+          <dt>Fear</dt><dd>A stranger in her mother's home she can't verify; being the only one who finds out if something goes wrong.</dd></dl>
+        </div>
+        <div class="persona">
+          <div class="role">Care recipient</div>
+          <h4>Raghunath, 71 — the elder</h4>
+          <p class="quote">"I don't need to be managed. I need someone reliable when my knee acts up, and I'd like my daughter to stop worrying."</p>
+          <dl><dt>Context</dt><dd>Lives independently, moderate tech comfort, prefers Telugu/Hindi over English.</dd>
+          <dt>Goal</dt><dd>Stay in control of his own life and decisions; get help on his terms.</dd>
+          <dt>Fear</dt><dd>Losing autonomy; being monitored without being asked; a bad actor gaining access to his home.</dd></dl>
+        </div>
+        <div class="persona">
+          <div class="role">Non-clinical caregiver</div>
+          <h4>Meena, 42 — the companion</h4>
+          <p class="quote">"I need steady work and I need the app to protect me too — not just the family that's paying."</p>
+          <dl><dt>Context</dt><dd>Gig-economy worker, may work across 2-3 platforms.</dd>
+          <dt>Goal</dt><dd>Predictable bookings, fast payout, protection from false accusations.</dd>
+          <dt>Fear</dt><dd>Unsafe household situations, payment disputes, being deactivated without recourse.</dd></dl>
+        </div>
+        <div class="persona">
+          <div class="role">Licensed clinical staff</div>
+          <h4>Nurse Priya, 29 — home nursing</h4>
+          <dl><dt>Context</dt><dd>Registered nurse, works home-visit shifts between hospital contracts.</dd>
+          <dt>Goal</dt><dd>Clear scope of what she's authorized to do per visit; documentation that protects her license.</dd>
+          <dt>Fear</dt><dd>Being asked to do something outside her clinical scope by an anxious family member.</dd></dl>
+        </div>
+        <div class="persona">
+          <div class="role">Hospital escort</div>
+          <h4>Suresh, 51 — the hospital attendant</h4>
+          <dl><dt>Context</dt><dd>Accompanies elders to appointments when no family member can attend.</dd>
+          <dt>Goal</dt><dd>Clear appointment details, ability to relay doctor's instructions accurately back to family.</dd></dl>
+        </div>
+        <div class="persona">
+          <div class="role">Home services</div>
+          <h4>Home-service provider — maid / electrician / plumber</h4>
+          <dl><dt>Context</dt><dd>Lower-touch, lower-risk bookings; higher volume, lower verification bar than in-home care roles.</dd></dl>
+        </div>
+        <div class="persona">
+          <div class="role">Trust &amp; safety</div>
+          <h4>Platform Admin / Ops</h4>
+          <dl><dt>Goal</dt><dd>Approve/reject caregiver verification, monitor SOS events in real time, resolve disputes, run the audit trail when something goes wrong.</dd>
+          <dt>Fear</dt><dd>A verification shortcut or missing audit log turning into a safety incident that could have been caught.</dd></dl>
+        </div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="stories">
+      <div class="section-eyebrow">06 — User Stories (representative sample)</div>
+      <h2>Enough to shape scope, not the full backlog</h2>
+      <ul>
+        <li>As <strong>Ananya</strong>, I want to book a hospital companion for my father's appointment next Tuesday and get a plain-language summary afterward, so I don't have to interrogate him for details he'll downplay.</li>
+        <li>As <strong>Ananya</strong>, I want to be notified immediately if an SOS is triggered, with my father's location and the nearest verified responder's ETA, so I can act within minutes, not hours.</li>
+        <li>As <strong>Raghunath</strong>, I want to approve exactly what my daughter can see about me — my medication list, yes; my live location all day, no — and change my mind later.</li>
+        <li>As <strong>Raghunath</strong>, I want to interact with the app by voice in Telugu, since typing in English is a barrier I don't want to fight every day.</li>
+        <li>As <strong>Meena</strong>, I want to see the full job details (address, duration, what's expected) before I accept, and get paid within a guaranteed window after an OTP-verified visit completion.</li>
+        <li>As <strong>Nurse Priya</strong>, I want the app to show me exactly what was prescribed and by whom, without asking me to interpret or extend it.</li>
+        <li>As <strong>a Platform Admin</strong>, I want a single dashboard of every caregiver's verification stage (background check, police verification, credential check) and an immutable log of every access to an elder's health data.</li>
+      </ul>
+    </section>
+
+    <section class="doc-section wide" id="functional">
+      <div class="section-eyebrow">07 — Functional Requirements</div>
+      <h2>By module</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Module</th><th>Must include</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Identity &amp; onboarding</strong></td><td class="muted">Government ID verification (Aadhaar/DigiLocker-style), instant background-check integration, police-verification workflow with status tracking, professional-council credential lookup for clinical roles, tiered trust levels gating job types</td></tr>
+            <tr><td><strong>Family &amp; elder profiles</strong></td><td class="muted">Elder profile owned by the elder; linked family members with per-category, revocable consent grants; consent audit log visible to the elder</td></tr>
+            <tr><td><strong>Booking &amp; dispatch</strong></td><td class="muted">Service catalog (hospital companion, nursing, physio, groceries, household services, companionship), caregiver matching (skill, location, language, trust tier), scheduling, OTP visit-start/visit-end verification</td></tr>
+            <tr><td><strong>AI care assistant</strong></td><td class="muted">Visit summary generation (constrained, no diagnosis), reminders (medication, appointments), multilingual translation between caregiver and family, caregiver-matching assistance, scheduling assistant, care-history summarization — with mandatory disclaimers and human hand-off on anything medically substantive</td></tr>
+            <tr><td><strong>Emergency &amp; safety</strong></td><td class="muted">SOS button with "call 108 first" as the mandatory primary action, live location sharing (elder opt-in, time-boxed), caregiver GPS during active visits, family + nearby-responder notification cascade</td></tr>
+            <tr><td><strong>Payments</strong></td><td class="muted">Razorpay integration per the resolved settlement model (merchant-of-record vs. compliant marketplace route), commission calculation, subscription billing, caregiver payout ledger with guaranteed settlement window</td></tr>
+            <tr><td><strong>Communication</strong></td><td class="muted">Push notifications (FCM) for bookings, SOS, reminders; in-app multilingual chat; visit-status updates</td></tr>
+            <tr><td><strong>Admin &amp; trust/safety</strong></td><td class="muted">Verification queue, live SOS monitoring, dispute resolution workflow, immutable audit log of data access, caregiver performance/complaint history</td></tr>
+            <tr><td><strong>Localization</strong></td><td class="muted">Full UI in English, Hindi, Telugu, Tamil, Kannada, Malayalam, Marathi, Bengali, Gujarati, Punjabi; voice input/output for low-literacy elder users</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="doc-section" id="nonfunctional">
+      <div class="section-eyebrow">08 — Non-Functional Requirements</div>
+      <h2>The requirements that don't show up in a feature demo</h2>
+      <ul>
+        <li><strong>SOS-path availability</strong> is a different SLA from the rest of the app — target as close to 100% as the architecture allows, with degraded-mode fallback (plain SMS/call) if the data connection or backend is unavailable.</li>
+        <li><strong>Consent &amp; privacy by design</strong> — every field touching health, location, or identity data is modeled with a consent scope and retention policy from day one, not added later; DPIA-ready by construction.</li>
+        <li><strong>Accessibility</strong> — elder-facing screens support large text, high contrast, and voice interaction; this is a core requirement, not a nice-to-have, given the primary care-recipient persona.</li>
+        <li><strong>Offline resilience</strong> — caregiver app functions (job details, OTP entry, visit logging) degrade gracefully in low-connectivity areas rather than blocking a visit.</li>
+        <li><strong>Data residency</strong> — health and identity data for Indian users stored within India-region infrastructure, anticipating stricter localization norms as DPDP Rules mature.</li>
+        <li><strong>Auditability</strong> — every access to an elder's health/location data is logged and attributable, queryable by the elder and by trust &amp; safety.</li>
+        <li><strong>Localization QA</strong> — all 10 launch languages tested for both correctness and dignity of tone (elder-facing copy reviewed by native speakers, not machine-translated only).</li>
+      </ul>
+    </section>
+
+    <section class="doc-section wide" id="features">
+      <div class="section-eyebrow">09 — Complete Feature List &amp; Phasing</div>
+      <h2>Scoped to a one-city pilot first</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Phase</th><th>Feature</th><th>Why this phase</th></tr></thead>
+          <tbody>
+            <tr><td><span class="phase-badge mvp">MVP</span></td><td>Elder + family profiles with consent model</td><td class="muted">Foundational; everything else depends on it</td></tr>
+            <tr><td><span class="phase-badge mvp">MVP</span></td><td>Caregiver onboarding: ID + instant background check + police-verification tracking</td><td class="muted">Non-negotiable trust bar for launch</td></tr>
+            <tr><td><span class="phase-badge mvp">MVP</span></td><td>Core bookings: hospital companion, home nursing, physiotherapy, medicine pickup, groceries, companionship</td><td class="muted">Highest-frequency, clearest willingness-to-pay use cases</td></tr>
+            <tr><td><span class="phase-badge mvp">MVP</span></td><td>Emergency SOS with 108-first flow + family/responder cascade</td><td class="muted">Core trust differentiator; cannot be deferred</td></tr>
+            <tr><td><span class="phase-badge mvp">MVP</span></td><td>Payments: booking + commission + caregiver payout</td><td class="muted">Required for any transaction to occur</td></tr>
+            <tr><td><span class="phase-badge mvp">MVP</span></td><td>AI visit summaries + reminders (constrained)</td><td class="muted">The stated differentiator vs. plain marketplaces</td></tr>
+            <tr><td><span class="phase-badge mvp">MVP</span></td><td>3–4 launch languages (English + pilot city's dominant languages)</td><td class="muted">Full 10-language QA is a Phase 2 cost, not a pilot blocker</td></tr>
+            <tr><td><span class="phase-badge p2">Phase 2</span></td><td>Household services (maid, electrician, plumber, home maintenance)</td><td class="muted">Lower verification bar, but adds ops complexity best added after core trust loop is proven</td></tr>
+            <tr><td><span class="phase-badge p2">Phase 2</span></td><td>Multi-city expansion</td><td class="muted">Requires repeatable, not just workable, caregiver-vetting ops</td></tr>
+            <tr><td><span class="phase-badge p2">Phase 2</span></td><td>Full 10-language rollout + voice assistant</td><td class="muted">Meaningful localization QA takes real time per language</td></tr>
+            <tr><td><span class="phase-badge p2">Phase 2</span></td><td>B2B / institutional partnerships (hospitals, insurers, employers)</td><td class="muted">Needs a provable outcome story from the pilot first</td></tr>
+            <tr><td><span class="phase-badge future">Future</span></td><td>Pharmacy &amp; diagnostics partnerships, telemedicine, equipment rental</td><td class="muted">Adjacent revenue lines once core trust and ops are proven</td></tr>
+            <tr><td><span class="phase-badge future">Future</span></td><td>International expansion (US, UK, Canada, Australia, Singapore, UAE, EU)</td><td class="muted">Each market resets the regulatory picture (HIPAA, GDPR, payments) — deliberately out of scope until India is validated</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="doc-section" id="next">
+      <div class="next-box">
+        <h3>What happens next</h3>
+        <p>This covers strategy and requirements — sections 1–9 of the 25 you asked for. The remaining sections (database design, API design, security architecture, AI architecture, Flutter project structure, Supabase schema, admin dashboard requirements, roadmap, testing, deployment, scaling, risk register, future roadmap) all inherit decisions from Section 4. Concretely, before Part 2 can be written without guesswork, I need your call on:</p>
+        <ol>
+          <li>Pilot city, and whether it's already chosen or still being evaluated</li>
+          <li>Payment settlement model — merchant-of-record vs. compliant marketplace route (recommend looping in payments/legal counsel)</li>
+          <li>Elder consent model — what a linked family member sees by default vs. what requires an explicit elder-granted permission</li>
+          <li>Background-check vendor and the trust-tier ladder (what a caregiver can and can't do at each verification stage)</li>
+          <li>Confirmation that "call 108 first" is acceptable as the mandatory primary SOS action</li>
+        </ol>
+        <p style="margin-bottom:0">Once these are set, Part 2 (system &amp; technical architecture) can be written on solid ground instead of assumptions that get expensive to unwind later.</p>
+      </div>
+    </section>
+
+    <footer class="doc-footer">
+      Sources: UNFPA India · Worldometer India Demographics 2026 · insightsonindia.com · Government of India 2020 Population Projections Report · YourStory (Dec 2024) · Tracxn (Emoha) · RBI Payment Aggregators Directions 2025 (RBI/DPSS/2025-26/141) · Code on Social Security, 2020 · DPDP Rules, 2025 (PIB notification, Nov 2025) · EY &amp; KPMG DPDP compliance guides (2025)
+    </footer>
+  </main>
+</div>
