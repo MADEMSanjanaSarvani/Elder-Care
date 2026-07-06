@@ -1,0 +1,40 @@
+{
+  "@@locale": "hi",
+  "appTitle": "सेतु",
+
+  "loginPhoneLabel": "फ़ोन नंबर",
+  "loginSendCode": "कोड भेजें",
+  "loginVerifyCode": "कोड सत्यापित करें",
+  "loginCodeSentTo": "हमने {phone} पर एक कोड भेजा है",
+
+  "elderHomeCallForHelp": "मदद के लिए कॉल करें",
+  "elderHomeBookHelp": "मदद बुक करें",
+  "elderHomeTodaysVisit": "आज की विज़िट",
+  "elderHomeNoVisitToday": "आज कोई विज़िट तय नहीं है",
+
+  "sosScreenTitle": "आपातकाल",
+  "sosCall108": "108 पर कॉल करें (आपातकाल)",
+  "sosNotifyPlatform": "परिवार और सेतु को भी सूचित करें",
+  "sosDisclaimer": "आपातकालीन चिकित्सा सहायता के लिए 108 पर कॉल करना सबसे तेज़ तरीका है। सेतु को सूचित करने से आपके परिवार और हमारी टीम को एक साथ पता चलता है — यह 108 पर कॉल करने का विकल्प नहीं है।",
+  "sosNotifiedConfirmation": "आपके परिवार और हमारी टीम को सूचित कर दिया गया है।",
+
+  "familyDashboardTitle": "परिवार डैशबोर्ड",
+  "familyDashboardUpcomingVisit": "आगामी विज़िट",
+  "familyDashboardManageConsent": "आप क्या देख सकते हैं, प्रबंधित करें",
+
+  "consentScreenTitle": "{name} आपके साथ क्या साझा करते हैं",
+  "consentCategoryLocationLive": "लाइव लोकेशन",
+  "consentCategoryLocationHistory": "लोकेशन इतिहास",
+  "consentCategoryHealthNotes": "स्वास्थ्य नोट्स",
+  "consentCategoryMedicationList": "दवाओं की सूची",
+  "consentCategoryVisitHistory": "पूरा विज़िट इतिहास",
+  "consentCategoryBilling": "बिलिंग विवरण",
+  "consentGrantedByElderOnly": "इसे केवल {name} बदल सकते हैं",
+
+  "bookingServiceSelectTitle": "किस तरह की मदद चाहिए?",
+  "bookingConfirm": "बुकिंग की पुष्टि करें",
+  "bookingStatusRequested": "अनुरोध किया गया",
+  "bookingStatusMatched": "देखभालकर्ता नियुक्त",
+  "bookingStatusInProgress": "विज़िट जारी है",
+  "bookingStatusCompleted": "पूर्ण"
+}

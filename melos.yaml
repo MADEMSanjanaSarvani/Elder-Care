@@ -1,0 +1,22 @@
+name: setu
+
+packages:
+  - packages/**
+  - apps/**
+
+command:
+  bootstrap:
+    runPubGetInParallel: false
+
+scripts:
+  analyze:
+    run: melos exec -- flutter analyze
+    description: Analyze every package/app in the workspace.
+
+  test:
+    run: melos exec --dir-exists=test -- flutter test
+    description: Run tests in every package/app that has a test/ directory.
+
+  format:
+    run: melos exec -- dart format --set-exit-if-changed .
+    description: Check formatting across the workspace.

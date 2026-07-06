@@ -1,0 +1,44 @@
+{
+  "@@locale": "en",
+  "appTitle": "Setu",
+  "@appTitle": {"description": "App name shown in the OS task switcher — not user-facing chrome"},
+
+  "loginPhoneLabel": "Phone number",
+  "loginSendCode": "Send code",
+  "loginVerifyCode": "Verify code",
+  "loginCodeSentTo": "We sent a code to {phone}",
+  "@loginCodeSentTo": {"placeholders": {"phone": {"type": "String"}}},
+
+  "elderHomeCallForHelp": "Call for Help",
+  "elderHomeBookHelp": "Book Help",
+  "elderHomeTodaysVisit": "Today's Visit",
+  "elderHomeNoVisitToday": "No visit scheduled today",
+
+  "sosScreenTitle": "Emergency",
+  "sosCall108": "Call 108 (Emergency)",
+  "sosNotifyPlatform": "Also notify family & Setu",
+  "sosDisclaimer": "Calling 108 is the fastest way to get emergency medical help. Notifying Setu alerts your family and our on-call team at the same time — it does not replace calling 108.",
+  "sosNotifiedConfirmation": "Your family and our on-call team have been notified.",
+
+  "familyDashboardTitle": "Family Dashboard",
+  "familyDashboardUpcomingVisit": "Upcoming visit",
+  "familyDashboardManageConsent": "Manage what you can see",
+
+  "consentScreenTitle": "What {name} shares with you",
+  "@consentScreenTitle": {"placeholders": {"name": {"type": "String"}}},
+  "consentCategoryLocationLive": "Live location",
+  "consentCategoryLocationHistory": "Location history",
+  "consentCategoryHealthNotes": "Health notes",
+  "consentCategoryMedicationList": "Medication list",
+  "consentCategoryVisitHistory": "Full visit history",
+  "consentCategoryBilling": "Billing details",
+  "consentGrantedByElderOnly": "Only {name} can change this",
+  "@consentGrantedByElderOnly": {"placeholders": {"name": {"type": "String"}}},
+
+  "bookingServiceSelectTitle": "What kind of help?",
+  "bookingConfirm": "Confirm booking",
+  "bookingStatusRequested": "Requested",
+  "bookingStatusMatched": "Caregiver assigned",
+  "bookingStatusInProgress": "Visit in progress",
+  "bookingStatusCompleted": "Completed"
+}

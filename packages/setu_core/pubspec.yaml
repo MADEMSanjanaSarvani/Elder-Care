@@ -1,0 +1,22 @@
+name: setu_core
+description: >
+  Shared models, Supabase client wrapper, consent logic, and design tokens
+  used by both the Family/Elder app and the Caregiver app — kept in one
+  package specifically so trust-tier and consent-gating logic can't drift
+  between the two (PRD Part 3 §18).
+version: 0.1.0
+publish_to: "none"
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ">=3.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  supabase_flutter: ^2.5.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0

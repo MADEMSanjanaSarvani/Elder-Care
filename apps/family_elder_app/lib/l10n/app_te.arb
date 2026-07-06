@@ -1,0 +1,40 @@
+{
+  "@@locale": "te",
+  "appTitle": "సేతు",
+
+  "loginPhoneLabel": "ఫోన్ నంబర్",
+  "loginSendCode": "కోడ్ పంపండి",
+  "loginVerifyCode": "కోడ్ ధృవీకరించండి",
+  "loginCodeSentTo": "మేము {phone}కి ఒక కోడ్ పంపాము",
+
+  "elderHomeCallForHelp": "సహాయం కోసం కాల్ చేయండి",
+  "elderHomeBookHelp": "సహాయం బుక్ చేయండి",
+  "elderHomeTodaysVisit": "ఈరోజు విజిట్",
+  "elderHomeNoVisitToday": "ఈరోజు ఎలాంటి విజిట్ నిర్ణయించలేదు",
+
+  "sosScreenTitle": "అత్యవసర పరిస్థితి",
+  "sosCall108": "108కి కాల్ చేయండి (అత్యవసరం)",
+  "sosNotifyPlatform": "కుటుంబం మరియు సేతుకు కూడా తెలియజేయండి",
+  "sosDisclaimer": "అత్యవసర వైద్య సహాయం కోసం 108కి కాల్ చేయడం అత్యంత వేగవంతమైన మార్గం. సేతుకు తెలియజేయడం వల్ల మీ కుటుంబం మరియు మా టీమ్‌కు ఒకేసారి తెలుస్తుంది — ఇది 108కి కాల్ చేయడానికి ప్రత్యామ్నాయం కాదు.",
+  "sosNotifiedConfirmation": "మీ కుటుంబం మరియు మా టీమ్‌కు తెలియజేయబడింది.",
+
+  "familyDashboardTitle": "కుటుంబ డాష్‌బోర్డ్",
+  "familyDashboardUpcomingVisit": "రాబోయే విజిట్",
+  "familyDashboardManageConsent": "మీరు ఏమి చూడగలరో నిర్వహించండి",
+
+  "consentScreenTitle": "{name} మీతో ఏమి పంచుకుంటారు",
+  "consentCategoryLocationLive": "ప్రత్యక్ష స్థానం",
+  "consentCategoryLocationHistory": "స్థాన చరిత్ర",
+  "consentCategoryHealthNotes": "ఆరోగ్య గమనికలు",
+  "consentCategoryMedicationList": "మందుల జాబితా",
+  "consentCategoryVisitHistory": "పూర్తి విజిట్ చరిత్ర",
+  "consentCategoryBilling": "బిల్లింగ్ వివరాలు",
+  "consentGrantedByElderOnly": "దీన్ని {name} మాత్రమే మార్చగలరు",
+
+  "bookingServiceSelectTitle": "ఎలాంటి సహాయం కావాలి?",
+  "bookingConfirm": "బుకింగ్ నిర్ధారించండి",
+  "bookingStatusRequested": "అభ్యర్థించారు",
+  "bookingStatusMatched": "కేర్‌గివర్ కేటాయించారు",
+  "bookingStatusInProgress": "విజిట్ జరుగుతోంది",
+  "bookingStatusCompleted": "పూర్తయింది"
+}
