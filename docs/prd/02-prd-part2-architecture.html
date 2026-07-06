@@ -178,9 +178,22 @@
       <p style="max-width:74ch">Every table below lives in Supabase Postgres. Columns are illustrative, not exhaustive — the point is the shape and the relationships, especially <code>consent_grants</code>, which every health/location-adjacent query has to join against before returning data to a family member.</p>
 
       <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">regions</span><span class="tbl-note">the config table that keeps "India, one city" from getting hardcoded anywhere</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">id, code</span><span class="col-type">uuid pk / text</span><span class="col-desc">e.g. "vizag-ap-in" — a region is a city cluster, not just a country</span></div>
+          <div class="col-row"><span class="col-name">country_code, currency</span><span class="col-type">text (ISO)</span><span class="col-desc">IN / INR at MVP; every money and geography field elsewhere derives from this, never a literal</span></div>
+          <div class="col-row"><span class="col-name">tax_profile</span><span class="col-type">jsonb</span><span class="col-desc">GST rate/rules for India regions; shape varies per country, hence jsonb not fixed columns</span></div>
+          <div class="col-row"><span class="col-name">payment_provider, bgv_provider</span><span class="col-type">text</span><span class="col-desc">"razorpay" / "idfy" at MVP — see the provider-abstraction note in Section 15</span></div>
+          <div class="col-row"><span class="col-name">compliance_profile</span><span class="col-type">text</span><span class="col-desc">"dpdp_in" at MVP; selects which consent copy, retention rules, and legal disclosures apply</span></div>
+          <div class="col-row"><span class="col-name">status</span><span class="col-type">enum</span><span class="col-desc">planned / active / paused — how Phase 2-6 rollout is actually toggled</span></div>
+        </div>
+      </div>
+
+      <div class="schema-card">
         <div class="schema-head"><span class="tbl-name">elder_profiles</span><span class="tbl-note">the data principal — owns their own record</span></div>
         <div class="schema-cols">
           <div class="col-row"><span class="col-name">id</span><span class="col-type">uuid pk</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">region_id</span><span class="col-type">uuid fk → regions</span><span class="col-desc">the one field that lets Phase 2+ mean "add a row," not "add an if-statement"</span></div>
           <div class="col-row"><span class="col-name">auth_user_id</span><span class="col-type">uuid, nullable</span><span class="col-desc">null if the elder hasn't onboarded their own login yet</span></div>
           <div class="col-row"><span class="col-name">display_name, dob, address</span><span class="col-type">text/date/jsonb</span><span class="col-desc">—</span></div>
           <div class="col-row"><span class="col-name">primary_language</span><span class="col-type">text</span><span class="col-desc">drives AI + UI locale</span></div>
@@ -208,8 +221,20 @@
       </div>
 
       <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">service_catalog</span><span class="tbl-note">per-region, not global — a service and its price are always scoped to a region</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">region_id</span><span class="col-type">uuid fk</span><span class="col-desc">the same service code can have different pricing/tax/availability per region</span></div>
+          <div class="col-row"><span class="col-name">code, name, category</span><span class="col-type">text/text/enum</span><span class="col-desc">clinical / non_clinical</span></div>
+          <div class="col-row"><span class="col-name">base_price, currency</span><span class="col-type">numeric/text</span><span class="col-desc">currency denormalized from region for query simplicity</span></div>
+          <div class="col-row"><span class="col-name">commission_pct, tax_rule_ref</span><span class="col-type">numeric/text</span><span class="col-desc">references the owning region's tax_profile — never a hardcoded GST%</span></div>
+          <div class="col-row"><span class="col-name">requires_trust_tier</span><span class="col-type">enum</span><span class="col-desc">—</span></div>
+        </div>
+      </div>
+
+      <div class="schema-card">
         <div class="schema-head"><span class="tbl-name">caregivers</span><span class="tbl-note">two verification tracks, one table</span></div>
         <div class="schema-cols">
+          <div class="col-row"><span class="col-name">region_id</span><span class="col-type">uuid fk</span><span class="col-desc">which BGV/police/council rules apply is resolved from here, not hardcoded per field</span></div>
           <div class="col-row"><span class="col-name">caregiver_type</span><span class="col-type">enum</span><span class="col-desc">clinical / non_clinical</span></div>
           <div class="col-row"><span class="col-name">sub_role</span><span class="col-type">enum</span><span class="col-desc">nurse, physiotherapist, hospital_attendant, companion, home_service_*</span></div>
           <div class="col-row"><span class="col-name">bgv_status, bgv_provider_ref</span><span class="col-type">enum/text</span><span class="col-desc">IDfy check status + reference id</span></div>
@@ -232,8 +257,8 @@
       <div class="schema-card">
         <div class="schema-head"><span class="tbl-name">payments</span> <span class="tbl-name" style="margin-left:2px">/</span> <span class="tbl-name">caregiver_payouts</span><span class="tbl-note">merchant-of-record ledger, kept separate from bookings</span></div>
         <div class="schema-cols">
-          <div class="col-row"><span class="col-name">payments</span><span class="col-type">table</span><span class="col-desc">family → Setu, via Razorpay Payment Gateway; amount, commission_amount, razorpay_payment_id, status</span></div>
-          <div class="col-row"><span class="col-name">caregiver_payouts</span><span class="col-type">table</span><span class="col-desc">Setu → caregiver, via RazorpayX Payouts; booking_id fk, amount, payout_status, razorpayx_payout_id, scheduled_for, paid_at</span></div>
+          <div class="col-row"><span class="col-name">payments</span><span class="col-type">table</span><span class="col-desc">family → Setu, via the region's configured payment_provider (Razorpay at MVP); amount, currency, commission_amount, provider_ref, status</span></div>
+          <div class="col-row"><span class="col-name">caregiver_payouts</span><span class="col-type">table</span><span class="col-desc">Setu → caregiver, via the region's payout rail (RazorpayX at MVP); booking_id fk, amount, currency, payout_status, provider_ref, scheduled_for, paid_at</span></div>
         </div>
       </div>
 
@@ -270,6 +295,7 @@
       <div class="table-wrap">
         <table>
           <tbody>
+            <tr><td style="width:1%"><div class="endpoint"><span class="method get">GET</span><span class="path">/regions/:code/config</span></div></td><td class="muted">Returns the active region's currency, tax profile, payment/BGV provider, and compliance profile — clients read this once at startup rather than hardcoding India/INR anywhere.</td></tr>
             <tr><td style="width:1%"><div class="endpoint"><span class="method post">POST</span><span class="path">/bookings</span></div></td><td class="muted">Validates required trust tier for the requested service before allowing a match — never left to the client.</td></tr>
             <tr><td><div class="endpoint"><span class="method post">POST</span><span class="path">/bookings/:id/match</span></div></td><td class="muted">Caregiver-matching: filters by trust tier, location, language, availability.</td></tr>
             <tr><td><div class="endpoint"><span class="method post">POST</span><span class="path">/bookings/:id/otp/start</span></div></td><td class="muted">Generates + verifies visit-start OTP; flips status to in_progress.</td></tr>
@@ -335,6 +361,15 @@
       <div class="section-eyebrow">15 — Backend Architecture</div>
       <h2>How the pieces fit</h2>
       <p style="max-width:74ch"><strong>Supabase</strong> (Postgres + Auth + Storage + Realtime) is the system of record and handles simple RLS-guarded reads directly from the Flutter clients. <strong>Edge Functions</strong> (Deno, colocated with the database) own every path that touches a secret or a cross-table rule — bookings, payments, payouts, SOS, AI, verification webhooks. <strong>n8n</strong> is the scheduler/orchestrator, not a business-logic owner: it triggers Edge Functions on a timer or webhook (nightly payout batch, appointment-reminder sweep, polling IDfy/police-verification status) rather than embedding logic of its own, so the actual rules live in one place. <strong>FCM</strong> delivers push (bookings, SOS, reminders); Supabase Realtime pushes live updates to the admin dashboard's SOS monitor. <strong>PostHog</strong> tracks product analytics — event payloads use anonymized/categorical properties only (e.g. <code>service_category</code>, not free-text health content), so analytics can't become a second, unaudited copy of sensitive data.</p>
+
+      <div class="callout">
+        <h4>Payment provider is an interface, not a direct call</h4>
+        <p>Every Edge Function that touches payments calls an internal <code>PaymentProvider</code> port (create_order, capture, payout, refund) resolved by the caller's <code>region_id → payment_provider</code>. Razorpay/RazorpayX is the only adapter implemented at MVP. Phase 5's NRI international-card payments still route through Razorpay's international-card support with no interface change. Phase 6 country-specific gateways (e.g. Stripe for the US/UK/EU) are a new adapter behind the same port, not a rewrite of every call site.</p>
+      </div>
+      <div class="callout">
+        <h4>Single region deployment at MVP, sharding is a Phase 6 concern — not before</h4>
+        <p>Phases 1-5 (Visakhapatnam through NRI family accounts) all keep the elder resident in India, so one Supabase project remains the system of record throughout — <code>region_id</code> partitions city/state operations logically without needing separate infrastructure. Phase 6 is the point where an elder is resident in another country, which is also the point real data-residency law (GDPR in the EU, for instance) requires a genuinely separate regional deployment. Building that split before Phase 6 needs it would be speculative infrastructure with no one to serve it — the <code>regions</code> table is what makes deferring it safe rather than short-sighted.</p>
+      </div>
     </section>
 
     <section class="doc-section wide" id="admin">

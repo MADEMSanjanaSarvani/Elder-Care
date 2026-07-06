@@ -1,0 +1,360 @@
+<title>Project Setu — Elder Care Platform PRD (Part 3)</title>
+<style>
+  :root{
+    --paper:#F2F4F0; --paper-raised:#FFFFFF; --ink:#15181A; --muted:#57625C; --border:#DADFD8;
+    --accent:#B8691A; --accent-ink:#5A3610; --accent-2:#1D6C5F; --danger:#A83F2A; --danger-bg:#F7EAE4;
+    --decision-bg:#EFEAF6; --decision-ink:#4B3B78; --decision-border:#D6CCEA;
+    --radius:3px;
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+  }
+  :root[data-theme="dark"]{
+    --paper:#14181A; --paper-raised:#1B211F; --ink:#E9EDE9; --muted:#9AA69E; --border:#2A312C;
+    --accent:#E0A559; --accent-ink:#F4DEB8; --accent-2:#4BB6A3; --danger:#E2705C; --danger-bg:#3A2620;
+    --decision-bg:#2A2740; --decision-ink:#D9CFEF; --decision-border:#453D66;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#14181A; --paper-raised:#1B211F; --ink:#E9EDE9; --muted:#9AA69E; --border:#2A312C;
+      --accent:#E0A559; --accent-ink:#F4DEB8; --accent-2:#4BB6A3; --danger:#E2705C; --danger-bg:#3A2620;
+      --decision-bg:#2A2740; --decision-ink:#D9CFEF; --decision-border:#453D66;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--font-body); line-height:1.6; -webkit-font-smoothing:antialiased;}
+  a{color:var(--accent-2);}
+  a:focus-visible, button:focus-visible, .tocLink:focus-visible{outline:2px solid var(--accent-2); outline-offset:2px;}
+  .shell{display:grid; grid-template-columns:248px minmax(0,1fr); max-width:1180px; margin:0 auto;}
+  @media (max-width:880px){.shell{grid-template-columns:1fr;} .toc{position:static !important; height:auto !important; border-right:none !important; border-bottom:1px solid var(--border);}}
+  .toc{position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto; padding:32px 20px 32px 28px; border-right:1px solid var(--border);}
+  .toc-kicker{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:6px;}
+  .toc-title{font-family:var(--font-display); font-size:19px; margin:0 0 2px;}
+  .toc-sub{font-size:12px; color:var(--muted); margin-bottom:22px;}
+  .toc nav{display:flex; flex-direction:column; gap:2px;}
+  .tocLink{font-size:13px; color:var(--muted); text-decoration:none; padding:6px 8px; border-radius:var(--radius); display:flex; gap:8px;}
+  .tocLink:hover{background:var(--paper-raised); color:var(--ink);}
+  .tocLink .n{font-family:var(--font-mono); color:var(--accent); font-size:11px; padding-top:1px;}
+  .content{padding:48px 56px 96px; min-width:0;}
+  @media (max-width:880px){.content{padding:32px 24px 72px;}}
+  .doc-header{margin-bottom:40px; border-bottom:1px solid var(--border); padding-bottom:32px;}
+  .doc-kicker{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:14px;}
+  h1.doc-title{font-family:var(--font-display); font-size:clamp(28px,4vw,40px); line-height:1.12; margin:0 0 10px; text-wrap:balance;}
+  .doc-dek{font-size:16px; color:var(--muted); max-width:66ch; margin:0 0 20px;}
+  .meta-row{display:flex; flex-wrap:wrap; gap:20px; font-size:12px; font-family:var(--font-mono); color:var(--muted);}
+  .meta-row b{color:var(--ink); font-weight:600;}
+  section.doc-section{margin-bottom:64px; max-width:74ch;}
+  section.doc-section.wide{max-width:none;}
+  h2{font-family:var(--font-display); font-size:26px; margin:0 0 6px; padding-top:8px; text-wrap:balance;}
+  .section-eyebrow{font-family:var(--font-mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;}
+  h3{font-family:var(--font-display); font-size:19px; margin:28px 0 8px;}
+  p{margin:0 0 16px;}
+  ul,ol{margin:0 0 16px; padding-left:22px;}
+  li{margin-bottom:6px;}
+  strong{font-weight:600;}
+  .lede{font-size:17px;}
+  table{width:100%; border-collapse:collapse; font-size:13.5px; margin:8px 0 8px;}
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:12px;}
+  th,td{text-align:left; padding:10px 13px; border-bottom:1px solid var(--border); vertical-align:top;}
+  th{font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); background:var(--paper-raised); white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  td.muted{color:var(--muted);}
+  code{font-family:var(--font-mono); font-size:0.88em; background:var(--paper-raised); padding:1px 5px; border-radius:2px; border:1px solid var(--border);}
+  .callout{border-left:3px solid var(--accent-2); background:var(--paper-raised); border-radius:0 var(--radius) var(--radius) 0; padding:16px 20px; margin:0 0 16px;}
+  .callout h4{margin:0 0 6px; font-size:14.5px;}
+  .callout p{margin:0; font-size:14px;}
+  .risk{border-left:3px solid var(--danger); background:var(--danger-bg); border-radius:0 var(--radius) var(--radius) 0; padding:16px 20px; margin:0 0 14px;}
+  .risk h4{margin:0 0 6px; font-size:14.5px;}
+  .risk p{margin:0 0 8px; font-size:14px;}
+  .risk p:last-child{margin-bottom:0;}
+  .tag-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;}
+  .tag{font-family:var(--font-mono); font-size:10px; letter-spacing:.03em; text-transform:uppercase; padding:2px 7px; border-radius:2px; display:inline-block;}
+  .tag.p{border:1px solid var(--border); color:var(--muted);}
+  .tag.sev-high{background:var(--danger-bg); color:var(--danger); border:1px solid var(--danger);}
+  .tag.sev-med{background:var(--decision-bg); color:var(--decision-ink); border:1px solid var(--decision-border);}
+
+  .phase-rail{display:flex; flex-direction:column; gap:0; margin:24px 0 8px;}
+  .phase{display:grid; grid-template-columns:64px 1fr; gap:18px; padding:20px 0; border-bottom:1px solid var(--border); position:relative;}
+  .phase:first-child{padding-top:0;}
+  .phase:last-child{border-bottom:none;}
+  .phase .pnum{font-family:var(--font-display); font-size:30px; color:var(--accent); line-height:1;}
+  .phase .pbody h4{margin:0 0 6px; font-family:var(--font-display); font-size:19px;}
+  .phase .pbody p{margin:0 0 8px; font-size:14px; color:var(--ink);}
+  .phase .pmeta{font-family:var(--font-mono); font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em;}
+
+  .tree{font-family:var(--font-mono); font-size:12.5px; line-height:1.85; background:var(--paper-raised); border:1px solid var(--border); border-radius:var(--radius); padding:18px 22px; overflow-x:auto; white-space:pre;}
+  .tree .c{color:var(--muted);}
+  .tree .d{color:var(--accent-ink);}
+
+  .grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px; margin:16px 0;}
+  .mini-card{border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; background:var(--paper-raised);}
+  .mini-card h4{margin:0 0 8px; font-size:14.5px; font-family:var(--font-body); font-weight:700;}
+  .mini-card p{margin:0; font-size:13.5px; color:var(--muted);}
+
+  .swatch-row{display:flex; gap:10px; flex-wrap:wrap; margin:14px 0 20px;}
+  .swatch{display:flex; flex-direction:column; align-items:center; gap:6px; font-family:var(--font-mono); font-size:10.5px; color:var(--muted);}
+  .swatch .chip{width:52px; height:36px; border-radius:4px; border:1px solid var(--border);}
+  footer.doc-footer{margin-top:80px; padding-top:20px; border-top:1px solid var(--border); font-size:12px; color:var(--muted); font-family:var(--font-mono);}
+</style>
+
+<div class="shell">
+  <aside class="toc">
+    <div class="toc-kicker">Project Setu</div>
+    <div class="toc-title">PRD — Part 3</div>
+    <div class="toc-sub">Execution &amp; Operations</div>
+    <nav>
+      <a class="tocLink" href="#uiux"><span class="n">17</span>UI/UX Guidelines</a>
+      <a class="tocLink" href="#flutter"><span class="n">18</span>Flutter Structure</a>
+      <a class="tocLink" href="#roadmap"><span class="n">19</span>Development Roadmap</a>
+      <a class="tocLink" href="#testing"><span class="n">20</span>Testing Plan</a>
+      <a class="tocLink" href="#deployment"><span class="n">21</span>Deployment Plan</a>
+      <a class="tocLink" href="#scaling"><span class="n">22</span>Scaling Strategy</a>
+      <a class="tocLink" href="#risk"><span class="n">23</span>Risk Register</a>
+      <a class="tocLink" href="#future"><span class="n">24</span>Future Roadmap</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="doc-header">
+      <div class="doc-kicker">Product Requirements Document · Draft for review</div>
+      <h1 class="doc-title">Execution &amp; Operations</h1>
+      <p class="doc-dek">Part 3 of the Project Setu PRD. The architecture in Part 2 is global-ready from day one — every table that would otherwise hardcode "India" or "₹" instead carries a <code>region_id</code>. This part keeps the actual build scoped to what Visakhapatnam needs, phase by phase, without pretending the roadmap is the architecture.</p>
+      <div class="meta-row">
+        <span><b>MVP scope:</b> Visakhapatnam only</span>
+        <span><b>Architecture scope:</b> multi-city, multi-currency, multi-country from day one</span>
+      </div>
+    </div>
+
+    <section class="doc-section wide" id="uiux">
+      <div class="section-eyebrow">17 — UI/UX Design Guidelines</div>
+      <h2>Two products wearing one family of colors</h2>
+      <p style="max-width:74ch">The Family/Elder app and the Caregiver app need to feel like the same trustworthy institution while serving opposite jobs — one is reassurance and oversight, the other is a work queue. Same palette and type system, different density and pacing.</p>
+      <div class="swatch-row">
+        <div class="swatch"><div class="chip" style="background:#F2F4F0;border-color:#DADFD8"></div>Paper #F2F4F0</div>
+        <div class="swatch"><div class="chip" style="background:#15181A"></div>Ink #15181A</div>
+        <div class="swatch"><div class="chip" style="background:#B8691A"></div>Accent (trust/action) #B8691A</div>
+        <div class="swatch"><div class="chip" style="background:#1D6C5F"></div>Verified/success #1D6C5F</div>
+        <div class="swatch"><div class="chip" style="background:#A83F2A"></div>SOS/critical #A83F2A</div>
+      </div>
+      <div class="grid2">
+        <div class="mini-card">
+          <h4>Elder mode — three buttons, not a menu</h4>
+          <p>Home screen: Call for Help, Book Help, Today's Visit. Large text (min 18sp body, 24sp+ headers), voice input as a first-class alternative to typing everywhere text entry appears, high-contrast mode by default, and no UI element whose only affordance is a subtle color change — every state (verified, in-progress, urgent) gets a label, not just a hue.</p>
+        </div>
+        <div class="mini-card">
+          <h4>Family mode — dashboard density, not clutter</h4>
+          <p>Timeline-first home screen (today's visit, last AI summary, next reminder), booking and consent management one tap away. Consent controls are never buried in a settings submenu — they're a top-level tab, because hiding them undercuts the whole trust pitch.</p>
+        </div>
+        <div class="mini-card">
+          <h4>Caregiver app — a work queue, not a brand showcase</h4>
+          <p>Job list first, map second, everything else third. OTP entry and job-completion flows optimized for one-handed use standing in a doorway, and functional in 2G/patchy connectivity — this is the one surface where "looks polished" matters less than "works when the signal drops."</p>
+        </div>
+        <div class="mini-card">
+          <h4>Language parity, not just translation</h4>
+          <p>Copy is written natively per language for elder-facing screens (tone matters as much as accuracy — see Part 1's localization QA requirement), not machine-translated from an English master and never revisited.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="doc-section wide" id="flutter">
+      <div class="section-eyebrow">18 — Flutter Project Structure</div>
+      <h2>One shared core, two apps, no forked trust logic</h2>
+      <p style="max-width:74ch">Consent enforcement and trust-tier logic must never exist in two copies that can drift apart — that's how a consent bug ships in one app and not the other. Recommendation: a small monorepo (Melos-managed) with a shared package plus two thin app shells.</p>
+      <div class="tree"><span class="d">setu/</span>
+├── <span class="d">packages/</span>
+│   └── <span class="d">setu_core/</span>          <span class="c"># shared by both apps — the only place consent/trust logic lives</span>
+│       ├── lib/
+│       │   ├── <span class="d">region/</span>          <span class="c"># region config client — reads GET /regions/:code/config once at startup</span>
+│       │   ├── <span class="d">consent/</span>         <span class="c"># consent-grant models + the has_consent() check mirrored client-side for UI gating</span>
+│       │   ├── <span class="d">supabase_client/</span> <span class="c"># typed wrapper over the Supabase SDK + Edge Function calls</span>
+│       │   ├── <span class="d">l10n/</span>             <span class="c"># ARB files, one per launch language</span>
+│       │   └── <span class="d">design_tokens/</span>    <span class="c"># colors, type scale, spacing — Section 17 codified</span>
+│       └── test/
+├── <span class="d">apps/</span>
+│   ├── <span class="d">family_elder_app/</span>
+│   │   └── lib/
+│   │       ├── <span class="d">core/</span>             <span class="c"># app-specific wiring: routing, DI, flavors (dev/staging/prod)</span>
+│   │       └── <span class="d">features/</span>
+│   │           ├── auth/            <span class="c">data / domain / presentation, each</span>
+│   │           ├── elder_profile/
+│   │           ├── family_dashboard/
+│   │           ├── booking/
+│   │           ├── consent/
+│   │           ├── sos/
+│   │           ├── ai_assistant/
+│   │           └── notifications/
+│   └── <span class="d">caregiver_app/</span>
+│       └── lib/
+│           ├── <span class="d">core/</span>
+│           └── <span class="d">features/</span>
+│               ├── auth/
+│               ├── job_queue/
+│               ├── otp_visit/
+│               └── earnings/
+└── melos.yaml</div>
+      <p style="margin-top:18px">Each feature module follows <strong>data / domain / presentation</strong> (Clean Architecture): a repository talking to Supabase or an Edge Function, use-cases holding the actual business rules, and presentation widgets that know nothing about where the data came from. State management: <strong>Riverpod</strong> — its compile-time-safe dependency injection and native support for Supabase's realtime streams (SOS monitoring, live booking status) fit better here than a global store pattern, and it keeps use-cases testable without a running app.</p>
+    </section>
+
+    <section class="doc-section wide" id="roadmap">
+      <div class="section-eyebrow">19 — Development Roadmap</div>
+      <h2>Six phases, one architecture</h2>
+      <div class="phase-rail">
+        <div class="phase">
+          <div class="pnum">01</div>
+          <div class="pbody">
+            <div class="pmeta">MVP · Visakhapatnam only</div>
+            <h4>Prove the trust loop works</h4>
+            <p>Everything in Part 1's MVP feature list, built against the Part 2 schema (which already carries <code>region_id</code>, currency, and compliance_profile — but only one row in <code>regions</code> is active). Success criteria: repeatable caregiver onboarding, a completed booking-to-payout cycle, a tested SOS path, and enough real bookings to validate willingness-to-pay for both the commission and subscription lines.</p>
+          </div>
+        </div>
+        <div class="phase">
+          <div class="pnum">02</div>
+          <div class="pbody">
+            <div class="pmeta">Andhra Pradesh &amp; Telangana</div>
+            <h4>Prove the playbook repeats</h4>
+            <p>Adding a city is a new <code>regions</code> row plus local caregiver-network build-out and localized service pricing — not new code. This phase is where that claim gets tested for real; any place engineering has to special-case a city is a bug to fix before Phase 3, not a one-off.</p>
+          </div>
+        </div>
+        <div class="phase">
+          <div class="pnum">03</div>
+          <div class="pbody">
+            <div class="pmeta">Tier-1 India · Bengaluru, Hyderabad, Chennai, Mumbai, Delhi NCR, Pune, Kolkata, Ahmedabad</div>
+            <h4>Prove it scales operationally, not just technically</h4>
+            <p>Volume growth stresses the caregiver-matching query and the verification queue's throughput, not the schema. This is the phase to revisit matching performance (Section 22) and to add city-level ops staffing, not to redesign the data model.</p>
+          </div>
+        </div>
+        <div class="phase">
+          <div class="pnum">04</div>
+          <div class="pbody">
+            <div class="pmeta">Nationwide India</div>
+            <h4>Institutional partnerships come online</h4>
+            <p>Hospitals, pharmacies, diagnostic labs, insurers, NGOs, and senior-care organizations plug in as B2B2C channels. This is also the natural point to formalize the DPO role and DPIA program flagged in Part 2, since institutional partners will ask for it directly.</p>
+          </div>
+        </div>
+        <div class="phase">
+          <div class="pnum">05</div>
+          <div class="pbody">
+            <div class="pmeta">NRI families</div>
+            <h4>The payer moves abroad, the elder doesn't</h4>
+            <p>International cards and multi-currency family billing via Razorpay's existing international support — no new payment adapter needed, because the elder is still India-resident and the India <code>regions</code> row still governs their record. This phase is mostly a payments and UX change (currency display, international phone/OTP handling for family accounts), not an infrastructure one.</p>
+          </div>
+        </div>
+        <div class="phase">
+          <div class="pnum">06</div>
+          <div class="pbody">
+            <div class="pmeta">International · US, UK, Canada, Australia, Singapore, UAE, Europe</div>
+            <h4>The elder is resident abroad — this is the real expansion</h4>
+            <p>New <code>regions</code> rows with a different <code>country_code</code>, <code>compliance_profile</code> (HIPAA, GDPR, etc.), <code>payment_provider</code> adapter (Stripe or local equivalent), and BGV vendor — and, per Section 15, a genuinely separate regional deployment where data residency law requires it. This is the phase the Part 2 architecture was built to make possible without a rewrite; it's still real, non-trivial work — new compliance review, new local caregiver-vetting partners, new healthcare-integration research per country — not a copy-paste of the India rollout.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="doc-section wide" id="testing">
+      <div class="section-eyebrow">20 — Testing Plan</div>
+      <h2>Where a bug is a support ticket vs. where it's a headline</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Layer</th><th>What's tested</th><th>Why it's not optional</th></tr></thead>
+          <tbody>
+            <tr><td><strong>RLS policy tests</strong></td><td class="muted">Automated tests (pgTAP or Supabase's test tooling) asserting a family member cannot read another elder's row, and cannot read a consented category after revocation</td><td class="muted">An RLS bug isn't a crash, it's a silent data breach — this needs its own test suite, not incidental coverage from feature tests</td></tr>
+            <tr><td><strong>Unit tests</strong></td><td class="muted">Use-cases in each feature's <code>domain/</code> layer, independent of Flutter widgets or Supabase</td><td class="muted">Fast feedback on business rules (trust-tier gating, consent checks) without spinning up the app</td></tr>
+            <tr><td><strong>Widget tests</strong></td><td class="muted">Elder-mode screens specifically tested for large-text/contrast requirements, not just rendering</td><td class="muted">Accessibility regressions are easy to introduce and easy to miss in a quick visual check</td></tr>
+            <tr><td><strong>Integration tests</strong></td><td class="muted">End-to-end: booking → match → OTP start → OTP end → payout scheduled; and SOS trigger → 108 screen shown → family notified</td><td class="muted">These are the two flows the entire trust pitch rests on</td></tr>
+            <tr><td><strong>AI guardrail tests</strong></td><td class="muted">A fixed set of adversarial prompts ("should I double her dose?") run against the AI pipeline in CI, asserting the output is flagged/escalated, not answered</td><td class="muted">Directly tests the Part 2 Section 14 constraint, not just that the API call succeeds</td></tr>
+            <tr><td><strong>Load testing</strong></td><td class="muted">SOS trigger path and caregiver-matching query, specifically, ahead of Phase 3 volume</td><td class="muted">A slow SOS path is a life-safety issue, not a performance nice-to-have</td></tr>
+            <tr><td><strong>Localization QA</strong></td><td class="muted">Native-speaker review of elder-facing copy per launch language, not machine-translation spot checks</td><td class="muted">Tone matters as much as correctness for a low-digital-literacy elder user</td></tr>
+            <tr><td><strong>Field UAT</strong></td><td class="muted">Real Telugu-speaking families and real caregivers in Visakhapatnam, before public launch</td><td class="muted">The MVP's actual test is whether real households trust it — a QA team can't substitute for that</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="doc-section wide" id="deployment">
+      <div class="section-eyebrow">21 — Deployment Plan</div>
+      <h2>Boring, reversible, and observable</h2>
+      <ul style="max-width:74ch">
+        <li><strong>Environments:</strong> dev → staging → production Supabase projects, with per-PR Supabase preview branches for schema changes so a migration is reviewed against real branch data before it touches production.</li>
+        <li><strong>Migrations:</strong> Supabase CLI migrations checked into the repo, applied through CI — never a manual change against the production database.</li>
+        <li><strong>Edge Functions:</strong> versioned deploys with an immediate rollback path; the payment and SOS functions specifically get a canary step before full rollout.</li>
+        <li><strong>Flutter release:</strong> Android via the Play Store's internal testing track first (matching the caregiver pool and pilot family cohort), graduating to production after the field UAT in Section 20 passes.</li>
+        <li><strong>Feature flags per region:</strong> since <code>regions.status</code> already models planned/active/paused, Phase 2+ city launches are a flag flip plus content, not a new release train.</li>
+        <li><strong>Secrets:</strong> managed via Supabase Vault / CI secret store; rotated on a schedule, never committed, never present in a Flutter build artifact.</li>
+      </ul>
+    </section>
+
+    <section class="doc-section wide" id="scaling">
+      <div class="section-eyebrow">22 — Scaling Strategy</div>
+      <h2>Scale the parts that will actually be under load — not everything, preemptively</h2>
+      <div class="grid2">
+        <div class="mini-card">
+          <h4>Caregiver matching</h4>
+          <p>A straightforward SQL filter (trust tier, location radius, language, availability) is correct through Phase 2. Revisit only if Phase 3's Tier-1-city volume shows real query latency — don't build a dedicated matching service for a problem Visakhapatnam doesn't have yet.</p>
+        </div>
+        <div class="mini-card">
+          <h4>Read-heavy admin queries</h4>
+          <p>Analytics and reporting queries move to a read replica once the admin dashboard's query volume starts competing with booking-path writes for primary database resources — a Supabase-supported upgrade path, not a re-architecture.</p>
+        </div>
+        <div class="mini-card">
+          <h4>Multi-currency &amp; multi-country</h4>
+          <p>Already modeled: <code>regions.currency</code>, <code>tax_profile</code>, and the <code>PaymentProvider</code> port from Part 2. Phase 6 adds adapters and rows, not new tables.</p>
+        </div>
+        <div class="mini-card">
+          <h4>Translation content at scale</h4>
+          <p>Ten languages by hand is feasible; beyond that (Phase 6's country-specific languages), move from ad hoc ARB file management to a translation-management platform (e.g. Lokalise/Crowdin) so native-speaker review stays sustainable.</p>
+        </div>
+        <div class="mini-card">
+          <h4>Data residency &amp; regional sharding</h4>
+          <p>One Supabase project through Phase 5 (Section 15). Phase 6 introduces per-region deployments where law requires it — the <code>regions</code> table is the seam that split happens along, so it's additive, not a migration of existing India data.</p>
+        </div>
+        <div class="mini-card">
+          <h4>AI cost &amp; latency</h4>
+          <p>Visit-summary and translation calls are the highest-volume AI usage; watch OpenAI cost-per-booking as volume grows and consider a cheaper model tier for translation specifically once usage justifies the engineering time to split it out.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="doc-section wide" id="risk">
+      <div class="section-eyebrow">23 — Risk Register</div>
+      <h2>Carried forward from Part 1, plus what MVP execution adds</h2>
+      <div class="risk">
+        <h4>Marketplace chicken-and-egg in a single city</h4>
+        <p>Not enough caregivers → slow bookings → families churn before caregiver supply catches up. Mitigation: hand-recruit and subsidize the first caregiver cohort in Visakhapatnam rather than waiting for organic supply; Phase 1 success criteria should include a minimum caregiver-to-household ratio, not just booking count.</p>
+        <div class="tag-row"><span class="tag sev-high">High likelihood</span><span class="tag p">Phase 1</span></div>
+      </div>
+      <div class="risk">
+        <h4>Police-verification turnaround throttles caregiver activation</h4>
+        <p>State processing time is outside the platform's control and can stall the standard trust tier for weeks. Mitigation: the probationary tier (IDfy-cleared, supervised jobs only) exists specifically so this doesn't block Phase 1 launch — but it needs enough probationary-tier job types to keep a new caregiver earning while they wait.</p>
+        <div class="tag-row"><span class="tag sev-high">High likelihood</span><span class="tag p">Phase 1</span></div>
+      </div>
+      <div class="risk">
+        <h4>Payment settlement model challenged by RBI or Razorpay onboarding</h4>
+        <p>The merchant-of-record decision (Part 1) still needs sign-off from payments/legal counsel and from Razorpay's own onboarding review before Phase 1 payments go live. Mitigation: start that conversation now, in parallel with engineering, not after the app is built.</p>
+        <div class="tag-row"><span class="tag sev-med">Medium likelihood, high impact</span><span class="tag p">Phase 1</span></div>
+      </div>
+      <div class="risk">
+        <h4>Consent UX friction reduces adoption</h4>
+        <p>An elder-granted, per-category consent model (the right call for trust and DPDP alignment) is inherently more setup steps than "child manages everything." Mitigation: invest specifically in making the elder-side consent flow fast and voice-guided, since this is the one piece of extra friction the whole model depends on being worth it.</p>
+        <div class="tag-row"><span class="tag sev-med">Medium likelihood</span><span class="tag p">Phase 1</span></div>
+      </div>
+      <div class="risk">
+        <h4>Vendor concentration — Supabase, Razorpay, OpenAI, IDfy</h4>
+        <p>Four single-vendor dependencies at MVP. Acceptable for Phase 1-2 velocity; the <code>PaymentProvider</code> port and region-scoped <code>bgv_provider</code> field (Part 2) are the deliberate seams for reducing this risk later without a rewrite — but Supabase and OpenAI don't have an abstraction yet, which is a reasonable MVP trade-off, not an oversight, given switching cost vs. one-city-scale risk.</p>
+        <div class="tag-row"><span class="tag sev-med">Low likelihood, high impact</span><span class="tag p">Ongoing</span></div>
+      </div>
+      <div class="risk">
+        <h4>International compliance risk arrives all at once in Phase 6</h4>
+        <p>HIPAA, GDPR, and country-specific healthcare-integration requirements are each substantial independently. Mitigation: treat Phase 6 as a per-country compliance research project starting well before engineering work begins on that region, not a checklist to clear quickly.</p>
+        <div class="tag-row"><span class="tag sev-med">Certain, low urgency</span><span class="tag p">Phase 6</span></div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="future">
+      <div class="section-eyebrow">24 — Future Roadmap</div>
+      <h2>Beyond the six phases</h2>
+      <p>A few things worth deciding early even though they're not urgent: a real brand name (this document has been using "Project Setu" as a placeholder throughout — worth resolving before Phase 1 marketing needs it), when to bring on a dedicated clinical safety officer (recommend: no later than Phase 2, once clinical-tier bookings have real volume), and when to formalize the DPO role (recommend: ahead of Phase 4's institutional partnerships, since partners will ask). Future revenue lines flagged in Part 1 — pharmacy, diagnostics, telemedicine, equipment rental, caregiver certification — slot naturally into the Phase 4 partnership motion rather than needing their own roadmap track.</p>
+    </section>
+
+    <footer class="doc-footer">Part 3 of 3 · Project Setu PRD · builds on Parts 1 and 2</footer>
+  </main>
+</div>
