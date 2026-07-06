@@ -39,16 +39,20 @@ Deno.serve(async (req) => {
 
   if (event.event === "payment.captured") {
     const orderId = event.payload?.payment?.entity?.order_id;
+    const paymentId = event.payload?.payment?.entity?.id;
     if (orderId) {
+      // provider_payment_ref (the actual Razorpay payment id, distinct
+      // from the order id) is what a refund action needs later — capture
+      // it here since this is the only point that ever sees it.
       await admin
         .from("payments")
-        .update({ status: "captured", captured_at: new Date().toISOString() })
-        .eq("provider_ref", orderId);
+        .update({ status: "captured", captured_at: new Date().toISOString(), provider_payment_ref: paymentId })
+        .eq("provider_order_ref", orderId);
     }
   } else if (event.event === "payment.failed") {
     const orderId = event.payload?.payment?.entity?.order_id;
     if (orderId) {
-      await admin.from("payments").update({ status: "failed" }).eq("provider_ref", orderId);
+      await admin.from("payments").update({ status: "failed" }).eq("provider_order_ref", orderId);
     }
   }
   // Other event types are intentionally ignored rather than erroring, per

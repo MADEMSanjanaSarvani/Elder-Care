@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/* Same palette as the PRD docs and the Flutter design tokens
+   (packages/setu_core/lib/src/design/design_tokens.dart) — this is an
+   internal ops tool, not a marketing surface, so the goal is
+   recognizably "the same product," not a distinct visual identity. */
+:root {
+  --paper: #f2f4f0;
+  --paper-raised: #ffffff;
+  --ink: #15181a;
+  --muted: #57625c;
+  --border: #dadfd8;
+
+  --accent: #b8691a;
+  --verified: #1d6c5f;
+  --sos: #a83f2a;
+  --warning: #9a7b1f;
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-raised: var(--paper-raised);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-verified: var(--verified);
+  --color-sos: var(--sos);
+  --color-warning: var(--warning);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #14181a;
+    --paper-raised: #1b211f;
+    --ink: #e9ede9;
+    --muted: #9aa69e;
+    --border: #2a312c;
+
+    --accent: #e0a559;
+    --verified: #4bb6a3;
+    --sos: #e2705c;
+    --warning: #d9b65c;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+table {
+  font-variant-numeric: tabular-nums;
+}

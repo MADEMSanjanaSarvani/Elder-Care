@@ -38,16 +38,18 @@ before it can reach a family member (PRD Part 2 §14): a deterministic
 regex pass for the clearest dosage/diagnosis phrasing, then a second,
 narrowly-scoped LLM call whose only job is to say SAFE or FLAGGED. A
 flagged output is written to `ai_interactions` (admin-visible) but never
-delivered — the caller gets a "pending review" response instead. There is
-currently no admin UI to actually clear a flagged item for delivery; that
-review queue is part of the Admin Dashboard (PRD Part 2 §16) and hasn't
-been built yet, so a flagged summary today has no path to the family
-until that's implemented. Treat this as a known gap, not a red herring.
+delivered — the caller gets a "pending review" response instead. The
+Admin Dashboard's AI review queue (`apps/admin-dashboard/app/(dashboard)/ai-review`)
+now clears these for delivery or rejects them.
 
 ## Not yet implemented
 
-- `payouts-run` (RazorpayX batch payout, meant to be triggered by n8n on a schedule per PRD Part 2 §15)
+- `payouts-run` (RazorpayX batch payout, meant to be triggered by n8n on a schedule per PRD Part 2 §15) — also
+  blocked on a `fund_account_id`-equivalent not existing anywhere in the caregiver schema yet; see
+  `apps/admin-dashboard`'s payouts page for the same gap from the read side.
 - `me/data-export`, `me/erasure-request` (DPDP data-subject rights, PRD Part 2 §12/§13)
-- The admin review queue for flagged AI outputs (see above)
+- Write-side instrumentation for `audit_log` — the table, RLS, and an admin viewer all exist, but nothing calls
+  INSERT on it yet. Postgres has no native SELECT-trigger auditing, so this needs explicit logging added at each
+  sensitive read path (consumer app repositories and Edge Functions alike), not a single migration.
 
 These were deferred rather than stubbed with fake logic — see the PRD for their intended design before implementing.

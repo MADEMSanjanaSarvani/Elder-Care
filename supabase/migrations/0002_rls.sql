@@ -278,9 +278,17 @@ create policy caregivers_select on caregivers for select to authenticated
       )
     )
   );
+-- Note: RLS is row-level, not column-level — an ops_admin granted UPDATE
+-- here to deactivate a caregiver (Admin Dashboard caregiver directory)
+-- could technically also edit verification fields like trust_tier, same
+-- as verification_agent can. Real column-level separation would need a
+-- BEFORE UPDATE trigger checking which columns changed against the
+-- caller's scope; left as a documented gap rather than built for MVP —
+-- revisit if ops_admin/verification_agent end up being different people
+-- in practice rather than the same small team.
 create policy caregivers_update_self on caregivers for update to authenticated
-  using (user_id = auth.uid() or has_admin_scope('verification_agent'))
-  with check (user_id = auth.uid() or has_admin_scope('verification_agent'));
+  using (user_id = auth.uid() or has_admin_scope('verification_agent') or has_admin_scope('ops_admin'))
+  with check (user_id = auth.uid() or has_admin_scope('verification_agent') or has_admin_scope('ops_admin'));
 
 create policy caregiver_documents_select on caregiver_documents for select to authenticated
   using (
@@ -317,6 +325,13 @@ create policy bookings_insert on bookings for insert to authenticated
 create policy bookings_update_cancel on bookings for update to authenticated
   using (requested_by = auth.uid() and status = 'requested')
   with check (status = 'cancelled');
+
+-- Admin Dashboard "Bookings & Disputes" (PRD Part 2 §16): ops_admin needs
+-- to mark a booking disputed, resolve a dispute back to completed, or
+-- cancel it outside the requester's own narrow cancel window above.
+create policy bookings_update_admin on bookings for update to authenticated
+  using (has_admin_scope('ops_admin'))
+  with check (has_admin_scope('ops_admin'));
 
 create policy booking_events_select on booking_events for select to authenticated
   using (exists (
@@ -376,6 +391,13 @@ create policy ai_interactions_select on ai_interactions for select to authentica
     or (is_linked_family(elder_id) and has_consent(elder_id, auth.uid(), 'health_notes'))
     or is_admin()
   );
+
+-- Admin Dashboard AI review queue (PRD Part 2 §14/§16): clearing
+-- `flagged`/`human_reviewed` on a held-for-review output is an admin
+-- action, not something Edge Functions need write access to update after
+-- the fact.
+create policy ai_interactions_update_admin on ai_interactions for update to authenticated
+  using (is_admin()) with check (is_admin());
 
 -- ---------------------------------------------------------------------
 -- audit_log — super_admin only via direct query; a self-service "who

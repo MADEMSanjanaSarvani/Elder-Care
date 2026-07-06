@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
         currency: service.currency,
         commission_amount: commissionAmount,
         provider: "razorpay",
-        provider_ref: order.id,
+        provider_order_ref: order.id,
         status: "created",
       })
       .select()

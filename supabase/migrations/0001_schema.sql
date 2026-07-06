@@ -288,7 +288,8 @@ create table payments (
   currency text not null,
   commission_amount numeric(12, 2) not null,
   provider text not null,          -- regions.payment_provider at time of payment
-  provider_ref text,               -- e.g. Razorpay payment id
+  provider_order_ref text,         -- Razorpay order id, set at payments-create-order time
+  provider_payment_ref text,       -- Razorpay *payment* id, set at capture time (payments-webhook) — refunds need this, not the order id
   status payment_status not null default 'created',
   captured_at timestamptz,
   created_at timestamptz not null default now()
