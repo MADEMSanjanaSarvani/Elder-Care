@@ -1,8 +1,7 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:setu_core/setu_core.dart';
 
 import '../features/auth/presentation/login_screen.dart';
 import '../features/booking/presentation/booking_screen.dart';
@@ -11,24 +10,6 @@ import '../features/elder_home/presentation/elder_home_screen.dart';
 import '../features/family_home/presentation/family_home_screen.dart';
 import '../features/sos/presentation/sos_screen.dart';
 import 'providers.dart';
-
-/// Bridges a Riverpod Stream to GoRouter's `Listenable`-based refresh, so a
-/// sign-in/sign-out actually re-runs `redirect` instead of leaving the user
-/// stranded until the next manual navigation.
-class GoRouterRefreshStream extends ChangeNotifier {
-  GoRouterRefreshStream(Stream<dynamic> stream) {
-    notifyListeners();
-    _subscription = stream.listen((_) => notifyListeners());
-  }
-
-  late final StreamSubscription<dynamic> _subscription;
-
-  @override
-  void dispose() {
-    _subscription.cancel();
-    super.dispose();
-  }
-}
 
 final routerProvider = Provider<GoRouter>((ref) {
   final client = ref.watch(supabaseClientProvider);

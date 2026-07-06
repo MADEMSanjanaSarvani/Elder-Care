@@ -13,6 +13,8 @@ export 'src/consent/consent_gate.dart';
 
 export 'src/supabase/setu_supabase_client.dart';
 
+export 'src/routing/go_router_refresh_stream.dart';
+
 export 'src/design/design_tokens.dart';
 
 export 'src/models/elder_profile.dart';
