@@ -18,7 +18,10 @@ class OtpVisitScreen extends ConsumerStatefulWidget {
 
 class _OtpVisitScreenState extends ConsumerState<OtpVisitScreen> {
   final _otpController = TextEditingController();
+  final _notesController = TextEditingController();
   bool _busy = false;
+  bool _visitEnded = false;
+  bool _summarySubmitted = false;
   String? _error;
   String? _message;
 
@@ -47,8 +50,34 @@ class _OtpVisitScreenState extends ConsumerState<OtpVisitScreen> {
     });
     try {
       await _repo.endVisit(bookingId: widget.bookingId, otp: _otpController.text.trim());
-      setState(() => _message = 'Visit completed. Payout has been scheduled.');
+      setState(() {
+        _message = 'Visit completed. Payout has been scheduled.';
+        _visitEnded = true;
+      });
       ref.invalidate(myBookingsProvider);
+    } catch (err) {
+      setState(() => _error = err.toString());
+    } finally {
+      setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _submitSummary() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final summary = await _repo.submitVisitSummary(
+        bookingId: widget.bookingId,
+        rawNotes: _notesController.text.trim(),
+      );
+      setState(() {
+        _summarySubmitted = true;
+        _message = summary != null
+            ? 'Summary sent to the family.'
+            : "Summary is being reviewed before it's shared with the family.";
+      });
     } catch (err) {
       setState(() => _error = err.toString());
     } finally {
@@ -84,6 +113,27 @@ class _OtpVisitScreenState extends ConsumerState<OtpVisitScreen> {
             FilledButton(onPressed: _busy ? null : _start, child: const Text('Start visit')),
             const SizedBox(height: SetuSpacing.sm),
             OutlinedButton(onPressed: _busy ? null : _end, child: const Text('End visit')),
+            if (_visitEnded && !_summarySubmitted) ...[
+              const SizedBox(height: SetuSpacing.lg),
+              const Divider(),
+              const SizedBox(height: SetuSpacing.md),
+              const Text('What happened during the visit? (a few lines is enough)'),
+              const SizedBox(height: SetuSpacing.sm),
+              TextField(
+                controller: _notesController,
+                maxLines: 4,
+                decoration: const InputDecoration(
+                  hintText: 'e.g. Helped with breakfast, went for a short walk, blood pressure checked...',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: SetuSpacing.sm),
+              FilledButton.icon(
+                onPressed: _busy ? null : _submitSummary,
+                icon: const Icon(Icons.send_outlined),
+                label: const Text('Send visit summary to family'),
+              ),
+            ],
           ],
         ),
       ),
