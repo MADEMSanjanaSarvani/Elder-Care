@@ -1,0 +1,367 @@
+<title>Project Setu — Elder Care Platform PRD (Part 2)</title>
+<style>
+  :root{
+    --paper:#F2F4F0;
+    --paper-raised:#FFFFFF;
+    --ink:#15181A;
+    --muted:#57625C;
+    --border:#DADFD8;
+    --accent:#B8691A;
+    --accent-ink:#5A3610;
+    --accent-2:#1D6C5F;
+    --danger:#A83F2A;
+    --danger-bg:#F7EAE4;
+    --decision-bg:#EFEAF6;
+    --decision-ink:#4B3B78;
+    --decision-border:#D6CCEA;
+    --get-bg:#E6EFEA; --get-ink:#1D6C5F;
+    --post-bg:#F3EBE0; --post-ink:#8A5A1C;
+    --radius:3px;
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+  }
+  :root[data-theme="dark"]{
+    --paper:#14181A; --paper-raised:#1B211F; --ink:#E9EDE9; --muted:#9AA69E; --border:#2A312C;
+    --accent:#E0A559; --accent-ink:#F4DEB8; --accent-2:#4BB6A3; --danger:#E2705C; --danger-bg:#3A2620;
+    --decision-bg:#2A2740; --decision-ink:#D9CFEF; --decision-border:#453D66;
+    --get-bg:#1C2E27; --get-ink:#5FCBB4; --post-bg:#332A1A; --post-ink:#E0A559;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#14181A; --paper-raised:#1B211F; --ink:#E9EDE9; --muted:#9AA69E; --border:#2A312C;
+      --accent:#E0A559; --accent-ink:#F4DEB8; --accent-2:#4BB6A3; --danger:#E2705C; --danger-bg:#3A2620;
+      --decision-bg:#2A2740; --decision-ink:#D9CFEF; --decision-border:#453D66;
+      --get-bg:#1C2E27; --get-ink:#5FCBB4; --post-bg:#332A1A; --post-ink:#E0A559;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--font-body); line-height:1.6; -webkit-font-smoothing:antialiased;}
+  a{color:var(--accent-2);}
+  a:focus-visible, button:focus-visible, .tocLink:focus-visible{outline:2px solid var(--accent-2); outline-offset:2px;}
+  .shell{display:grid; grid-template-columns:248px minmax(0,1fr); max-width:1180px; margin:0 auto;}
+  @media (max-width:880px){.shell{grid-template-columns:1fr;} .toc{position:static !important; height:auto !important; border-right:none !important; border-bottom:1px solid var(--border);}}
+  .toc{position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto; padding:32px 20px 32px 28px; border-right:1px solid var(--border);}
+  .toc-kicker{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:6px;}
+  .toc-title{font-family:var(--font-display); font-size:19px; margin:0 0 2px;}
+  .toc-sub{font-size:12px; color:var(--muted); margin-bottom:22px;}
+  .toc nav{display:flex; flex-direction:column; gap:2px;}
+  .tocLink{font-size:13px; color:var(--muted); text-decoration:none; padding:6px 8px; border-radius:var(--radius); display:flex; gap:8px;}
+  .tocLink:hover{background:var(--paper-raised); color:var(--ink);}
+  .tocLink .n{font-family:var(--font-mono); color:var(--accent); font-size:11px; padding-top:1px;}
+  .content{padding:48px 56px 96px; min-width:0;}
+  @media (max-width:880px){.content{padding:32px 24px 72px;}}
+  .doc-header{margin-bottom:40px; border-bottom:1px solid var(--border); padding-bottom:32px;}
+  .doc-kicker{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:14px;}
+  h1.doc-title{font-family:var(--font-display); font-size:clamp(28px,4vw,40px); line-height:1.12; margin:0 0 10px; text-wrap:balance;}
+  .doc-dek{font-size:16px; color:var(--muted); max-width:66ch; margin:0 0 20px;}
+  .meta-row{display:flex; flex-wrap:wrap; gap:20px; font-size:12px; font-family:var(--font-mono); color:var(--muted);}
+  .meta-row b{color:var(--ink); font-weight:600;}
+  .decisions-locked{display:flex; flex-wrap:wrap; gap:8px; margin-top:18px;}
+  .lock-chip{font-family:var(--font-mono); font-size:11px; background:var(--paper-raised); border:1px solid var(--border); padding:5px 10px; border-radius:2px;}
+  .lock-chip b{color:var(--accent-ink);}
+  section.doc-section{margin-bottom:64px; max-width:74ch;}
+  section.doc-section.wide{max-width:none;}
+  h2{font-family:var(--font-display); font-size:26px; margin:0 0 6px; padding-top:8px; text-wrap:balance;}
+  .section-eyebrow{font-family:var(--font-mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;}
+  h3{font-family:var(--font-display); font-size:19px; margin:28px 0 8px;}
+  p{margin:0 0 16px;}
+  ul,ol{margin:0 0 16px; padding-left:22px;}
+  li{margin-bottom:6px;}
+  strong{font-weight:600;}
+  .lede{font-size:17px;}
+  table{width:100%; border-collapse:collapse; font-size:13.5px; margin:8px 0 8px;}
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:12px;}
+  th,td{text-align:left; padding:10px 13px; border-bottom:1px solid var(--border); vertical-align:top;}
+  th{font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); background:var(--paper-raised); white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  td.muted{color:var(--muted);}
+  code{font-family:var(--font-mono); font-size:0.88em; background:var(--paper-raised); padding:1px 5px; border-radius:2px; border:1px solid var(--border);}
+  .schema-card{border:1px solid var(--border); border-radius:var(--radius); background:var(--paper-raised); margin-bottom:16px; overflow:hidden;}
+  .schema-head{padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
+  .schema-head .tbl-name{font-family:var(--font-mono); font-weight:700; font-size:14px;}
+  .schema-head .tbl-note{font-size:12.5px; color:var(--muted);}
+  .schema-cols{padding:10px 16px 14px;}
+  .col-row{display:grid; grid-template-columns:150px 130px 1fr; gap:10px; font-size:12.5px; padding:4px 0; border-bottom:1px dotted var(--border);}
+  .col-row:last-child{border-bottom:none;}
+  .col-name{font-family:var(--font-mono); color:var(--accent-ink);}
+  .col-type{font-family:var(--font-mono); color:var(--accent-2);}
+  .col-desc{color:var(--muted);}
+  .endpoint{display:flex; gap:12px; align-items:baseline; padding:9px 0; border-bottom:1px dotted var(--border); font-size:13.5px;}
+  .endpoint:last-child{border-bottom:none;}
+  .method{font-family:var(--font-mono); font-size:11px; font-weight:700; padding:2px 7px; border-radius:2px; white-space:nowrap;}
+  .method.get{background:var(--get-bg); color:var(--get-ink);}
+  .method.post{background:var(--post-bg); color:var(--post-ink);}
+  .path{font-family:var(--font-mono); font-size:13px;}
+  .endpoint .desc{color:var(--muted); font-size:12.5px;}
+  .callout{border-left:3px solid var(--accent-2); background:var(--paper-raised); border-radius:0 var(--radius) var(--radius) 0; padding:16px 20px; margin:0 0 16px;}
+  .callout h4{margin:0 0 6px; font-size:14.5px;}
+  .callout p{margin:0; font-size:14px;}
+  .risk{border-left:3px solid var(--danger); background:var(--danger-bg); border-radius:0 var(--radius) var(--radius) 0; padding:16px 20px; margin:0 0 14px;}
+  .risk h4{margin:0 0 6px; font-size:14.5px;}
+  .risk p{margin:0; font-size:14px;}
+  .surface-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin:20px 0;}
+  .surface{border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; background:var(--paper-raised);}
+  .surface .who{font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase; color:var(--accent);}
+  .surface h4{margin:6px 0 8px; font-family:var(--font-display); font-size:17px;}
+  .surface p{font-size:13px; color:var(--muted); margin:0;}
+  .flow-step{display:flex; gap:14px; padding:10px 0; border-bottom:1px dotted var(--border);}
+  .flow-step:last-child{border-bottom:none;}
+  .flow-step .idx{font-family:var(--font-mono); color:var(--accent); font-size:12px; min-width:20px;}
+  .flow-step .body{font-size:14px;}
+  .flow-step .body b{display:block; margin-bottom:2px;}
+  footer.doc-footer{margin-top:80px; padding-top:20px; border-top:1px solid var(--border); font-size:12px; color:var(--muted); font-family:var(--font-mono);}
+</style>
+
+<div class="shell">
+  <aside class="toc">
+    <div class="toc-kicker">Project Setu</div>
+    <div class="toc-title">PRD — Part 2</div>
+    <div class="toc-sub">System &amp; Technical Architecture</div>
+    <nav>
+      <a class="tocLink" href="#ia"><span class="n">10</span>Information Architecture</a>
+      <a class="tocLink" href="#db"><span class="n">11</span>Database Design</a>
+      <a class="tocLink" href="#api"><span class="n">12</span>API Design</a>
+      <a class="tocLink" href="#security"><span class="n">13</span>Security Architecture</a>
+      <a class="tocLink" href="#ai"><span class="n">14</span>AI Architecture</a>
+      <a class="tocLink" href="#backend"><span class="n">15</span>Backend Architecture</a>
+      <a class="tocLink" href="#admin"><span class="n">16</span>Admin Dashboard</a>
+      <a class="tocLink" href="#next"><span class="n">→</span>What's Next</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="doc-header">
+      <div class="doc-kicker">Product Requirements Document · Draft for review</div>
+      <h1 class="doc-title">System &amp; Technical Architecture</h1>
+      <p class="doc-dek">Part 2 of the Project Setu PRD. Everything here is built on the six decisions locked at the end of Part 1 — shown below so this document is self-contained. Part 3 (UI/UX guidelines, Flutter project structure, roadmap, testing, deployment, scaling, risk register) follows after this is reviewed.</p>
+      <div class="meta-row">
+        <span><b>Pilot city:</b> Visakhapatnam</span>
+        <span><b>Stack:</b> Flutter · Supabase/PostgreSQL · Razorpay + RazorpayX · FCM · OpenAI · n8n · PostHog</span>
+      </div>
+      <div class="decisions-locked">
+        <span class="lock-chip"><b>Payments:</b> merchant-of-record</span>
+        <span class="lock-chip"><b>Consent:</b> elder-granted, per category</span>
+        <span class="lock-chip"><b>Vetting:</b> clinical / non-clinical split</span>
+        <span class="lock-chip"><b>SOS:</b> 108-first mandatory</span>
+        <span class="lock-chip"><b>BGV vendor:</b> IDfy</span>
+      </div>
+    </div>
+
+    <section class="doc-section wide" id="ia">
+      <div class="section-eyebrow">10 — Information Architecture</div>
+      <h2>Three surfaces, one trust graph</h2>
+      <p style="max-width:74ch">A single do-everything Flutter app would force compromises on both ends: an elder who wants three big buttons and voice input, and a family member who wants a dense dashboard, don't belong on the same screen. Recommendation: three surfaces sharing one backend and one data model.</p>
+      <div class="surface-grid">
+        <div class="surface">
+          <div class="who">Flutter · consumer</div>
+          <h4>Family &amp; Elder App</h4>
+          <p>One codebase, two experience modes selected at login by role. Family mode: full dashboard, booking, consent management. Elder mode: large-text, voice-first, three-action home screen (Call for Help, Book Help, Today's Visit) — deliberately not a shrunken version of the family UI.</p>
+        </div>
+        <div class="surface">
+          <div class="who">Flutter · caregiver</div>
+          <h4>Caregiver App</h4>
+          <p>Separate app, separate build. Job queue, accept/decline, navigation, OTP start/end scan, earnings and payout status. Different enough in job (dispatch, not care management) that bundling it into the consumer app would bloat both.</p>
+        </div>
+        <div class="surface">
+          <div class="who">Web · internal</div>
+          <h4>Admin / Ops Dashboard</h4>
+          <p>Not Flutter — a web app. Ops staff work at desks with dense tables, bulk actions, and real-time SOS monitoring; that's a desktop-web job, not a mobile one. Detailed in Section 16.</p>
+        </div>
+      </div>
+      <p>Underneath all three: one Supabase project, one Postgres schema, one consent graph. An elder's data has exactly one source of truth regardless of which surface reads or writes it — the alternative (per-surface caches or duplicated models) is how consent violations happen by accident.</p>
+    </section>
+
+    <section class="doc-section wide" id="db">
+      <div class="section-eyebrow">11 — Database Design (Supabase / PostgreSQL)</div>
+      <h2>The consent graph is the schema's spine</h2>
+      <p style="max-width:74ch">Every table below lives in Supabase Postgres. Columns are illustrative, not exhaustive — the point is the shape and the relationships, especially <code>consent_grants</code>, which every health/location-adjacent query has to join against before returning data to a family member.</p>
+
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">elder_profiles</span><span class="tbl-note">the data principal — owns their own record</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">id</span><span class="col-type">uuid pk</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">auth_user_id</span><span class="col-type">uuid, nullable</span><span class="col-desc">null if the elder hasn't onboarded their own login yet</span></div>
+          <div class="col-row"><span class="col-name">display_name, dob, address</span><span class="col-type">text/date/jsonb</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">primary_language</span><span class="col-type">text</span><span class="col-desc">drives AI + UI locale</span></div>
+          <div class="col-row"><span class="col-name">emergency_contacts</span><span class="col-type">jsonb</span><span class="col-desc">independent of family_links — always reachable even if consent is revoked</span></div>
+        </div>
+      </div>
+
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">family_links</span><span class="tbl-note">who is connected to whom</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">elder_id, family_user_id</span><span class="col-type">uuid fks</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">relationship</span><span class="col-type">text</span><span class="col-desc">"daughter", "son", etc. — display only</span></div>
+          <div class="col-row"><span class="col-name">status</span><span class="col-type">enum</span><span class="col-desc">pending / active / revoked</span></div>
+        </div>
+      </div>
+
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">consent_grants</span><span class="tbl-note">the table every sensitive query joins against</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">elder_id, family_user_id</span><span class="col-type">uuid fks</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">category</span><span class="col-type">enum</span><span class="col-desc">location_live / location_history / health_notes / medication_list / visit_history / billing</span></div>
+          <div class="col-row"><span class="col-name">granted, granted_at, revoked_at</span><span class="col-type">bool/timestamptz</span><span class="col-desc">revocation is a first-class state, not a delete</span></div>
+          <div class="col-row"><span class="col-name">granted_via</span><span class="col-type">enum</span><span class="col-desc">elder_app (default) / documented_guardian_process (rare, logged, requires admin sign-off — see Security)</span></div>
+        </div>
+      </div>
+
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">caregivers</span><span class="tbl-note">two verification tracks, one table</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">caregiver_type</span><span class="col-type">enum</span><span class="col-desc">clinical / non_clinical</span></div>
+          <div class="col-row"><span class="col-name">sub_role</span><span class="col-type">enum</span><span class="col-desc">nurse, physiotherapist, hospital_attendant, companion, home_service_*</span></div>
+          <div class="col-row"><span class="col-name">bgv_status, bgv_provider_ref</span><span class="col-type">enum/text</span><span class="col-desc">IDfy check status + reference id</span></div>
+          <div class="col-row"><span class="col-name">police_verification_status</span><span class="col-type">enum</span><span class="col-desc">not_started / submitted / in_progress / cleared / flagged</span></div>
+          <div class="col-row"><span class="col-name">professional_council_reg_no</span><span class="col-type">text, nullable</span><span class="col-desc">clinical roles only; validated against council registry</span></div>
+          <div class="col-row"><span class="col-name">trust_tier</span><span class="col-type">enum</span><span class="col-desc">probationary (BGV cleared only) / standard (+ police verified) / clinical_verified (+ council check, insurance on file)</span></div>
+        </div>
+      </div>
+
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">bookings</span><span class="tbl-note">the transaction record</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">elder_id, requested_by, caregiver_id</span><span class="col-type">uuid fks</span><span class="col-desc">caregiver_id null until matched</span></div>
+          <div class="col-row"><span class="col-name">service_id, scheduled_at, status</span><span class="col-type">fk/timestamptz/enum</span><span class="col-desc">requested → matched → confirmed → in_progress → completed / cancelled / disputed</span></div>
+          <div class="col-row"><span class="col-name">otp_start, otp_end + verified_at</span><span class="col-type">text/timestamptz</span><span class="col-desc">visit-boundary proof, drives payout trigger</span></div>
+          <div class="col-row"><span class="col-name">required_trust_tier</span><span class="col-type">enum</span><span class="col-desc">copied from service_catalog at booking time — a caregiver can't be matched below it</span></div>
+        </div>
+      </div>
+
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">payments</span> <span class="tbl-name" style="margin-left:2px">/</span> <span class="tbl-name">caregiver_payouts</span><span class="tbl-note">merchant-of-record ledger, kept separate from bookings</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">payments</span><span class="col-type">table</span><span class="col-desc">family → Setu, via Razorpay Payment Gateway; amount, commission_amount, razorpay_payment_id, status</span></div>
+          <div class="col-row"><span class="col-name">caregiver_payouts</span><span class="col-type">table</span><span class="col-desc">Setu → caregiver, via RazorpayX Payouts; booking_id fk, amount, payout_status, razorpayx_payout_id, scheduled_for, paid_at</span></div>
+        </div>
+      </div>
+
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">sos_events</span><span class="tbl-note">life-safety path — write-heavy, append-only</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">elder_id, triggered_by, location</span><span class="col-type">uuid/uuid/geography</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">status</span><span class="col-type">enum</span><span class="col-desc">triggered / family_notified / responder_dispatched / resolved</span></div>
+          <div class="col-row"><span class="col-name">ack_108_shown_at</span><span class="col-type">timestamptz</span><span class="col-desc">records that the 108-first screen was actually shown — audit evidence for the liability boundary</span></div>
+        </div>
+      </div>
+
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">ai_interactions</span><span class="tbl-note">every AI touch, logged for audit and QA</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">interaction_type</span><span class="col-type">enum</span><span class="col-desc">visit_summary / translation / reminder / scheduling_assist</span></div>
+          <div class="col-row"><span class="col-name">input_ref, output_text</span><span class="col-type">text</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">flagged, human_reviewed</span><span class="col-type">bool</span><span class="col-desc">set by the output guardrail described in Section 14</span></div>
+        </div>
+      </div>
+
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">audit_log</span><span class="tbl-note">DPDP-grade access trail</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">actor_user_id, action, resource_type, resource_id</span><span class="col-type">uuid/text/text/uuid</span><span class="col-desc">every read of health_notes / medication_list / location_history writes a row here, not just writes</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="doc-section wide" id="api">
+      <div class="section-eyebrow">12 — API Design</div>
+      <h2>Two layers: RLS-guarded direct access, and Edge Functions for anything with a secret or a rule</h2>
+      <p style="max-width:74ch">Supabase's client SDK can talk to Postgres directly for simple, already-permission-scoped reads (a family member's own booking history, an elder's own profile) — Postgres Row Level Security enforces the boundary, no custom API needed. Anything that (a) touches a third-party secret, (b) enforces a business rule beyond "is this my row," or (c) needs to be atomic across tables goes through a Supabase Edge Function instead.</p>
+      <div class="table-wrap">
+        <table>
+          <tbody>
+            <tr><td style="width:1%"><div class="endpoint"><span class="method post">POST</span><span class="path">/bookings</span></div></td><td class="muted">Validates required trust tier for the requested service before allowing a match — never left to the client.</td></tr>
+            <tr><td><div class="endpoint"><span class="method post">POST</span><span class="path">/bookings/:id/match</span></div></td><td class="muted">Caregiver-matching: filters by trust tier, location, language, availability.</td></tr>
+            <tr><td><div class="endpoint"><span class="method post">POST</span><span class="path">/bookings/:id/otp/start</span></div></td><td class="muted">Generates + verifies visit-start OTP; flips status to in_progress.</td></tr>
+            <tr><td><div class="endpoint"><span class="method post">POST</span><span class="path">/bookings/:id/otp/end</span></div></td><td class="muted">Verifies visit-end OTP; triggers payout scheduling.</td></tr>
+            <tr><td><div class="endpoint"><span class="method post">POST</span><span class="path">/payments/create-order</span></div></td><td class="muted">Server-side Razorpay order creation — API key never touches the Flutter client.</td></tr>
+            <tr><td><div class="endpoint"><span class="method post">POST</span><span class="path">/payments/webhook</span></div></td><td class="muted">Razorpay webhook receiver; verifies signature before writing to <code>payments</code>.</td></tr>
+            <tr><td><div class="endpoint"><span class="method post">POST</span><span class="path">/payouts/run</span></div></td><td class="muted">Triggered by n8n on schedule; batches RazorpayX payouts for completed, unpaid bookings.</td></tr>
+            <tr><td><div class="endpoint"><span class="method post">POST</span><span class="path">/sos/trigger</span></div></td><td class="muted">Writes sos_event, fans out to family + on-call ops + nearest responder in parallel; the 108-first screen is enforced client-side <em>and</em> logged server-side via <code>ack_108_shown_at</code>.</td></tr>
+            <tr><td><div class="endpoint"><span class="method post">POST</span><span class="path">/ai/visit-summary</span></div></td><td class="muted">Scoped OpenAI call (Section 14); writes to <code>ai_interactions</code> before returning to the client.</td></tr>
+            <tr><td><div class="endpoint"><span class="method post">POST</span><span class="path">/verification/idfy-webhook</span></div></td><td class="muted">Receives BGV status callbacks, updates <code>caregivers.bgv_status</code> and recomputes trust_tier.</td></tr>
+            <tr><td><div class="endpoint"><span class="method get">GET</span><span class="path">/me/data-export</span></div></td><td class="muted">DPDP data-portability right — full export of a data principal's own records.</td></tr>
+            <tr><td><div class="endpoint"><span class="method post">POST</span><span class="path">/me/erasure-request</span></div></td><td class="muted">DPDP erasure right, subject to legal/audit retention exceptions (flagged, not deleted immediately).</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="doc-section wide" id="security">
+      <div class="section-eyebrow">13 — Security Architecture</div>
+      <h2>RLS is the enforcement layer, not a formality</h2>
+      <div class="callout">
+        <h4>RBAC via Supabase custom claims</h4>
+        <p>JWT carries <code>role</code> (elder / family_member / caregiver / admin) plus linked ids. Every RLS policy reads these claims — there is no code path where a client can read another elder's data because the Flutter app "just didn't show it."</p>
+      </div>
+      <div class="callout">
+        <h4>Consent-gated policies, not table-level policies</h4>
+        <p>Tables like <code>bookings.health_notes</code> or location fields aren't gated by a simple "is family member" check — the RLS policy calls a Postgres function <code>has_consent(elder_id, requesting_user, category)</code> that checks <code>consent_grants</code> at query time. Revoking consent takes effect on the next query, not on the next deploy.</p>
+      </div>
+      <div class="callout">
+        <h4>Column-level encryption for the highest-sensitivity fields</h4>
+        <p>Government ID numbers and raw medical notes are encrypted at the column level (pgsodium/pgcrypto) in addition to Supabase's at-rest encryption — so a database dump or misconfigured policy doesn't expose them in plaintext.</p>
+      </div>
+      <div class="callout">
+        <h4>Secrets live in Edge Functions, never in the client</h4>
+        <p>OpenAI, Razorpay, RazorpayX, and IDfy keys are Edge Function environment variables only. The Flutter apps never hold a third-party API key.</p>
+      </div>
+      <div class="risk">
+        <h4>Guardian-override consent needs a real workflow, not a checkbox</h4>
+        <p><code>consent_grants.granted_via = documented_guardian_process</code> exists for the genuine edge case of an elder who lacks capacity to consent (e.g. advanced dementia) — but it must require admin review and a documented basis (medical certification, power of attorney), logged and auditable, never a self-serve toggle a family member flips unilaterally. Flagging this as a Part 3 legal/ops workflow to design properly, not a database default.</p>
+      </div>
+      <div class="callout">
+        <h4>Caregiver app device &amp; session security</h4>
+        <p>Short-lived access tokens with refresh rotation; location sharing scoped to active-booking windows only, not always-on background tracking of caregivers between jobs.</p>
+      </div>
+      <div class="callout">
+        <h4>DPDP operational readiness</h4>
+        <p>Breach detection + a 72-hour reporting runbook, a named DPO contact point, and DPIA documentation for the consent/location/health data flows — procedural detail belongs in Part 3, but the schema and RLS design above are already built to make these possible rather than retrofitted.</p>
+      </div>
+    </section>
+
+    <section class="doc-section wide" id="ai">
+      <div class="section-eyebrow">14 — AI Architecture</div>
+      <h2>Constrained by design, not by prompt wording alone</h2>
+      <p style="max-width:74ch">"Don't diagnose" is not something an LLM reliably self-enforces through instructions alone. The architecture below treats it as a system constraint with multiple independent layers, so that a single weak point doesn't become the only line of defense.</p>
+      <div class="flow-step"><span class="idx">1</span><div class="body"><b>Fixed toolset, no freeform capability</b>Each <code>interaction_type</code> (visit_summary, translation, reminder, scheduling_assist) has its own scoped system prompt and its own fixed set of callable functions — e.g. <code>get_appointment_details</code>, <code>get_medication_list</code>, <code>translate_text</code>. The model cannot browse, execute code, or answer outside its assigned task.</div></div>
+      <div class="flow-step"><span class="idx">2</span><div class="body"><b>Output guardrail before the user ever sees it</b>Every response passes a lightweight classifier (rule-based pattern matching for dosage/diagnosis-shaped language, plus a cheap moderation-model pass) before being returned. A flagged output is held for human review rather than delivered.</div></div>
+      <div class="flow-step"><span class="idx">3</span><div class="body"><b>Mandatory disclaimers on health-adjacent output</b>Any visit summary or reminder touching medication or symptoms is appended with a standard, non-negotiable disclaimer and a "confirm with your clinician" pointer — not left to the model's discretion.</div></div>
+      <div class="flow-step"><span class="idx">4</span><div class="body"><b>Full logging for audit and QA</b>Every interaction, flagged or not, is written to <code>ai_interactions</code> — both for the DPDP audit trail and so QA can sample real outputs and tighten the guardrail over time.</div></div>
+      <div class="flow-step"><span class="idx">5</span><div class="body"><b>Escalation, not silence, on ambiguity</b>If a family member asks the AI something that reads as a medical question ("should I increase the dose?"), the correct behavior is routing to a human (the assigned nurse or the family's own doctor), never an AI-generated answer, even a hedged one.</div></div>
+    </section>
+
+    <section class="doc-section wide" id="backend">
+      <div class="section-eyebrow">15 — Backend Architecture</div>
+      <h2>How the pieces fit</h2>
+      <p style="max-width:74ch"><strong>Supabase</strong> (Postgres + Auth + Storage + Realtime) is the system of record and handles simple RLS-guarded reads directly from the Flutter clients. <strong>Edge Functions</strong> (Deno, colocated with the database) own every path that touches a secret or a cross-table rule — bookings, payments, payouts, SOS, AI, verification webhooks. <strong>n8n</strong> is the scheduler/orchestrator, not a business-logic owner: it triggers Edge Functions on a timer or webhook (nightly payout batch, appointment-reminder sweep, polling IDfy/police-verification status) rather than embedding logic of its own, so the actual rules live in one place. <strong>FCM</strong> delivers push (bookings, SOS, reminders); Supabase Realtime pushes live updates to the admin dashboard's SOS monitor. <strong>PostHog</strong> tracks product analytics — event payloads use anonymized/categorical properties only (e.g. <code>service_category</code>, not free-text health content), so analytics can't become a second, unaudited copy of sensitive data.</p>
+    </section>
+
+    <section class="doc-section wide" id="admin">
+      <div class="section-eyebrow">16 — Admin Dashboard Requirements</div>
+      <h2>Built for a desk, not a pocket</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Screen</th><th>Purpose</th><th>Access role</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Verification Queue</strong></td><td class="muted">Review BGV/police/credential status per caregiver, advance or hold trust tier</td><td class="muted">verification_agent</td></tr>
+            <tr><td><strong>Live SOS Monitor</strong></td><td class="muted">Real-time feed of active SOS events via Supabase Realtime; escalate, reassign responder</td><td class="muted">sos_operator</td></tr>
+            <tr><td><strong>Bookings &amp; Disputes</strong></td><td class="muted">Investigate a booking's full event log, resolve disputes, issue refunds</td><td class="muted">ops_admin</td></tr>
+            <tr><td><strong>Caregiver Directory</strong></td><td class="muted">Performance history, complaint history, active/suspended status</td><td class="muted">ops_admin</td></tr>
+            <tr><td><strong>Consent &amp; Audit Log Viewer</strong></td><td class="muted">Who accessed what, when — health content itself redacted by default, metadata only, per data minimization</td><td class="muted">super_admin</td></tr>
+            <tr><td><strong>Payout Reconciliation</strong></td><td class="muted">RazorpayX payout batch status, retry failed payouts</td><td class="muted">finance_ops</td></tr>
+            <tr><td><strong>Service Catalog Management</strong></td><td class="muted">Add/edit services, pricing, required trust tier, per pilot city</td><td class="muted">super_admin</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="doc-section" id="next">
+      <div class="section-eyebrow">Next</div>
+      <h2>What Part 3 covers</h2>
+      <p>UI/UX design guidelines, Flutter project structure, development roadmap (Phase 1 → production), testing plan, deployment plan, scaling strategy, risk register, and future roadmap. One open question before writing it: do you want the full roadmap scoped only to the Visakhapatnam pilot (recommended — keep Part 3 concrete), or do you want multi-city/international scaling milestones included alongside it?</p>
+    </section>
+
+    <footer class="doc-footer">Part 2 of 3 · Project Setu PRD · builds on decisions locked in Part 1</footer>
+  </main>
+</div>
