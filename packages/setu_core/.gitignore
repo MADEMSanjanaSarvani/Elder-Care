@@ -3,5 +3,6 @@
 # consumes it, so it's not committed here.
 .dart_tool/
 .packages
+.flutter-plugins-dependencies
 pubspec.lock
 build/
