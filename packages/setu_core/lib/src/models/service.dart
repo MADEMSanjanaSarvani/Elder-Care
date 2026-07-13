@@ -24,7 +24,8 @@ class SetuService {
       name: json['name'] as String,
       basePrice: (json['base_price'] as num).toDouble(),
       currency: json['currency'] as String,
-      requiresTrustTier: TrustTier.fromWire(json['requires_trust_tier'] as String),
+      requiresTrustTier:
+          TrustTier.fromWire(json['requires_trust_tier'] as String),
     );
   }
 }

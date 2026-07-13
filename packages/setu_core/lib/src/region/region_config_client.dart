@@ -19,7 +19,8 @@ class RegionConfigClient {
       method: HttpMethod.get,
     );
     if (response.status != 200) {
-      throw StateError('Failed to load region config for $regionCode: ${response.status}');
+      throw StateError(
+          'Failed to load region config for $regionCode: ${response.status}');
     }
     return Region.fromJson(response.data as Map<String, dynamic>);
   }

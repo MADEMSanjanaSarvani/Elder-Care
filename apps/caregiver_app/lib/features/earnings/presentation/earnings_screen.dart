@@ -25,7 +25,9 @@ class EarningsScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Earnings')),
       body: payoutsAsync.when(
         data: (payouts) {
-          if (payouts.isEmpty) return const Center(child: Text('No payouts yet.'));
+          if (payouts.isEmpty) {
+            return const Center(child: Text('No payouts yet.'));
+          }
           return ListView.separated(
             padding: const EdgeInsets.all(SetuSpacing.lg),
             itemCount: payouts.length,
@@ -35,13 +37,15 @@ class EarningsScreen extends ConsumerWidget {
               return ListTile(
                 title: Text('${payout['currency']} ${payout['amount']}'),
                 subtitle: Text('Status: ${payout['status']}'),
-                trailing: Text(payout['scheduled_for'].toString().split('T').first),
+                trailing:
+                    Text(payout['scheduled_for'].toString().split('T').first),
               );
             },
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Something went wrong: $err')),
+        error: (err, stack) =>
+            Center(child: Text('Something went wrong: $err')),
       ),
     );
   }

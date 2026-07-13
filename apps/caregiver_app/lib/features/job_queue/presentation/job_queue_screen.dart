@@ -20,8 +20,10 @@ class JobQueueScreen extends ConsumerWidget {
         if (caregiver == null) return const PendingVerificationScreen();
         return _JobList(caregiver: caregiver);
       },
-      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (err, stack) => Scaffold(body: Center(child: Text('Something went wrong: $err'))),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (err, stack) =>
+          Scaffold(body: Center(child: Text('Something went wrong: $err'))),
     );
   }
 }
@@ -46,11 +48,14 @@ class _JobList extends ConsumerWidget {
       ),
       body: bookingsAsync.when(
         data: (bookings) {
-          if (bookings.isEmpty) return const Center(child: Text('No jobs assigned right now.'));
+          if (bookings.isEmpty) {
+            return const Center(child: Text('No jobs assigned right now.'));
+          }
           return ListView.separated(
             padding: const EdgeInsets.all(SetuSpacing.lg),
             itemCount: bookings.length,
-            separatorBuilder: (context, index) => const SizedBox(height: SetuSpacing.sm),
+            separatorBuilder: (context, index) =>
+                const SizedBox(height: SetuSpacing.sm),
             itemBuilder: (context, index) {
               final booking = bookings[index];
               return Card(
@@ -65,7 +70,8 @@ class _JobList extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Something went wrong: $err')),
+        error: (err, stack) =>
+            Center(child: Text('Something went wrong: $err')),
       ),
     );
   }

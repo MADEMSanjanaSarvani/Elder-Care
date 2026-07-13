@@ -26,18 +26,22 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-      GoRoute(path: '/home', builder: (context, state) => const HomeRouterScreen()),
+      GoRoute(
+          path: '/home', builder: (context, state) => const HomeRouterScreen()),
       GoRoute(
         path: '/elder/:elderId/sos',
-        builder: (context, state) => SosScreen(elderId: state.pathParameters['elderId']!),
+        builder: (context, state) =>
+            SosScreen(elderId: state.pathParameters['elderId']!),
       ),
       GoRoute(
         path: '/elder/:elderId/booking',
-        builder: (context, state) => BookingScreen(elderId: state.pathParameters['elderId']!),
+        builder: (context, state) =>
+            BookingScreen(elderId: state.pathParameters['elderId']!),
       ),
       GoRoute(
         path: '/elder/:elderId/consent',
-        builder: (context, state) => ConsentScreen(elderId: state.pathParameters['elderId']!),
+        builder: (context, state) =>
+            ConsentScreen(elderId: state.pathParameters['elderId']!),
       ),
     ],
   );
@@ -61,7 +65,8 @@ class HomeRouterScreen extends ConsumerWidget {
             return const FamilyHomeScreen();
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(child: Text('Failed to load profile: $err')),
+          error: (err, stack) =>
+              Center(child: Text('Failed to load profile: $err')),
         ),
       ),
     );

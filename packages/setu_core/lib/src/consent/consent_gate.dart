@@ -9,9 +9,11 @@ import 'consent_grant.dart';
 /// from an Edge Function) regardless of what the client believes.
 class ConsentGate {
   ConsentGate(List<ConsentGrant> grants)
-      : _activeCategories = grants.where((g) => g.isActive).map((g) => g.category).toSet();
+      : _activeCategories =
+            grants.where((g) => g.isActive).map((g) => g.category).toSet();
 
   final Set<ConsentCategory> _activeCategories;
 
-  bool canView(ConsentCategory category) => _activeCategories.contains(category);
+  bool canView(ConsentCategory category) =>
+      _activeCategories.contains(category);
 }

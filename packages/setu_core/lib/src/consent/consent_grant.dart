@@ -43,8 +43,12 @@ class ConsentGrant {
       category: ConsentCategory.fromWire(json['category'] as String),
       granted: json['granted'] as bool,
       grantedVia: ConsentGrantSource.fromWire(json['granted_via'] as String),
-      grantedAt: json['granted_at'] == null ? null : DateTime.parse(json['granted_at'] as String),
-      revokedAt: json['revoked_at'] == null ? null : DateTime.parse(json['revoked_at'] as String),
+      grantedAt: json['granted_at'] == null
+          ? null
+          : DateTime.parse(json['granted_at'] as String),
+      revokedAt: json['revoked_at'] == null
+          ? null
+          : DateTime.parse(json['revoked_at'] as String),
     );
   }
 }

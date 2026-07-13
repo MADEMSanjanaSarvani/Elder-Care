@@ -5,10 +5,13 @@ class AuthRepository {
 
   final SupabaseClient _client;
 
-  Future<void> sendOtp(String phone) => _client.auth.signInWithOtp(phone: phone);
+  Future<void> sendOtp(String phone) =>
+      _client.auth.signInWithOtp(phone: phone);
 
-  Future<AuthResponse> verifyOtp({required String phone, required String token}) {
-    return _client.auth.verifyOTP(phone: phone, token: token, type: OtpType.sms);
+  Future<AuthResponse> verifyOtp(
+      {required String phone, required String token}) {
+    return _client.auth
+        .verifyOTP(phone: phone, token: token, type: OtpType.sms);
   }
 
   /// Creates the `profiles` row only. The matching `caregivers` row —

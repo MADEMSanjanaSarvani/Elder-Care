@@ -44,7 +44,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _error = null;
     });
     try {
-      await _repo.verifyOtp(phone: _phoneController.text.trim(), token: _codeController.text.trim());
+      await _repo.verifyOtp(
+          phone: _phoneController.text.trim(),
+          token: _codeController.text.trim());
       await _repo.ensureProfile();
       if (mounted) context.go('/home');
     } catch (err) {
@@ -67,20 +69,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Setu — Caregiver', style: Theme.of(context).textTheme.headlineMedium),
+                  Text('Setu — Caregiver',
+                      style: Theme.of(context).textTheme.headlineMedium),
                   const SizedBox(height: 24),
                   if (_error != null) ...[
-                    Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                    Text(_error!,
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.error)),
                     const SizedBox(height: 12),
                   ],
                   if (_step == _Step.enterPhone) ...[
                     TextField(
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(labelText: 'Phone number', hintText: '+91XXXXXXXXXX'),
+                      decoration: const InputDecoration(
+                          labelText: 'Phone number', hintText: '+91XXXXXXXXXX'),
                     ),
                     const SizedBox(height: 16),
-                    FilledButton(onPressed: _busy ? null : _sendCode, child: const Text('Send code')),
+                    FilledButton(
+                        onPressed: _busy ? null : _sendCode,
+                        child: const Text('Send code')),
                   ] else ...[
                     Text('Enter the code sent to ${_phoneController.text}'),
                     const SizedBox(height: 8),
@@ -90,7 +98,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       decoration: const InputDecoration(labelText: 'Code'),
                     ),
                     const SizedBox(height: 16),
-                    FilledButton(onPressed: _busy ? null : _verifyCode, child: const Text('Verify code')),
+                    FilledButton(
+                        onPressed: _busy ? null : _verifyCode,
+                        child: const Text('Verify code')),
                   ],
                 ],
               ),

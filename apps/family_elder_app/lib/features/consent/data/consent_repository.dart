@@ -10,7 +10,8 @@ class ConsentRepository {
 
   final SupabaseClient _client;
 
-  Future<List<ConsentGrant>> fetchGrants({required String elderId, required String familyUserId}) async {
+  Future<List<ConsentGrant>> fetchGrants(
+      {required String elderId, required String familyUserId}) async {
     final rows = await _client
         .from('consent_grants')
         .select()
@@ -27,14 +28,17 @@ class ConsentRepository {
     required ConsentCategory category,
     required bool granted,
   }) async {
-    await _client.from('consent_grants').upsert({
-      'elder_id': elderId,
-      'family_user_id': familyUserId,
-      'category': category.wireValue,
-      'granted': granted,
-      'granted_via': 'elder_app',
-      'granted_at': granted ? DateTime.now().toIso8601String() : null,
-      'revoked_at': granted ? null : DateTime.now().toIso8601String(),
-    }, onConflict: 'elder_id, family_user_id, category');
+    await _client.from('consent_grants').upsert(
+      {
+        'elder_id': elderId,
+        'family_user_id': familyUserId,
+        'category': category.wireValue,
+        'granted': granted,
+        'granted_via': 'elder_app',
+        'granted_at': granted ? DateTime.now().toIso8601String() : null,
+        'revoked_at': granted ? null : DateTime.now().toIso8601String(),
+      },
+      onConflict: 'elder_id, family_user_id, category',
+    );
   }
 }

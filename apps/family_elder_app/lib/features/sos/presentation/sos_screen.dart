@@ -55,7 +55,10 @@ class _SosScreenState extends ConsumerState<SosScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Emergency'), backgroundColor: SetuColors.sosLight, foregroundColor: Colors.white),
+      appBar: AppBar(
+          title: const Text('Emergency'),
+          backgroundColor: SetuColors.sosLight,
+          foregroundColor: Colors.white),
       body: Padding(
         padding: const EdgeInsets.all(SetuSpacing.lg),
         child: Column(
@@ -68,7 +71,8 @@ class _SosScreenState extends ConsumerState<SosScreen> {
               ),
               onPressed: _call108,
               icon: const Icon(Icons.call, size: 28),
-              label: const Text('Call 108 (Emergency)', style: TextStyle(fontSize: 20)),
+              label: const Text('Call 108 (Emergency)',
+                  style: TextStyle(fontSize: 20)),
             ),
             const SizedBox(height: SetuSpacing.lg),
             Text(
@@ -79,7 +83,8 @@ class _SosScreenState extends ConsumerState<SosScreen> {
             ),
             const SizedBox(height: SetuSpacing.lg),
             if (_error != null) ...[
-              Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              Text(_error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
               const SizedBox(height: SetuSpacing.md),
             ],
             if (_notified)
@@ -88,7 +93,8 @@ class _SosScreenState extends ConsumerState<SosScreen> {
               OutlinedButton.icon(
                 onPressed: _notifying ? null : _notifyPlatform,
                 icon: const Icon(Icons.notifications_active_outlined),
-                label: Text(_notifying ? 'Notifying…' : 'Also notify family & Setu'),
+                label: Text(
+                    _notifying ? 'Notifying…' : 'Also notify family & Setu'),
               ),
           ],
         ),

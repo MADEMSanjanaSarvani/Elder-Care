@@ -5,9 +5,15 @@ import 'package:setu_core/setu_core.dart';
 import '../../../core/providers.dart';
 import '../data/consent_repository.dart';
 
-final _familyLinksProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, elderId) async {
+final _familyLinksProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>(
+        (ref, elderId) async {
   final client = ref.watch(supabaseClientProvider);
-  return client.from('family_links').select().eq('elder_id', elderId).eq('status', 'active');
+  return client
+      .from('family_links')
+      .select()
+      .eq('elder_id', elderId)
+      .eq('status', 'active');
 });
 
 /// Consent management (PRD Part 1 §04): the elder grants access per
@@ -24,14 +30,16 @@ class ConsentScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final elderAsync = ref.watch(elderProfileByIdProvider(elderId));
-    final profileAsync = ref.watch(currentProfileProvider);
-    final currentUserId = ref.watch(supabaseClientProvider).auth.currentUser?.id;
+    final currentUserId =
+        ref.watch(supabaseClientProvider).auth.currentUser?.id;
 
     return Scaffold(
       appBar: AppBar(title: const Text('What you can see')),
       body: elderAsync.when(
         data: (elder) {
-          if (elder == null) return const Center(child: Text('Elder not found'));
+          if (elder == null) {
+            return const Center(child: Text('Elder not found'));
+          }
           final isElderSelf = elder['auth_user_id'] == currentUserId;
 
           if (isElderSelf) {
@@ -44,14 +52,18 @@ class ConsentScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Something went wrong: $err')),
+        error: (err, stack) =>
+            Center(child: Text('Something went wrong: $err')),
       ),
     );
   }
 }
 
 class _ReadOnlyConsentView extends ConsumerWidget {
-  const _ReadOnlyConsentView({required this.elderId, required this.elderName, required this.familyUserId});
+  const _ReadOnlyConsentView(
+      {required this.elderId,
+      required this.elderName,
+      required this.familyUserId});
 
   final String elderId;
   final String elderName;
@@ -63,12 +75,15 @@ class _ReadOnlyConsentView extends ConsumerWidget {
     return FutureBuilder<List<ConsentGrant>>(
       future: repo.fetchGrants(elderId: elderId, familyUserId: familyUserId),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
         final gate = ConsentGate(snapshot.data!);
         return ListView(
           padding: const EdgeInsets.all(SetuSpacing.lg),
           children: [
-            Text('Only $elderName can change this', style: Theme.of(context).textTheme.bodyMedium),
+            Text('Only $elderName can change this',
+                style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: SetuSpacing.md),
             for (final category in ConsentCategory.values)
               CheckboxListTile(
@@ -93,13 +108,16 @@ class _FamilyMemberConsentEditor extends ConsumerWidget {
     final familyLinksAsync = ref.watch(_familyLinksProvider(elderId));
     return familyLinksAsync.when(
       data: (links) {
-        if (links.isEmpty) return const Center(child: Text('No linked family members yet.'));
+        if (links.isEmpty) {
+          return const Center(child: Text('No linked family members yet.'));
+        }
         return ListView.builder(
           padding: const EdgeInsets.all(SetuSpacing.lg),
           itemCount: links.length,
           itemBuilder: (context, index) {
             final familyUserId = links[index]['family_user_id'] as String;
-            return _FamilyMemberConsentCard(elderId: elderId, familyUserId: familyUserId);
+            return _FamilyMemberConsentCard(
+                elderId: elderId, familyUserId: familyUserId);
           },
         );
       },
@@ -110,24 +128,29 @@ class _FamilyMemberConsentEditor extends ConsumerWidget {
 }
 
 class _FamilyMemberConsentCard extends ConsumerStatefulWidget {
-  const _FamilyMemberConsentCard({required this.elderId, required this.familyUserId});
+  const _FamilyMemberConsentCard(
+      {required this.elderId, required this.familyUserId});
 
   final String elderId;
   final String familyUserId;
 
   @override
-  ConsumerState<_FamilyMemberConsentCard> createState() => _FamilyMemberConsentCardState();
+  ConsumerState<_FamilyMemberConsentCard> createState() =>
+      _FamilyMemberConsentCardState();
 }
 
-class _FamilyMemberConsentCardState extends ConsumerState<_FamilyMemberConsentCard> {
+class _FamilyMemberConsentCardState
+    extends ConsumerState<_FamilyMemberConsentCard> {
   late Future<List<ConsentGrant>> _grantsFuture;
 
-  ConsentRepository get _repo => ConsentRepository(ref.read(supabaseClientProvider));
+  ConsentRepository get _repo =>
+      ConsentRepository(ref.read(supabaseClientProvider));
 
   @override
   void initState() {
     super.initState();
-    _grantsFuture = _repo.fetchGrants(elderId: widget.elderId, familyUserId: widget.familyUserId);
+    _grantsFuture = _repo.fetchGrants(
+        elderId: widget.elderId, familyUserId: widget.familyUserId);
   }
 
   Future<void> _toggle(ConsentCategory category, bool value) async {
@@ -138,7 +161,8 @@ class _FamilyMemberConsentCardState extends ConsumerState<_FamilyMemberConsentCa
       granted: value,
     );
     setState(() {
-      _grantsFuture = _repo.fetchGrants(elderId: widget.elderId, familyUserId: widget.familyUserId);
+      _grantsFuture = _repo.fetchGrants(
+          elderId: widget.elderId, familyUserId: widget.familyUserId);
     });
   }
 
@@ -149,7 +173,12 @@ class _FamilyMemberConsentCardState extends ConsumerState<_FamilyMemberConsentCa
       child: FutureBuilder<List<ConsentGrant>>(
         future: _grantsFuture,
         builder: (context, snapshot) {
-          if (!snapshot.hasData) return const Padding(padding: EdgeInsets.all(SetuSpacing.md), child: LinearProgressIndicator());
+          if (!snapshot.hasData) {
+            return const Padding(
+              padding: EdgeInsets.all(SetuSpacing.md),
+              child: LinearProgressIndicator(),
+            );
+          }
           final gate = ConsentGate(snapshot.data!);
           return Column(
             children: [

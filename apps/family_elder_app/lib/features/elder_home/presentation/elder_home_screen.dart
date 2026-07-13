@@ -19,15 +19,18 @@ class ElderHomeScreen extends ConsumerWidget {
     return elderProfiles.when(
       data: (elders) {
         if (elders.isEmpty) {
-          return const Center(child: Text('No elder profile found for this account.'));
+          return const Center(
+              child: Text('No elder profile found for this account.'));
         }
-        final elder = elders.first; // an elder-mode login always maps to exactly one profile
+        final elder = elders
+            .first; // an elder-mode login always maps to exactly one profile
         return Padding(
           padding: const EdgeInsets.all(SetuSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Hello, ${elder.displayName}', style: textTheme.headlineMedium),
+              Text('Hello, ${elder.displayName}',
+                  style: textTheme.headlineMedium),
               const SizedBox(height: SetuSpacing.xl),
               _BigActionButton(
                 icon: Icons.sos_rounded,
@@ -75,13 +78,14 @@ class _BigActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: color.withOpacity(0.12),
+      color: color.withValues(alpha: 0.12),
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: SetuSpacing.xl, horizontal: SetuSpacing.lg),
+          padding: const EdgeInsets.symmetric(
+              vertical: SetuSpacing.xl, horizontal: SetuSpacing.lg),
           child: Row(
             children: [
               Icon(icon, size: 40, color: color),
@@ -89,7 +93,10 @@ class _BigActionButton extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 22),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontSize: 22),
                 ),
               ),
             ],

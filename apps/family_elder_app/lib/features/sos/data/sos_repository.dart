@@ -17,7 +17,12 @@ class SosRepository {
   }) async {
     final response = await _client.functions.invoke(
       'sos-trigger',
-      body: {'elder_id': elderId, 'lat': lat, 'lng': lng, 'ack_108_shown': ack108Shown},
+      body: {
+        'elder_id': elderId,
+        'lat': lat,
+        'lng': lng,
+        'ack_108_shown': ack108Shown
+      },
     );
     if (response.status != 201) {
       throw StateError('SOS trigger failed: ${response.data}');

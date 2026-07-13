@@ -44,7 +44,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _error = null;
     });
     try {
-      await _repo.verifyOtp(phone: _phoneController.text.trim(), token: _codeController.text.trim());
+      await _repo.verifyOtp(
+          phone: _phoneController.text.trim(),
+          token: _codeController.text.trim());
       final hasProfile = await _repo.hasProfile();
       if (hasProfile) {
         if (mounted) context.go('/home');
@@ -83,10 +85,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Setu', style: Theme.of(context).textTheme.headlineLarge),
+                  Text('Setu',
+                      style: Theme.of(context).textTheme.headlineLarge),
                   const SizedBox(height: 24),
                   if (_error != null) ...[
-                    Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                    Text(_error!,
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.error)),
                     const SizedBox(height: 12),
                   ],
                   ..._buildStepFields(),
@@ -106,10 +111,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           TextField(
             controller: _phoneController,
             keyboardType: TextInputType.phone,
-            decoration: const InputDecoration(labelText: 'Phone number', hintText: '+91XXXXXXXXXX'),
+            decoration: const InputDecoration(
+                labelText: 'Phone number', hintText: '+91XXXXXXXXXX'),
           ),
           const SizedBox(height: 16),
-          FilledButton(onPressed: _busy ? null : _sendCode, child: const Text('Send code')),
+          FilledButton(
+              onPressed: _busy ? null : _sendCode,
+              child: const Text('Send code')),
         ];
       case _LoginStep.enterCode:
         return [
@@ -121,13 +129,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             decoration: const InputDecoration(labelText: 'Code'),
           ),
           const SizedBox(height: 16),
-          FilledButton(onPressed: _busy ? null : _verifyCode, child: const Text('Verify code')),
+          FilledButton(
+              onPressed: _busy ? null : _verifyCode,
+              child: const Text('Verify code')),
         ];
       case _LoginStep.chooseRole:
         return [
           const Text('Who is signing in?'),
           const SizedBox(height: 16),
-          FilledButton(onPressed: _busy ? null : () => _chooseRole('elder'), child: const Text("I'm the senior citizen")),
+          FilledButton(
+              onPressed: _busy ? null : () => _chooseRole('elder'),
+              child: const Text("I'm the senior citizen")),
           const SizedBox(height: 8),
           OutlinedButton(
             onPressed: _busy ? null : () => _chooseRole('family_member'),

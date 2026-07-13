@@ -2,9 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:setu_core/setu_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-final supabaseClientProvider = Provider<SupabaseClient>((ref) => SetuSupabaseClient.instance);
+final supabaseClientProvider =
+    Provider<SupabaseClient>((ref) => SetuSupabaseClient.instance);
 
-final authStateProvider = StreamProvider<AuthState>((ref) => SetuSupabaseClient.onAuthStateChange);
+final authStateProvider =
+    StreamProvider<AuthState>((ref) => SetuSupabaseClient.onAuthStateChange);
 
 /// This caregiver's own row, if their onboarding/verification (PRD Part 1
 /// §04 — BGV, police verification, and for clinical roles the council
@@ -17,7 +19,11 @@ final myCaregiverProvider = FutureProvider<Caregiver?>((ref) async {
   final client = ref.watch(supabaseClientProvider);
   final user = client.auth.currentUser;
   if (user == null) return null;
-  final row = await client.from('caregivers').select().eq('user_id', user.id).maybeSingle();
+  final row = await client
+      .from('caregivers')
+      .select()
+      .eq('user_id', user.id)
+      .maybeSingle();
   if (row == null) return null;
   return Caregiver.fromJson(row);
 });
@@ -30,7 +36,7 @@ final myBookingsProvider = FutureProvider<List<Booking>>((ref) async {
       .from('bookings')
       .select()
       .eq('caregiver_id', caregiver.id)
-      .inFilter('status', ['matched', 'confirmed', 'in_progress'])
-      .order('scheduled_at');
+      .inFilter('status', ['matched', 'confirmed', 'in_progress']).order(
+          'scheduled_at');
   return rows.map((row) => Booking.fromJson(row)).toList();
 });

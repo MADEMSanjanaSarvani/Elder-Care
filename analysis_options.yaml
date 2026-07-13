@@ -5,7 +5,9 @@ linter:
     prefer_single_quotes: true
     always_declare_return_types: true
     avoid_print: true
-    require_trailing_commas: true
+    # require_trailing_commas deliberately omitted: it fights `dart format`,
+    # which doesn't add trailing commas on its own — enabling it just means
+    # every `dart format` pass immediately reintroduces lint warnings.
 
 analyzer:
   exclude:

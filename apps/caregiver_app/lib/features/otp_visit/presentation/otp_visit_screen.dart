@@ -25,7 +25,8 @@ class _OtpVisitScreenState extends ConsumerState<OtpVisitScreen> {
   String? _error;
   String? _message;
 
-  OtpVisitRepository get _repo => OtpVisitRepository(ref.read(supabaseClientProvider));
+  OtpVisitRepository get _repo =>
+      OtpVisitRepository(ref.read(supabaseClientProvider));
 
   Future<void> _start() async {
     setState(() {
@@ -33,7 +34,8 @@ class _OtpVisitScreenState extends ConsumerState<OtpVisitScreen> {
       _error = null;
     });
     try {
-      await _repo.startVisit(bookingId: widget.bookingId, otp: _otpController.text.trim());
+      await _repo.startVisit(
+          bookingId: widget.bookingId, otp: _otpController.text.trim());
       setState(() => _message = 'Visit started.');
       ref.invalidate(myBookingsProvider);
     } catch (err) {
@@ -49,7 +51,8 @@ class _OtpVisitScreenState extends ConsumerState<OtpVisitScreen> {
       _error = null;
     });
     try {
-      await _repo.endVisit(bookingId: widget.bookingId, otp: _otpController.text.trim());
+      await _repo.endVisit(
+          bookingId: widget.bookingId, otp: _otpController.text.trim());
       setState(() {
         _message = 'Visit completed. Payout has been scheduled.';
         _visitEnded = true;
@@ -103,27 +106,35 @@ class _OtpVisitScreenState extends ConsumerState<OtpVisitScreen> {
             ),
             const SizedBox(height: SetuSpacing.md),
             if (_error != null) ...[
-              Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              Text(_error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
               const SizedBox(height: SetuSpacing.sm),
             ],
             if (_message != null) ...[
-              Text(_message!, style: TextStyle(color: Theme.of(context).colorScheme.secondary)),
+              Text(_message!,
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.secondary)),
               const SizedBox(height: SetuSpacing.sm),
             ],
-            FilledButton(onPressed: _busy ? null : _start, child: const Text('Start visit')),
+            FilledButton(
+                onPressed: _busy ? null : _start,
+                child: const Text('Start visit')),
             const SizedBox(height: SetuSpacing.sm),
-            OutlinedButton(onPressed: _busy ? null : _end, child: const Text('End visit')),
+            OutlinedButton(
+                onPressed: _busy ? null : _end, child: const Text('End visit')),
             if (_visitEnded && !_summarySubmitted) ...[
               const SizedBox(height: SetuSpacing.lg),
               const Divider(),
               const SizedBox(height: SetuSpacing.md),
-              const Text('What happened during the visit? (a few lines is enough)'),
+              const Text(
+                  'What happened during the visit? (a few lines is enough)'),
               const SizedBox(height: SetuSpacing.sm),
               TextField(
                 controller: _notesController,
                 maxLines: 4,
                 decoration: const InputDecoration(
-                  hintText: 'e.g. Helped with breakfast, went for a short walk, blood pressure checked...',
+                  hintText:
+                      'e.g. Helped with breakfast, went for a short walk, blood pressure checked...',
                   border: OutlineInputBorder(),
                 ),
               ),

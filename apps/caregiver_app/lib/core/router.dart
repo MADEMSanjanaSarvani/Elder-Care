@@ -23,11 +23,15 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-      GoRoute(path: '/home', builder: (context, state) => const JobQueueScreen()),
-      GoRoute(path: '/earnings', builder: (context, state) => const EarningsScreen()),
+      GoRoute(
+          path: '/home', builder: (context, state) => const JobQueueScreen()),
+      GoRoute(
+          path: '/earnings',
+          builder: (context, state) => const EarningsScreen()),
       GoRoute(
         path: '/booking/:bookingId',
-        builder: (context, state) => OtpVisitScreen(bookingId: state.pathParameters['bookingId']!),
+        builder: (context, state) =>
+            OtpVisitScreen(bookingId: state.pathParameters['bookingId']!),
       ),
     ],
   );

@@ -57,7 +57,8 @@ class SetuTheme {
     final bool isDark = brightness == Brightness.dark;
     final Color paper = isDark ? SetuColors.paperDark : SetuColors.paperLight;
     final Color ink = isDark ? SetuColors.inkDark : SetuColors.inkLight;
-    final Color accent = isDark ? SetuColors.accentDark : SetuColors.accentLight;
+    final Color accent =
+        isDark ? SetuColors.accentDark : SetuColors.accentLight;
 
     final ColorScheme colorScheme = ColorScheme(
       brightness: brightness,
@@ -67,7 +68,8 @@ class SetuTheme {
       onSecondary: Colors.white,
       error: isDark ? SetuColors.sosDark : SetuColors.sosLight,
       onError: Colors.white,
-      surface: isDark ? SetuColors.paperRaisedDark : SetuColors.paperRaisedLight,
+      surface:
+          isDark ? SetuColors.paperRaisedDark : SetuColors.paperRaisedLight,
       onSurface: ink,
     );
 
@@ -77,16 +79,21 @@ class SetuTheme {
       colorScheme: colorScheme,
       useMaterial3: true,
       textTheme: _textTheme(ink),
-      appBarTheme: AppBarTheme(backgroundColor: paper, foregroundColor: ink, elevation: 0),
+      appBarTheme: AppBarTheme(
+          backgroundColor: paper, foregroundColor: ink, elevation: 0),
     );
   }
 
   static TextTheme _textTheme(Color ink) {
     return TextTheme(
-      headlineLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.w700, color: ink),
-      headlineMedium: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: ink),
-      titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: ink),
-      bodyLarge: TextStyle(fontSize: 18, color: ink), // elder-mode default per Section 17
+      headlineLarge:
+          TextStyle(fontSize: 32, fontWeight: FontWeight.w700, color: ink),
+      headlineMedium:
+          TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: ink),
+      titleLarge:
+          TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: ink),
+      bodyLarge: TextStyle(
+          fontSize: 18, color: ink), // elder-mode default per Section 17
       bodyMedium: TextStyle(fontSize: 15, color: ink),
       labelSmall: TextStyle(fontSize: 11, letterSpacing: 0.4, color: ink),
     );

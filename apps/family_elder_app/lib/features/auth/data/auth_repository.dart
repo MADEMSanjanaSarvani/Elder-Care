@@ -9,13 +9,17 @@ class AuthRepository {
 
   final SupabaseClient _client;
 
-  Future<void> sendOtp(String phone) => _client.auth.signInWithOtp(phone: phone);
+  Future<void> sendOtp(String phone) =>
+      _client.auth.signInWithOtp(phone: phone);
 
-  Future<AuthResponse> verifyOtp({required String phone, required String token}) {
-    return _client.auth.verifyOTP(phone: phone, token: token, type: OtpType.sms);
+  Future<AuthResponse> verifyOtp(
+      {required String phone, required String token}) {
+    return _client.auth
+        .verifyOTP(phone: phone, token: token, type: OtpType.sms);
   }
 
-  Future<void> ensureProfile({required String role, required String preferredLanguage}) async {
+  Future<void> ensureProfile(
+      {required String role, required String preferredLanguage}) async {
     final user = _client.auth.currentUser;
     if (user == null) throw StateError('Not signed in');
     await _client.from('profiles').upsert({
@@ -29,7 +33,11 @@ class AuthRepository {
   Future<bool> hasProfile() async {
     final user = _client.auth.currentUser;
     if (user == null) return false;
-    final row = await _client.from('profiles').select('id').eq('id', user.id).maybeSingle();
+    final row = await _client
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
     return row != null;
   }
 }

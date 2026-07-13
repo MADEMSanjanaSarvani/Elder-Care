@@ -23,7 +23,8 @@ class FamilyHomeScreen extends ConsumerWidget {
         return ListView.separated(
           padding: const EdgeInsets.all(SetuSpacing.lg),
           itemCount: elders.length,
-          separatorBuilder: (context, index) => const SizedBox(height: SetuSpacing.md),
+          separatorBuilder: (context, index) =>
+              const SizedBox(height: SetuSpacing.md),
           itemBuilder: (context, index) {
             final elder = elders[index];
             return Card(
@@ -32,17 +33,20 @@ class FamilyHomeScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(elder.displayName, style: Theme.of(context).textTheme.titleLarge),
+                    Text(elder.displayName,
+                        style: Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height: SetuSpacing.sm),
                     Row(
                       children: [
                         TextButton.icon(
-                          onPressed: () => context.push('/elder/${elder.id}/booking'),
+                          onPressed: () =>
+                              context.push('/elder/${elder.id}/booking'),
                           icon: const Icon(Icons.add_circle_outline),
                           label: const Text('Book help'),
                         ),
                         TextButton.icon(
-                          onPressed: () => context.push('/elder/${elder.id}/consent'),
+                          onPressed: () =>
+                              context.push('/elder/${elder.id}/consent'),
                           icon: const Icon(Icons.privacy_tip_outlined),
                           label: const Text('What you can see'),
                         ),

@@ -4,13 +4,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'env.dart';
 
-final supabaseClientProvider = Provider<SupabaseClient>((ref) => SetuSupabaseClient.instance);
+final supabaseClientProvider =
+    Provider<SupabaseClient>((ref) => SetuSupabaseClient.instance);
 
-final authStateProvider = StreamProvider<AuthState>((ref) => SetuSupabaseClient.onAuthStateChange);
+final authStateProvider =
+    StreamProvider<AuthState>((ref) => SetuSupabaseClient.onAuthStateChange);
 
 /// The signed-in user's `profiles` row — null while signed out or before
 /// the row has been created (see `AuthRepository.completeSignIn`).
-final currentProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
+final currentProfileProvider =
+    FutureProvider<Map<String, dynamic>?>((ref) async {
   ref.watch(authStateProvider); // re-fetch on sign-in/sign-out
   final client = ref.watch(supabaseClientProvider);
   final user = client.auth.currentUser;
@@ -18,7 +21,8 @@ final currentProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async
   return client.from('profiles').select().eq('id', user.id).maybeSingle();
 });
 
-final elderProfileByIdProvider = FutureProvider.family<Map<String, dynamic>?, String>((ref, elderId) async {
+final elderProfileByIdProvider =
+    FutureProvider.family<Map<String, dynamic>?, String>((ref, elderId) async {
   final client = ref.watch(supabaseClientProvider);
   return client.from('elder_profiles').select().eq('id', elderId).maybeSingle();
 });
@@ -35,7 +39,8 @@ final myElderProfilesProvider = FutureProvider<List<ElderProfile>>((ref) async {
   final user = client.auth.currentUser;
   if (user == null) return [];
 
-  final selfRows = await client.from('elder_profiles').select().eq('auth_user_id', user.id);
+  final selfRows =
+      await client.from('elder_profiles').select().eq('auth_user_id', user.id);
   final linkedRows = await client
       .from('elder_profiles')
       .select('*, family_links!inner(family_user_id, status)')
