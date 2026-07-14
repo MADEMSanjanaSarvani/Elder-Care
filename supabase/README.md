@@ -21,26 +21,46 @@ supabase functions serve
 
 ## Status
 
-**Database + RLS**: applied to a real local Postgres 16 + PostGIS instance
-and functionally tested — see `tests/README.md`. This is the strongest
-verification anything in this repo has, short of a live Supabase project.
+**A real Supabase project now exists and is live** — project ref
+`veumfexjpxqhxemjaaor`, region ap-southeast-1 (Singapore). All three
+migrations, the seed data, and all 11 Edge Functions have been applied /
+deployed against it for real (not a local approximation), from a
+Windows machine outside this sandboxed environment (whose network policy
+blocks `supabase.co` entirely — see the git log around this point for
+that whole saga). Confirmed end-to-end with a real authenticated request:
 
-**Edge Functions**: all 11 functions plus `_shared/` type-check clean
-(`deno check`) and lint clean (`deno lint`) under Deno 2.9. The two pure-logic
-shared modules have real unit tests (`_shared/trustTier.test.ts`,
-`_shared/aiGuardrail.test.ts` — 15 passing, the guardrail's model-classifier
-branch tested by stubbing `fetch` since there's no live OpenAI key
-available here):
+```
+GET https://veumfexjpxqhxemjaaor.supabase.co/functions/v1/regions-config?code=vizag-ap-in
+Authorization: Bearer <a real user's access token, obtained via /auth/v1/token>
+
+200 OK
+{"code":"vizag-ap-in","display_name":"Visakhapatnam, Andhra Pradesh", ...}
+```
+
+That single request proves four things work together for real: the
+database (with RLS actually enforcing it, not bypassed), a deployed Edge
+Function, real Supabase Auth issuing and validating a session, and the
+seed data being correctly queried. It also confirmed the auth boundary
+itself is working as designed — the same request with only the
+publishable key (not a real user session) correctly gets `401 Invalid or
+expired session`, since `requireUser()` demands an actual signed-in user,
+not just an API key.
+
+**What this does *not* yet prove**: only `regions-config` has been
+exercised this way. The other 10 functions deployed successfully (no
+build/upload errors) but haven't each been individually invoked and
+verified — `bookings-create`, `sos-trigger`, and the payments functions
+in particular are worth testing next given what's riding on them.
+
+Database + RLS were also validated locally beforehand (`tests/README.md`)
+against a real Postgres 16 + PostGIS instance before ever touching the
+live project. All 11 Edge Functions plus `_shared/` still type-check
+clean (`deno check`) and lint clean (`deno lint`) under Deno 2.9, and the
+two pure-logic shared modules have real passing unit tests:
 
 ```bash
 deno test --allow-net=api.openai.com functions/_shared/
 ```
-
-None of the 11 functions have been *invoked* — that needs either a real
-Supabase project (`supabase functions serve` / a deployed project) or a
-live third-party API key, neither of which exists in this environment.
-Static/type validation and unit tests are real signal, but they're not
-the same as a confirmed working HTTP call.
 
 Note: `_shared/supabaseAdmin.ts` imports `@supabase/supabase-js` via an
 `npm:` specifier rather than the more commonly-seen `https://esm.sh/...`
