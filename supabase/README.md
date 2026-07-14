@@ -54,12 +54,29 @@ publishable key (not a real user session) correctly gets `401 Invalid or
 expired session`, since `requireUser()` demands an actual signed-in user,
 not just an API key.
 
-**What this does *not* yet prove**: only `regions-config` has been
-exercised this way. The other 12 functions deployed successfully (no
-build/upload errors) but haven't each been individually invoked and
-verified — `bookings-create`, `sos-trigger`, the payments functions, and
-the two new DPDP endpoints in particular are worth testing next given
-what's riding on them.
+**Since then, a second live pass individually exercised the full booking
+lifecycle and SOS**: `bookings-create` → `bookings-match` → `otp-start` →
+`otp-end` → `sos-trigger`, run end-to-end against two real test accounts
+(a smoke-test elder and caregiver, created via the Admin API and seeded
+directly into `profiles`/`elder_profiles`/`caregivers`). Every step
+returned the expected status transition, the resulting `caregiver_payouts`
+row was scheduled correctly (₹399.20, `status: scheduled`), the SOS event
+stored a real PostGIS point and set `family_notified` immediately, and
+all four expected `audit_log` rows for the booking were confirmed present
+with the right `event`/`caregiver_id`/`payout_amount` metadata — proving
+the audit instrumentation added after the fact actually fires in
+production, not just in the local RLS test harness.
+
+That's 6 of 14 functions now individually verified live (`regions-config`
+plus these 5). Still unverified: `bookings-match`'s TODO-flagged
+auth model aside, the 5 functions needing real third-party
+credentials — `payments-create-order`, `payments-webhook`,
+`verification-idfy-webhook`, `ai-visit-summary`, `ai-translate` — none of
+which have Razorpay/IDfy/OpenAI secrets configured on this project yet
+(business items: merchant onboarding, BGV vendor contract, an API key),
+so there's nothing to smoke-test against until those exist. `payouts-run`
+is also unverified — it isn't deployed live yet (see the Caregiver
+payouts section above).
 
 Database + RLS were also validated locally beforehand (`tests/README.md`)
 against a real Postgres 16 + PostGIS instance before ever touching the

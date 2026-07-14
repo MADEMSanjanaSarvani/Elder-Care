@@ -70,10 +70,14 @@ cd apps/caregiver_app && flutter pub get && flutter analyze
 Flutter app has ever actually been opened in a browser/emulator/device by
 a human and pointed at the live project — compiling and type-checking is
 real signal, it isn't the same kind of confidence as watching the thing
-run. On the backend side, only `regions-config` has been individually
-invoked and verified over live HTTP; the other 12 deployed functions have
-deployed cleanly but not each been exercised that way (see
-`supabase/README.md`'s Status section for exactly which).
+run. On the backend side, 6 of 14 functions are now individually invoked
+and verified over live HTTP (`regions-config`, and the full
+`bookings-create` → `bookings-match` → `otp-start` → `otp-end` →
+`sos-trigger` lifecycle, including payout scheduling and audit logging);
+the remaining functions either deployed cleanly but haven't each been
+exercised (`payouts-run` isn't deployed live at all yet), or are blocked
+on third-party credentials nobody has configured yet (Razorpay, IDfy,
+OpenAI) — see `supabase/README.md`'s Status section for exactly which.
 
 ## Deliberately not yet built
 
