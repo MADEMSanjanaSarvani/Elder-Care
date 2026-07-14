@@ -171,6 +171,10 @@ create policy elder_profiles_select on elder_profiles for select to authenticate
     auth_user_id = auth.uid()
     or is_linked_family(id)
     or is_admin()
+    or exists (
+      select 1 from bookings b
+      where b.elder_id = elder_profiles.id and b.caregiver_id = caregiver_id_for(auth.uid())
+    )
   );
 create policy elder_profiles_insert on elder_profiles for insert to authenticated
   with check (created_by = auth.uid());
