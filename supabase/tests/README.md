@@ -47,6 +47,8 @@ a flaky test to rerun.
 
 No PostgREST, GoTrue, or Realtime server — this validates the SQL and the
 RLS logic, not the full request/response path an actual client would go
-through, and it doesn't touch the Edge Functions in `../functions/` at
-all (those need Deno + real or mocked third-party APIs, a different kind
-of test).
+through. It also doesn't touch the Edge Functions in `../functions/` at
+all — those have their own tests now (`../functions/_shared/*.test.ts`,
+run with `deno test`), but even those are unit tests of the pure logic,
+not a real invocation over HTTP against a live Supabase project. Nothing
+in this repo has cleared that last bar yet.

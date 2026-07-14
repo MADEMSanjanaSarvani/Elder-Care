@@ -19,6 +19,37 @@ supabase db reset       # applies migrations + seed.sql to your local db
 supabase functions serve
 ```
 
+## Status
+
+**Database + RLS**: applied to a real local Postgres 16 + PostGIS instance
+and functionally tested — see `tests/README.md`. This is the strongest
+verification anything in this repo has, short of a live Supabase project.
+
+**Edge Functions**: all 11 functions plus `_shared/` type-check clean
+(`deno check`) and lint clean (`deno lint`) under Deno 2.9. The two pure-logic
+shared modules have real unit tests (`_shared/trustTier.test.ts`,
+`_shared/aiGuardrail.test.ts` — 15 passing, the guardrail's model-classifier
+branch tested by stubbing `fetch` since there's no live OpenAI key
+available here):
+
+```bash
+deno test --allow-net=api.openai.com functions/_shared/
+```
+
+None of the 11 functions have been *invoked* — that needs either a real
+Supabase project (`supabase functions serve` / a deployed project) or a
+live third-party API key, neither of which exists in this environment.
+Static/type validation and unit tests are real signal, but they're not
+the same as a confirmed working HTTP call.
+
+Note: `_shared/supabaseAdmin.ts` imports `@supabase/supabase-js` via an
+`npm:` specifier rather than the more commonly-seen `https://esm.sh/...`
+URL — both work in Supabase's Deno-based Edge Runtime, but `npm:` was
+required here because this environment's network policy blocks `esm.sh`
+(and also blocks `jsr.io`, which is why the test files use a 6-line
+local assertion helper instead of `jsr:@std/assert`). Neither substitution
+changes behavior; note them if you're used to seeing the more common imports.
+
 ## Required environment variables (Edge Functions)
 
 | Variable | Used by |

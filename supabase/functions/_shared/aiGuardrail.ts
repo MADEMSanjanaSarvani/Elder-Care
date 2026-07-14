@@ -21,7 +21,10 @@ const DOSAGE_OR_DIAGNOSIS_PATTERNS: RegExp[] = [
   /\b(likely|probably|definitely)\s+(has|have)\s+\b(a|an)\b.*\b(disease|condition|disorder)\b/i,
 ];
 
-function patternMatch(text: string): GuardrailResult {
+// Exported for direct unit testing (aiGuardrail.test.ts) — this is the
+// half of the guardrail that's actually deterministic and testable
+// without a live OpenAI key; modelClassify below isn't.
+export function patternMatch(text: string): GuardrailResult {
   for (const pattern of DOSAGE_OR_DIAGNOSIS_PATTERNS) {
     if (pattern.test(text)) {
       return { flagged: true, reason: `Matched dosage/diagnosis pattern: ${pattern.source}` };
@@ -69,7 +72,7 @@ async function modelClassify(text: string, openaiApiKey: string): Promise<Guardr
 export async function runGuardrail(text: string, openaiApiKey: string): Promise<GuardrailResult> {
   const patternResult = patternMatch(text);
   if (patternResult.flagged) return patternResult;
-  return modelClassify(text, openaiApiKey);
+  return await modelClassify(text, openaiApiKey);
 }
 
 export const MEDICAL_DISCLAIMER =

@@ -1,0 +1,81 @@
+// Unit tests for the deterministic half of the AI guardrail (PRD Part 2
+// §14). patternMatch is pure regex, tested directly with no network
+// calls. runGuardrail's fallback to modelClassify (the OpenAI safety
+// classifier) is tested by stubbing globalThis.fetch — there is no live
+// OpenAI key available to call the real thing here, and a stub is the
+// honest way to test that branch's logic rather than skipping it.
+//
+// Deliberately dependency-free — see testUtil.ts for why.
+import { assertEquals, assertStringIncludes } from "./testUtil.ts";
+import { patternMatch, runGuardrail } from "./aiGuardrail.ts";
+
+Deno.test("patternMatch: flags an explicit dosage-change instruction", () => {
+  const result = patternMatch("You should increase the dose to twice daily.");
+  assertEquals(result.flagged, true);
+});
+
+Deno.test("patternMatch: flags a specific dosage amount", () => {
+  const result = patternMatch("Take 500 mg twice a day.");
+  assertEquals(result.flagged, true);
+});
+
+Deno.test("patternMatch: flags a direct diagnostic assertion", () => {
+  const result = patternMatch("Based on the symptoms, you have diabetes.");
+  assertEquals(result.flagged, true);
+});
+
+Deno.test("patternMatch: does not flag a plain, non-clinical visit summary", () => {
+  const result = patternMatch(
+    "Helped with breakfast, went for a short walk in the garden, and had a friendly chat about her grandchildren.",
+  );
+  assertEquals(result.flagged, false);
+});
+
+Deno.test("patternMatch: does not flag a factual mention of an existing prescription without instructing a change", () => {
+  // Deliberately checks the guardrail isn't so broad it blocks ordinary
+  // caregiving notes just for mentioning that medication exists.
+  const result = patternMatch("Reminded her to take her morning tablet as scheduled by her doctor.");
+  assertEquals(result.flagged, false);
+});
+
+Deno.test("runGuardrail: pattern-flagged text short-circuits before any network call", async () => {
+  let fetchCalled = false;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () => {
+    fetchCalled = true;
+    throw new Error("fetch should not have been called");
+  };
+  try {
+    const result = await runGuardrail("You should double the dose immediately.", "fake-key");
+    assertEquals(result.flagged, true);
+    assertEquals(fetchCalled, false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+Deno.test("runGuardrail: falls back to the model classifier for text the regex layer misses", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () =>
+    Promise.resolve(
+      new Response(JSON.stringify({ choices: [{ message: { content: "SAFE" } }] }), { status: 200 }),
+    );
+  try {
+    const result = await runGuardrail("Had a lovely afternoon walk.", "fake-key");
+    assertEquals(result.flagged, false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+Deno.test("runGuardrail: fails closed if the classifier call itself errors", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () => Promise.resolve(new Response("service unavailable", { status: 500 }));
+  try {
+    const result = await runGuardrail("Some ambiguous text the regex layer didn't catch.", "fake-key");
+    assertEquals(result.flagged, true);
+    assertStringIncludes(result.reason ?? "", "failing closed");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
