@@ -1,0 +1,548 @@
+<title>Project Setu — Elder Care Platform PRD (Part 5)</title>
+<style>
+  :root{
+    --paper:#F2F4F0; --paper-raised:#FFFFFF; --ink:#15181A; --muted:#57625C; --border:#DADFD8;
+    --accent:#B8691A; --accent-ink:#5A3610; --accent-2:#1D6C5F; --danger:#A83F2A; --danger-bg:#F7EAE4;
+    --decision-bg:#EFEAF6; --decision-ink:#4B3B78; --decision-border:#D6CCEA;
+    --get-bg:#E6EFEA; --get-ink:#1D6C5F; --post-bg:#F3EBE0; --post-ink:#8A5A1C;
+    --radius:3px;
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+  }
+  :root[data-theme="dark"]{
+    --paper:#14181A; --paper-raised:#1B211F; --ink:#E9EDE9; --muted:#9AA69E; --border:#2A312C;
+    --accent:#E0A559; --accent-ink:#F4DEB8; --accent-2:#4BB6A3; --danger:#E2705C; --danger-bg:#3A2620;
+    --decision-bg:#2A2740; --decision-ink:#D9CFEF; --decision-border:#453D66;
+    --get-bg:#1C2E27; --get-ink:#5FCBB4; --post-bg:#332A1A; --post-ink:#E0A559;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#14181A; --paper-raised:#1B211F; --ink:#E9EDE9; --muted:#9AA69E; --border:#2A312C;
+      --accent:#E0A559; --accent-ink:#F4DEB8; --accent-2:#4BB6A3; --danger:#E2705C; --danger-bg:#3A2620;
+      --decision-bg:#2A2740; --decision-ink:#D9CFEF; --decision-border:#453D66;
+      --get-bg:#1C2E27; --get-ink:#5FCBB4; --post-bg:#332A1A; --post-ink:#E0A559;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--font-body); line-height:1.6; -webkit-font-smoothing:antialiased;}
+  a{color:var(--accent-2);}
+  a:focus-visible, button:focus-visible, .tocLink:focus-visible{outline:2px solid var(--accent-2); outline-offset:2px;}
+  .shell{display:grid; grid-template-columns:260px minmax(0,1fr); max-width:1200px; margin:0 auto;}
+  @media (max-width:880px){.shell{grid-template-columns:1fr;} .toc{position:static !important; height:auto !important; border-right:none !important; border-bottom:1px solid var(--border);}}
+  .toc{position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto; padding:32px 20px 32px 28px; border-right:1px solid var(--border);}
+  .toc-kicker{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:6px;}
+  .toc-title{font-family:var(--font-display); font-size:19px; margin:0 0 2px;}
+  .toc-sub{font-size:12px; color:var(--muted); margin-bottom:18px;}
+  .toc-group{font-family:var(--font-mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:16px 0 4px;}
+  .toc nav{display:flex; flex-direction:column; gap:1px;}
+  .tocLink{font-size:12.5px; color:var(--muted); text-decoration:none; padding:5px 8px; border-radius:var(--radius); display:flex; gap:8px;}
+  .tocLink:hover{background:var(--paper-raised); color:var(--ink);}
+  .tocLink .n{font-family:var(--font-mono); color:var(--accent); font-size:10.5px; padding-top:1px;}
+  .content{padding:48px 56px 96px; min-width:0;}
+  @media (max-width:880px){.content{padding:32px 24px 72px;}}
+  .doc-header{margin-bottom:40px; border-bottom:1px solid var(--border); padding-bottom:32px;}
+  .doc-kicker{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:14px;}
+  h1.doc-title{font-family:var(--font-display); font-size:clamp(28px,4vw,40px); line-height:1.12; margin:0 0 10px; text-wrap:balance;}
+  .doc-dek{font-size:16px; color:var(--muted); max-width:70ch; margin:0 0 20px;}
+  .meta-row{display:flex; flex-wrap:wrap; gap:20px; font-size:12px; font-family:var(--font-mono); color:var(--muted);}
+  .meta-row b{color:var(--ink); font-weight:600;}
+  .progress-strip{display:flex; flex-wrap:wrap; gap:8px; margin-top:18px;}
+  .prog-chip{font-family:var(--font-mono); font-size:11px; padding:5px 10px; border-radius:2px; border:1px solid var(--border);}
+  .prog-chip.done{background:var(--get-bg); color:var(--get-ink); border-color:var(--get-ink);}
+  .prog-chip.next{background:var(--post-bg); color:var(--post-ink); border-color:var(--post-ink);}
+  section.module{margin-bottom:96px; padding-bottom:8px; max-width:78ch;}
+  section.module.wide{max-width:none;}
+  .module-eyebrow{font-family:var(--font-mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;}
+  h2.module-title{font-family:var(--font-display); font-size:28px; margin:0 0 6px; padding-top:8px; text-wrap:balance;}
+  .module-dek{font-size:15px; color:var(--muted); margin:0 0 28px;}
+  h3{font-family:var(--font-display); font-size:18px; margin:30px 0 10px; border-top:1px solid var(--border); padding-top:22px;}
+  h3:first-of-type{border-top:none; padding-top:0;}
+  h3 .sec-n{font-family:var(--font-mono); font-size:11px; color:var(--accent); margin-right:8px; font-weight:400;}
+  p{margin:0 0 14px;}
+  ul,ol{margin:0 0 14px; padding-left:20px;}
+  li{margin-bottom:5px;}
+  strong{font-weight:600;}
+  table{width:100%; border-collapse:collapse; font-size:13px; margin:6px 0 14px;}
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:14px;}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
+  th{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); background:var(--paper-raised); white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  td.muted{color:var(--muted);}
+  code{font-family:var(--font-mono); font-size:0.87em; background:var(--paper-raised); padding:1px 5px; border-radius:2px; border:1px solid var(--border);}
+  .schema-card{border:1px solid var(--border); border-radius:var(--radius); background:var(--paper-raised); margin-bottom:14px; overflow:hidden;}
+  .schema-head{padding:11px 15px; border-bottom:1px solid var(--border); display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
+  .schema-head .tbl-name{font-family:var(--font-mono); font-weight:700; font-size:13.5px;}
+  .schema-head .tbl-note{font-size:12px; color:var(--muted);}
+  .schema-head .tag{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; padding:2px 7px; border-radius:2px; background:var(--decision-bg); color:var(--decision-ink);}
+  .schema-cols{padding:9px 15px 12px;}
+  .col-row{display:grid; grid-template-columns:150px 130px 1fr; gap:10px; font-size:12px; padding:4px 0; border-bottom:1px dotted var(--border);}
+  .col-row:last-child{border-bottom:none;}
+  .col-name{font-family:var(--font-mono); color:var(--accent-ink);}
+  .col-type{font-family:var(--font-mono); color:var(--accent-2);}
+  .col-desc{color:var(--muted);}
+  .endpoint{display:flex; gap:12px; align-items:baseline; padding:8px 0; border-bottom:1px dotted var(--border); font-size:13px;}
+  .endpoint:last-child{border-bottom:none;}
+  .method{font-family:var(--font-mono); font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:2px; white-space:nowrap;}
+  .method.get{background:var(--get-bg); color:var(--get-ink);}
+  .method.post{background:var(--post-bg); color:var(--post-ink);}
+  .method.none{background:var(--paper); color:var(--muted); border:1px dashed var(--border);}
+  .path{font-family:var(--font-mono); font-size:12.5px;}
+  .callout{border-left:3px solid var(--accent-2); background:var(--paper-raised); border-radius:0 var(--radius) var(--radius) 0; padding:14px 18px; margin:0 0 14px;}
+  .callout h4{margin:0 0 5px; font-size:13.5px;}
+  .callout p{margin:0; font-size:13.5px;}
+  .risk{border-left:3px solid var(--danger); background:var(--danger-bg); border-radius:0 var(--radius) var(--radius) 0; padding:14px 18px; margin:0 0 14px;}
+  .risk h4{margin:0 0 5px; font-size:13.5px;}
+  .risk p{margin:0; font-size:13.5px;}
+  .decision{border-left:3px solid var(--decision-ink); background:var(--decision-bg); border-radius:0 var(--radius) var(--radius) 0; padding:14px 18px; margin:0 0 14px;}
+  .decision h4{margin:0 0 5px; font-size:13.5px; color:var(--decision-ink);}
+  .decision p{margin:0; font-size:13.5px; color:var(--decision-ink);}
+  .flow-step{display:flex; gap:14px; padding:9px 0; border-bottom:1px dotted var(--border);}
+  .flow-step:last-child{border-bottom:none;}
+  .flow-step .idx{font-family:var(--font-mono); color:var(--accent); font-size:11px; min-width:18px;}
+  .flow-step .body{font-size:13.5px;}
+  .flow-step .body b{display:block; margin-bottom:2px;}
+  .persona-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:0 0 16px;}
+  .persona{border:1px solid var(--border); border-radius:var(--radius); padding:10px 12px; font-size:12.5px;}
+  .persona .role{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; color:var(--accent);}
+  .persona .access{color:var(--muted); font-size:11.5px; margin-top:3px;}
+  footer.doc-footer{margin-top:80px; padding-top:20px; border-top:1px solid var(--border); font-size:12px; color:var(--muted); font-family:var(--font-mono);}
+</style>
+
+<div class="shell">
+  <aside class="toc">
+    <div class="toc-kicker">Project Setu</div>
+    <div class="toc-title">PRD — Part 5</div>
+    <div class="toc-sub">Missing Modules — Batch 2: Care Logistics</div>
+    <nav>
+      <a class="tocLink" href="#overview"><span class="n">·</span>Batch overview</a>
+      <div class="toc-group">Module 5</div>
+      <a class="tocLink" href="#m5"><span class="n">17</span>Medicine Management</a>
+      <div class="toc-group">Module 6</div>
+      <a class="tocLink" href="#m6"><span class="n">17</span>Medicine Refill Management</a>
+      <div class="toc-group">Module 7</div>
+      <a class="tocLink" href="#m7"><span class="n">17</span>Appointment Management</a>
+      <div class="toc-group">Module 8</div>
+      <a class="tocLink" href="#m8"><span class="n">17</span>Smart Reminder System</a>
+      <a class="tocLink" href="#cross"><span class="n">·</span>Touches to existing modules</a>
+      <a class="tocLink" href="#next"><span class="n">→</span>Batch 3 preview</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="doc-header">
+      <div class="doc-kicker">Product Requirements Document · Architecture &amp; requirements only, no implementation code</div>
+      <h1 class="doc-title">Missing Modules, Batch 2: Care Logistics</h1>
+      <p class="doc-dek">Part 5 of the Project Setu PRD, second of seven batches across 25 modules. This batch covers the recurring, day-to-day logistics of managing an elder's care: what medications they're on and whether doses are being taken, when supply is running low, what external appointments are coming up, and — the one genuine architectural finding of this batch — a single shared reminder engine instead of three separate ones. Existing implemented modules (booking, OTP, caregiver verification, SOS, payments, DPDP) remain untouched except where flagged in <a href="#cross">§ Touches to existing modules</a>.</p>
+      <div class="meta-row">
+        <span><b>Batch:</b> 2 of 7</span>
+        <span><b>Modules:</b> Medicine Management · Medicine Refill Management · Appointment Management · Smart Reminder System</span>
+        <span><b>Builds on:</b> Parts 1–4, the live schema, and <code>elder_timeline_events</code> from Batch 1</span>
+      </div>
+      <div class="progress-strip">
+        <span class="prog-chip done">Batch 1 — Family Experience (done)</span>
+        <span class="prog-chip done">Batch 2 — this document</span>
+        <span class="prog-chip next">Batch 3 next — Notifications, Visits, Health Records</span>
+      </div>
+    </div>
+
+    <section class="module wide" id="overview">
+      <div class="module-eyebrow">Batch overview</div>
+      <h2 class="module-title">One finding worth stating up front</h2>
+      <p>Medicine Management, Medicine Refill Management, and Appointment Management each independently need to remind someone about something at a scheduled time. Designing them one at a time would produce three near-identical scheduled sweep jobs, three notification-delivery code paths, and three slightly different ideas of what a "reminder" is. Designing them together surfaced that duplication early — so Smart Reminder System exists as the fourth module in this batch specifically to be the single shared engine the other three plug into, rather than a fourth independent feature competing for the same job. Each of the first three modules' API Design sections below states plainly which parts of the "remind someone" problem they still own directly (domain-specific generation) and which parts they hand off to Smart Reminder System (generic delivery).</p>
+      <div class="decision">
+        <h4>Medicine Pickup already exists as a bookable service</h4>
+        <p><code>service_catalog</code> already has a <code>medicine_pickup</code> entry (non-clinical, ₹149, probationary trust tier — see <code>supabase/seed.sql</code>). Medicine Refill Management's job is connecting "you're running low" to booking that existing service, not building pharmacy logistics from scratch.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 5 — MEDICINE MANAGEMENT -->
+    <!-- ============================================================ -->
+    <section class="module wide" id="m5">
+      <div class="module-eyebrow">Module 5 of 4 in this batch (5th overall)</div>
+      <h2 class="module-title">Medicine Management</h2>
+      <p class="module-dek">The existing <code>elder_medications</code> table (0001_schema.sql) has no UI, no adherence tracking, and no history of dosage changes beyond a current-state <code>active</code> flag. This module builds the workflow layer and the one genuinely missing table: concrete, trackable dose instances.</p>
+
+      <h3><span class="sec-n">01</span>Problem being solved</h3>
+      <p><code>elder_medications</code> answers "what is the elder currently prescribed." It cannot answer "did they take this morning's dose" — there is no row anywhere that represents a single, concrete, time-boxed dose. Family cannot see adherence; nothing feeds a missed-dose signal to anyone.</p>
+
+      <h3><span class="sec-n">02</span>User personas</h3>
+      <div class="persona-grid">
+        <div class="persona"><div class="role">Elder</div>Self-marks doses taken, if capable.<div class="access">read/write own</div></div>
+        <div class="persona"><div class="role">Family member</div>Adds/edits medications, marks doses on the elder's behalf.<div class="access"><code>medication_list</code> consent</div></div>
+        <div class="persona"><div class="role">Caregiver — clinical</div>Marks a dose "administered" only during an in-progress clinical booking.<div class="access">booking-scoped, clinical only</div></div>
+        <div class="persona"><div class="role">Caregiver — non-clinical</div>Can log "reminded," never "administered."<div class="access">booking-scoped, reminder only</div></div>
+        <div class="persona"><div class="role">Admin</div>No new surface.<div class="access">none (MVP)</div></div>
+      </div>
+
+      <h3><span class="sec-n">03</span>Functional requirements</h3>
+      <ul>
+        <li>CRUD on <code>elder_medications</code> (existing table, now with a real screen) — add, edit, discontinue.</li>
+        <li>Discontinuing a medication sets <code>active = false</code> and writes an <code>elder_timeline_events</code> row (<code>medication_stopped</code>, already planned in Batch 1) and cancels any pending future doses (see § Edge cases).</li>
+        <li>New rolling-window dose generation: turns a medication's <code>schedule</code> jsonb into concrete dose instances a few days ahead.</li>
+        <li>Dose marking: taken / missed / skipped, by elder (self), family (proxy — important for lower digital literacy elders), or a clinical caregiver during an in-progress booking.</li>
+        <li><strong>Non-clinical caregivers may only log "reminded," never "administered."</strong> Administering medication is a clinical action; letting a companion/home-service caregiver mark a dose as taken would misrepresent who actually delivered care.</li>
+        <li>Editing dosage/schedule while a clinical caregiver is actively assigned should prompt re-confirmation — a family member silently changing a dose a nurse is mid-visit administering is a real safety gap worth naming explicitly, not just an edge case.</li>
+      </ul>
+
+      <h3><span class="sec-n">04</span>Non-functional requirements</h3>
+      <ul>
+        <li>Dose generation must be idempotent — regenerating the rolling window must never create duplicate rows for the same medication/time.</li>
+        <li>Timezone handling shares the same per-elder timezone concept established for Daily Check-ins (Batch 1) — not a second, inconsistent implementation.</li>
+      </ul>
+
+      <h3><span class="sec-n">05</span>User flow</h3>
+      <div class="flow-step"><span class="idx">1</span><div class="body"><b>Family</b>Adds a medication with dosage + schedule.</div></div>
+      <div class="flow-step"><span class="idx">2</span><div class="body"><b>System</b>Nightly sweep generates the next few days of concrete dose instances.</div></div>
+      <div class="flow-step"><span class="idx">3</span><div class="body"><b>Elder / family / clinical caregiver</b>Marks each dose taken, missed, or (caregiver only, clinical) administered.</div></div>
+      <div class="flow-step"><span class="idx">4</span><div class="body"><b>Adherence</b>Surfaces on the Family Dashboard widget (Batch 1, extended) and in full in the Timeline.</div></div>
+
+      <h3><span class="sec-n">06</span>Information architecture</h3>
+      <p>Medication list screen (add/edit), a dose checklist/calendar view, refill status shown inline (see Module 6 — deliberately the same screen, not a fragmented second section).</p>
+
+      <h3><span class="sec-n">07</span>Database design</h3>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">medication_doses</span><span class="tbl-note">concrete, trackable dose instances</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">medication_id</span><span class="col-type">uuid fk</span><span class="col-desc">→ <code>elder_medications</code></span></div>
+          <div class="col-row"><span class="col-name">scheduled_at, taken_at</span><span class="col-type">timestamptz, taken_at nullable</span><span class="col-desc">kept separate — a dose taken late still has its original scheduled time preserved</span></div>
+          <div class="col-row"><span class="col-name">status</span><span class="col-type">enum</span><span class="col-desc">pending / taken / missed / skipped / cancelled</span></div>
+          <div class="col-row"><span class="col-name">marked_by, marked_via</span><span class="col-type">uuid fk / text</span><span class="col-desc">marked_via: elder_self / family_proxy / caregiver_clinical / system_auto_missed</span></div>
+          <div class="col-row"><span class="col-name">related_booking_id</span><span class="col-type">uuid fk, nullable</span><span class="col-desc">set only when marked by a caregiver — lets RLS check the booking is in_progress and clinical</span></div>
+          <div class="col-row"><span class="col-name">administered_note</span><span class="col-type">text, nullable, capped</span><span class="col-desc">clinical caregiver only; same never-unguarded-AI rule as every free-text field in this plan</span></div>
+        </div>
+        <div class="schema-cols" style="border-top:1px dotted var(--border)"><span style="font-family:var(--font-mono);font-size:11.5px;color:var(--muted)">unique(medication_id, scheduled_at)</span></div>
+      </div>
+      <p>RLS reuses the existing <code>elder_medications</code> shape (<code>is_elder_self</code>, <code>has_consent('medication_list')</code>, <code>is_admin</code>) plus one addition: a caregiver may write a row with <code>marked_via = 'caregiver_clinical'</code> only if <code>is_assigned_caregiver(related_booking_id)</code> holds, the booking is <code>in_progress</code>, and the caregiver's <code>caregiver_type = 'clinical'</code> — enforced in the policy itself, not just hidden in the UI, since a non-clinical caregiver attempting to mark "administered" must fail at the database, not just be prevented by a button that isn't shown.</p>
+
+      <h3><span class="sec-n">08</span>API design</h3>
+      <div class="table-wrap">
+        <table><tbody>
+          <tr><td style="width:1%"><div class="endpoint"><span class="method post">POST</span><span class="path">/medications/generate-doses</span></div></td><td class="muted">New scheduled Edge Function (nightly, n8n-triggered). Domain-specific: turns <code>schedule</code> jsonb into concrete <code>medication_doses</code> rows for the rolling window. Also enqueues a corresponding row into Smart Reminder System's shared <code>reminders</code> table (Module 8) — generation and delivery are deliberately separate concerns, not duplicated logic.</td></tr>
+          <tr><td style="width:1%"><div class="endpoint"><span class="method none">—</span><span class="path">dose marking</span></div></td><td class="muted">Plain RLS-guarded update — no secret, no cross-table rule beyond what's expressed in the policy above.</td></tr>
+        </tbody></table>
+      </div>
+
+      <h3><span class="sec-n">09</span>Security design</h3>
+      <div class="risk"><h4>Clinical-only administration is an RLS rule, not a UI convention</h4><p>Restated because it's the one place in this module where getting the enforcement layer wrong would misrepresent who actually delivered a medical action — the exact kind of gap that matters for both safety and legal accountability.</p></div>
+      <div class="callout"><h4>No new consent category</h4><p>Doses inherit <code>medication_list</code> — a dose is exactly as sensitive as the medication it belongs to; inventing a second category here would be unnecessary sprawl.</p></div>
+
+      <h3><span class="sec-n">10</span>AI architecture</h3>
+      <p>Not required. <code>administered_note</code> is short, human-authored, and — if ever summarized by AI in a future module — must go through the existing two-layer guardrail, never a new unguarded path.</p>
+
+      <h3><span class="sec-n">11</span>Accessibility requirements</h3>
+      <p>Elder-mode dose marking reuses the same large-tap-target pattern as Daily Check-ins (Batch 1) — not a form, a single confirm action per due dose.</p>
+
+      <h3><span class="sec-n">12</span>Notification requirements</h3>
+      <p>Owned by Smart Reminder System (Module 8) — this module only enqueues, never delivers.</p>
+
+      <h3><span class="sec-n">13</span>Edge cases</h3>
+      <ul>
+        <li>Medication discontinued with pending future doses → those transition to <code>cancelled</code>, not deleted, preserving the audit trail.</li>
+        <li>Non-clinical caregiver attempts to mark "administered" → blocked at RLS (see § Security), not just UI.</li>
+        <li>Dose taken early or late → <code>scheduled_at</code> stays fixed; <code>taken_at</code> records reality separately.</li>
+        <li>As-needed (PRN) medications with no fixed schedule → the calendar/checklist model doesn't fit; needs a manual "logged a dose" quick-action instead — flagged for whoever scopes the detailed UI, not solved by the default schedule-based flow.</li>
+      </ul>
+
+      <h3><span class="sec-n">14</span>Admin dashboard requirements</h3>
+      <p>None new for MVP.</p>
+
+      <h3><span class="sec-n">15</span>Flutter project structure</h3>
+      <p><code>apps/family_elder_app/lib/features/medications/</code> — <code>MedicationListScreen</code>, <code>DoseChecklistWidget</code>, <code>AddEditMedicationForm</code>. <code>apps/caregiver_app</code> gets one additive, booking-scoped action ("Mark administered"), visible only for in-progress clinical bookings.</p>
+
+      <h3><span class="sec-n">16</span>Supabase requirements</h3>
+      <p>One new table (<code>medication_doses</code>) with RLS extending the existing <code>elder_medications</code> pattern. One new scheduled Edge Function (<code>medications-generate-doses</code>). No new storage, no new consent category.</p>
+
+      <h3><span class="sec-n">17</span>Future scalability</h3>
+      <p>The generation sweep should share a common timezone-batching approach with Daily Check-ins' sweep and, later, Appointment Management's recurrence expansion — worth extracting a shared <code>_shared/scheduledSweep.ts</code> helper once a third instance of this pattern exists, rather than three copies of the same batching logic. Noted as a real DRY opportunity for implementation time, not built now.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 6 — MEDICINE REFILL MANAGEMENT -->
+    <!-- ============================================================ -->
+    <section class="module wide" id="m6">
+      <div class="module-eyebrow">Module 6 of 4 in this batch (6th overall)</div>
+      <h2 class="module-title">Medicine Refill Management</h2>
+      <p class="module-dek">Connects "you're running low" to the <code>medicine_pickup</code> service that already exists in the catalog — this module is thin by design.</p>
+
+      <h3><span class="sec-n">01</span>Problem being solved</h3>
+      <p>Medications run out; family need advance warning and a fast path to reorder. The platform already has a bookable pickup service — this module's entire job is the stock-tracking and the nudge, not pharmacy logistics.</p>
+
+      <h3><span class="sec-n">02</span>User personas</h3>
+      <div class="persona-grid">
+        <div class="persona"><div class="role">Family member</div>Sets stock/threshold, receives low-stock alerts, books the pickup.<div class="access">primary actor</div></div>
+        <div class="persona"><div class="role">Elder</div>Read visibility, same consent gate as medications.<div class="access">read</div></div>
+        <div class="persona"><div class="role">Caregiver</div>Can flag low stock observed during a visit.<div class="access">booking-scoped write</div></div>
+        <div class="persona"><div class="role">Admin</div>None new.<div class="access">none</div></div>
+      </div>
+
+      <h3><span class="sec-n">03</span>Functional requirements</h3>
+      <ul>
+        <li>Per-medication stock: quantity on hand, unit, refill threshold.</li>
+        <li>Auto-decrement on every dose marked <code>taken</code> in Module 5 — a database trigger, not application code in three different client paths (see § Database).</li>
+        <li>Threshold crossed → notification (via Module 8) + a "Book Medicine Pickup" CTA that deep-links into the <em>existing</em> <code>bookings-create</code> flow with <code>service_id</code> pre-filled to <code>medicine_pickup</code> and a note listing which medications are low.</li>
+        <li>Manual "mark restocked" resets the count.</li>
+        <li><strong>No autonomous purchasing, ever.</strong> The system suggests; a human always taps to actually book. Stock estimates are advisory, and family can override them at any time.</li>
+      </ul>
+
+      <h3><span class="sec-n">04</span>Non-functional requirements</h3>
+      <p>Stock math must degrade gracefully — a wrong estimate should produce an early-but-harmless alert, never a false "you're fine" that causes a real gap in medication.</p>
+
+      <h3><span class="sec-n">05</span>User flow</h3>
+      <div class="flow-step"><span class="idx">1</span><div class="body"><b>Family</b>Sets initial quantity + threshold when adding a medication.</div></div>
+      <div class="flow-step"><span class="idx">2</span><div class="body"><b>System</b>Decrements automatically as doses are marked taken.</div></div>
+      <div class="flow-step"><span class="idx">3</span><div class="body"><b>Threshold crossed</b>Notification fires; family taps "Book Medicine Pickup," prefilled.</div></div>
+      <div class="flow-step"><span class="idx">4</span><div class="body"><b>Existing booking flow</b>Runs unmodified from that point — <code>bookings-create</code> → <code>bookings-match</code> → OTP visit, exactly as it does today.</div></div>
+
+      <h3><span class="sec-n">06</span>Information architecture</h3>
+      <p>Refill status is shown inline on the Medicine Management list screen (Module 5) — a deliberate choice not to fragment "medications" into two disconnected app sections.</p>
+
+      <h3><span class="sec-n">07</span>Database design</h3>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">medication_stock</span><span class="tbl-note">one row per medication</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">medication_id</span><span class="col-type">uuid fk, unique</span><span class="col-desc">→ <code>elder_medications</code></span></div>
+          <div class="col-row"><span class="col-name">quantity_on_hand, unit</span><span class="col-type">numeric / text</span><span class="col-desc">unit from a small fixed vocabulary (tablets, ml, …), not freeform</span></div>
+          <div class="col-row"><span class="col-name">refill_threshold, last_restocked_at</span><span class="col-type">numeric / timestamptz</span><span class="col-desc">—</span></div>
+        </div>
+      </div>
+      <p>RLS is identical in shape to <code>elder_medications</code>, reusing the same <code>medication_list</code> consent category — no new category needed.</p>
+
+      <h3><span class="sec-n">08</span>API design</h3>
+      <div class="table-wrap">
+        <table><tbody>
+          <tr><td style="width:1%"><div class="endpoint"><span class="method none">—</span><span class="path">no new endpoint</span></div></td><td class="muted">Stock decrement is a Postgres trigger on <code>medication_doses</code> reaching <code>status = 'taken'</code> — the right tool here, since it stays correct regardless of which of the three marking paths (elder, family, caregiver) triggered it, rather than duplicating decrement logic three times in application code.</td></tr>
+        </tbody></table>
+      </div>
+
+      <h3><span class="sec-n">09</span>Security design</h3>
+      <p>No new sensitive data beyond what <code>medication_list</code> consent already gates.</p>
+
+      <h3><span class="sec-n">10</span>AI architecture</h3>
+      <p>Not applicable.</p>
+
+      <h3><span class="sec-n">11</span>Accessibility requirements</h3>
+      <p>Same baseline as Module 5 — inline status uses a simple, non-alarming visual (a stock-level indicator, not a stark red warning) consistent with the platform's tone discipline for non-emergency signals.</p>
+
+      <h3><span class="sec-n">12</span>Notification requirements</h3>
+      <p>Owned by Smart Reminder System (Module 8).</p>
+
+      <h3><span class="sec-n">13</span>Edge cases</h3>
+      <ul>
+        <li>As-needed (PRN) medications don't auto-decrement via the dose-taken trigger (see Module 5 §13) — refill tracking for these needs a manual "logged a dose" entry point, same caveat carried over.</li>
+        <li>Threshold set to an unrealistic value (e.g. 0) → a sensible default suggestion based on dosage schedule is a good Phase 2+ heuristic; not required for MVP, noted rather than built.</li>
+        <li>Multiple medications low at once → one consolidated pickup suggestion listing all of them, not N separate prompts — same anti-notification-fatigue principle established in Daily Check-ins (Batch 1).</li>
+      </ul>
+
+      <h3><span class="sec-n">14</span>Admin dashboard requirements</h3>
+      <p>None new.</p>
+
+      <h3><span class="sec-n">15</span>Flutter project structure</h3>
+      <p><code>apps/family_elder_app/lib/features/medications/refill/</code> — extends Module 5's feature folder rather than a separate top-level feature.</p>
+
+      <h3><span class="sec-n">16</span>Supabase requirements</h3>
+      <p>One new table (<code>medication_stock</code>) + RLS. One new Postgres trigger. No new Edge Function, no new storage, no new consent category.</p>
+
+      <h3><span class="sec-n">17</span>Future scalability</h3>
+      <p>The fixed unit vocabulary (tablets/ml/etc.) is chosen specifically so a future real-time pharmacy-stock integration (Phase 3+) has a clean mapping target instead of freeform text needing cleanup first.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 7 — APPOINTMENT MANAGEMENT -->
+    <!-- ============================================================ -->
+    <section class="module wide" id="m7">
+      <div class="module-eyebrow">Module 7 of 4 in this batch (7th overall)</div>
+      <h2 class="module-title">Appointment Management</h2>
+      <p class="module-dek">Tracks external medical appointments — a calendar fact the family is managing — distinct from, but optionally linkable to, a paid platform booking.</p>
+
+      <h3><span class="sec-n">01</span>Problem being solved</h3>
+      <p>Elders have doctor visits, lab tests, and follow-ups that aren't platform bookings at all. Today there's no way to track them, and no connection between "elder has an appointment Tuesday" and "should we book a Hospital Companion for it."</p>
+
+      <h3><span class="sec-n">02</span>User personas</h3>
+      <div class="persona-grid">
+        <div class="persona"><div class="role">Family member</div>Primary — creates/edits/tracks appointments.<div class="access">full</div></div>
+        <div class="persona"><div class="role">Elder</div>Views own, can add.<div class="access">full, own record</div></div>
+        <div class="persona"><div class="role">Caregiver</div>Visible only if assigned to an accompanying booking.<div class="access">read, booking-linked</div></div>
+        <div class="persona"><div class="role">Admin</div>None new.<div class="access">none</div></div>
+      </div>
+
+      <h3><span class="sec-n">03</span>Functional requirements</h3>
+      <ul>
+        <li>CRUD: doctor/specialty, location, date/time, notes, reminder lead time.</li>
+        <li><strong>An appointment is not a booking.</strong> A <code>bookings</code> row is paid, matched, and OTP-verified; an appointment is a calendar fact the family is tracking, optionally linked to a booking (e.g. if they book Hospital Companion to accompany it) via a nullable <code>related_booking_id</code>. Conflating the two would be a real modeling mistake this spec avoids on purpose.</li>
+        <li>Recurring appointments (e.g. monthly dialysis) via a simple fixed-cadence recurrence descriptor — not a full iCal RRULE for MVP.</li>
+        <li>Optional post-appointment outcome note.</li>
+      </ul>
+
+      <h3><span class="sec-n">04</span>Non-functional requirements</h3>
+      <p>Recurrence expansion must be efficient and idempotent, following the same generation-not-delivery pattern established in Module 5.</p>
+
+      <h3><span class="sec-n">05</span>User flow</h3>
+      <div class="flow-step"><span class="idx">1</span><div class="body"><b>Family</b>Adds an appointment (one-off or recurring).</div></div>
+      <div class="flow-step"><span class="idx">2</span><div class="body"><b>Reminder</b>Fires via Module 8 ahead of the appointment.</div></div>
+      <div class="flow-step"><span class="idx">3</span><div class="body"><b>Optional</b>Family taps "book a companion for this" → deep-links into the existing booking flow, date/time/location prefilled.</div></div>
+      <div class="flow-step"><span class="idx">4</span><div class="body"><b>After</b>Family or elder can log an outcome note.</div></div>
+
+      <h3><span class="sec-n">06</span>Information architecture</h3>
+      <p>Appointments list/calendar screen with a plain chronological list view as the accessible default (calendars are often harder to parse for lower digital literacy or visual impairment than a simple ordered list), add/edit form, detail view showing any linked booking and the outcome note.</p>
+
+      <h3><span class="sec-n">07</span>Database design</h3>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">appointments</span><span class="tbl-note">calendar fact, not a transaction record</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">elder_id, title, location</span><span class="col-type">uuid fk / text / text</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">scheduled_at, recurrence_rule</span><span class="col-type">timestamptz / text, nullable</span><span class="col-desc">simple cadence descriptor, not full RRULE</span></div>
+          <div class="col-row"><span class="col-name">related_booking_id</span><span class="col-type">uuid fk, nullable</span><span class="col-desc">set only if a companion/transport service was booked for it</span></div>
+          <div class="col-row"><span class="col-name">outcome_note, created_by</span><span class="col-type">text, nullable / uuid fk</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">status</span><span class="col-type">enum</span><span class="col-desc">scheduled / completed / cancelled</span></div>
+        </div>
+      </div>
+      <p>RLS reuses <code>visit_history</code> — an appointment is conceptually part of care/visit history, and inventing a new consent category here would be unwarranted sprawl (unlike Daily Check-ins in Batch 1, which genuinely needed one).</p>
+
+      <h3><span class="sec-n">08</span>API design</h3>
+      <p>No Edge Function needed for CRUD — plain RLS-guarded writes. Recurrence expansion (turning a recurrence rule into concrete future instances) needs the same lightweight generation step as Module 5's dose generation, and should enqueue its reminders into Module 8's shared table rather than invent a fourth delivery path.</p>
+
+      <h3><span class="sec-n">09</span>Security design</h3>
+      <p>No new sensitivity beyond existing <code>visit_history</code>-gated data.</p>
+
+      <h3><span class="sec-n">10</span>AI architecture</h3>
+      <p>Not required. <code>outcome_note</code> is subject to the same never-unguarded-AI rule as every other free-text field in this plan if a future module ever summarizes it.</p>
+
+      <h3><span class="sec-n">11</span>Accessibility requirements</h3>
+      <p>List-view-first design (see § IA) is itself the accessibility decision here.</p>
+
+      <h3><span class="sec-n">12</span>Notification requirements</h3>
+      <p>Owned by Smart Reminder System (Module 8).</p>
+
+      <h3><span class="sec-n">13</span>Edge cases</h3>
+      <ul>
+        <li>A single instance of a recurring appointment is rescheduled without affecting the rest of the series — flagged as needing a documented decision (exception-instance table vs. keeping recurrence simple) rather than solved definitively; MVP scope keeps recurrence to fixed cadence only, no per-instance overrides.</li>
+        <li>The linked booking gets cancelled → the appointment itself must <strong>not</strong> auto-cancel. The doctor visit still exists even if the companion booking fell through — an explicit decoupling, not an oversight.</li>
+      </ul>
+
+      <h3><span class="sec-n">14</span>Admin dashboard requirements</h3>
+      <p>None new.</p>
+
+      <h3><span class="sec-n">15</span>Flutter project structure</h3>
+      <p><code>apps/family_elder_app/lib/features/appointments/</code>.</p>
+
+      <h3><span class="sec-n">16</span>Supabase requirements</h3>
+      <p>One new table (<code>appointments</code>) + RLS reusing <code>visit_history</code>. No new Edge Function beyond the shared generation pattern noted above, no new storage, no new consent category.</p>
+
+      <h3><span class="sec-n">17</span>Future scalability</h3>
+      <p>Simple fixed-cadence recurrence is an intentional MVP constraint; a full RRULE-based system is a plausible Phase 2+ upgrade once real usage shows the simple version is limiting.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 8 — SMART REMINDER SYSTEM -->
+    <!-- ============================================================ -->
+    <section class="module wide" id="m8">
+      <div class="module-eyebrow">Module 8 of 4 in this batch (8th overall)</div>
+      <h2 class="module-title">Smart Reminder System</h2>
+      <p class="module-dek">The shared reminder-delivery engine the previous three modules plug into — designed last in this batch, precisely because designing the other three first is what revealed it was needed.</p>
+
+      <h3><span class="sec-n">01</span>Problem being solved</h3>
+      <p>Medicine Management, Medicine Refill Management, and Appointment Management each need to notify someone at a scheduled time. Building three separate sweep jobs and three delivery code paths would triduplicate the exact same problem. This module is the single shared engine; the other three own domain-specific <em>generation</em> (deciding <em>what</em> and <em>when</em>) and hand off <em>delivery</em> (getting a notification to a person, reliably, once) to this module.</p>
+
+      <h3><span class="sec-n">02</span>User personas</h3>
+      <div class="persona-grid">
+        <div class="persona"><div class="role">Elder</div>Receives reminders per <code>recipient_scope</code>.<div class="access">read own</div></div>
+        <div class="persona"><div class="role">Family member</div>Receives reminders; can snooze/dismiss.<div class="access">read, consent-scoped</div></div>
+        <div class="persona"><div class="role">Caregiver</div>Not a reminder recipient in this module's scope.<div class="access">none</div></div>
+        <div class="persona"><div class="role">Admin</div>Sweep delivery-health visibility.<div class="access">read-only, ops</div></div>
+      </div>
+
+      <h3><span class="sec-n">03</span>Functional requirements</h3>
+      <ul>
+        <li>Generic <code>reminders</code> table any module can enqueue into by referencing its own source row via <code>source_type</code>/<code>source_id</code> — deliberately not a hard foreign key (see § Database).</li>
+        <li>Delivery: FCM push primary, SMS fallback for low-connectivity or non-app-installed family members — reuses the existing FCM plan from PRD Part 2 §15, not a new push infrastructure.</li>
+        <li>Snooze and dismiss actions.</li>
+        <li>One unified sweep (<code>reminders-dispatch-sweep</code>) rather than per-module cron jobs.</li>
+      </ul>
+
+      <h3><span class="sec-n">04</span>Non-functional requirements</h3>
+      <ul>
+        <li>Delivery must be idempotent — a sweep re-run must never double-send.</li>
+        <li>Must respect per-elder timezone and skip anything snoozed or already dismissed.</li>
+      </ul>
+
+      <h3><span class="sec-n">05</span>User flow</h3>
+      <p>Mostly infrastructure, not a destination screen. Reminders surface as push notifications, plus a simple in-app list aggregating every pending reminder regardless of which module generated it.</p>
+
+      <h3><span class="sec-n">06</span>Information architecture</h3>
+      <div class="decision">
+        <h4>Division of labor with the Family Notification Center (Batch 3)</h4>
+        <p>This module produces the underlying scheduled trigger and owns delivery timing/channel selection. Batch 3's Family Notification Center owns the actual notification inbox UI and cross-source aggregation (SOS alerts, invite notifications, everything else). Stated explicitly here so the two aren't built later as duplicate, competing systems.</p>
+      </div>
+
+      <h3><span class="sec-n">07</span>Database design</h3>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">reminders</span><span class="tbl-note">the shared engine's one table</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">elder_id</span><span class="col-type">uuid fk</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">source_type, source_id</span><span class="col-type">text / uuid</span><span class="col-desc">deliberately not a hard FK — a real FK would require this table to know about every future module's schema at migration time, defeating the point of a shared engine</span></div>
+          <div class="col-row"><span class="col-name">remind_at, recipient_scope</span><span class="col-type">timestamptz / text</span><span class="col-desc">recipient_scope: elder / family / both</span></div>
+          <div class="col-row"><span class="col-name">status, snoozed_until</span><span class="col-type">enum / timestamptz, nullable</span><span class="col-desc">pending / sent / snoozed / dismissed / cancelled</span></div>
+        </div>
+      </div>
+      <div class="decision">
+        <h4>Consent-aware visibility varies per row, so the RLS policy needs a helper</h4>
+        <p>A reminder about a medication dose is exactly as sensitive as the medication itself; a reminder about an appointment inherits <code>visit_history</code>. Because the required category depends on <code>source_type</code>, a single static policy can't express it — this needs one small helper function, <code>required_consent_for_source(source_type)</code>, mapping source type to consent category, referenced inside the RLS predicate. This is the one piece of genuine new RLS design in this batch, called out precisely rather than glossed over.</p>
+      </div>
+
+      <h3><span class="sec-n">08</span>API design</h3>
+      <div class="table-wrap">
+        <table><tbody>
+          <tr><td style="width:1%"><div class="endpoint"><span class="method post">POST</span><span class="path">/reminders/dispatch-sweep</span></div></td><td class="muted">New scheduled Edge Function, externally triggered (n8n/cron). Reads due, non-snoozed reminders, checks the source row still warrants sending (see § Edge cases), delivers via FCM/SMS, marks sent. The one delivery mechanism the other three modules in this batch all rely on.</td></tr>
+          <tr><td style="width:1%"><div class="endpoint"><span class="method none">—</span><span class="path">enqueue</span></div></td><td class="muted">Always a side effect of the source module's own write path (e.g. <code>medications-generate-doses</code> inserts a corresponding reminder) — no separate "create reminder" endpoint needed.</td></tr>
+        </tbody></table>
+      </div>
+
+      <h3><span class="sec-n">09</span>Security design</h3>
+      <p>Consent-aware visibility as designed above. SMS delivery touches a secret (SMS provider credentials), so the sweep is properly an Edge Function — consistent with the existing "secrets live in Edge Functions, never the client" rule.</p>
+
+      <h3><span class="sec-n">10</span>AI architecture</h3>
+      <p>Not applicable.</p>
+
+      <h3><span class="sec-n">11</span>Accessibility requirements</h3>
+      <p>Reminder copy must be short, plain-language, and deliberately non-alarming — a reminder is not an emergency, the same tone discipline established for Daily Check-ins' escalation messaging in Batch 1.</p>
+
+      <h3><span class="sec-n">12</span>Notification requirements</h3>
+      <p>This module <em>is</em> the notification-generation engine for scheduled reminders; delivery UI/inbox belongs to Batch 3's Family Notification Center (see § IA).</p>
+
+      <h3><span class="sec-n">13</span>Edge cases</h3>
+      <ul>
+        <li>Source row deleted or discontinued after its reminder was enqueued but before it fires (e.g. a medication stopped) → the sweep must re-check the source's current state before sending, not blindly fire a stale reminder. A real correctness requirement given the loose reference design.</li>
+        <li>Multiple reminders for the same elder at the same instant, from different modules → ideally batched into one push rather than a notification storm; MVP can send them separately, noted as a known Phase 2+ improvement, not a blocker.</li>
+      </ul>
+
+      <h3><span class="sec-n">14</span>Admin dashboard requirements</h3>
+      <p>Ops visibility into sweep health (last run, delivery/failure rate). Plausibly the same admin page could cover every scheduled sweep in the platform (check-ins, doses, reminders) collectively rather than one page per job — worth flagging for whoever builds the admin side, not decided here.</p>
+
+      <h3><span class="sec-n">15</span>Flutter project structure</h3>
+      <p><code>apps/family_elder_app/lib/features/reminders/</code> — mostly backend-driven; a simple aggregated list with snooze/dismiss actions.</p>
+
+      <h3><span class="sec-n">16</span>Supabase requirements</h3>
+      <p>One new table (<code>reminders</code>), one new helper function (<code>required_consent_for_source</code>) and its RLS policy, one new scheduled Edge Function (<code>reminders-dispatch-sweep</code>). Supersedes the separate per-module sweep concepts sketched while designing Modules 5–7 above — this is the single point of delivery for all of them.</p>
+
+      <h3><span class="sec-n">17</span>Future scalability</h3>
+      <p>The <code>source_type</code>/<code>source_id</code> loose-reference design is this module's core contribution to the rest of the 25-module plan: any future module can start enqueueing reminders without a single change to this table's schema. Index on <code>(status, remind_at)</code> is critical for sweep performance as adoption grows across modules.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="module wide" id="cross">
+      <div class="module-eyebrow">Cross-cutting</div>
+      <h2 class="module-title">Every touch to an existing, already-implemented module</h2>
+      <p>None. This batch is fully additive new tables, functions, and screens — no column, policy, or existing Edge Function from the already-implemented booking/OTP/caregiver-verification/SOS/payments/DPDP modules is touched. The one place this batch connects to the existing system is a pure read/deep-link into the existing, unmodified <code>bookings-create</code> flow (Module 6, Medicine Refill Management) — no change to that function at all.</p>
+    </section>
+
+    <section class="module" id="next">
+      <div class="module-eyebrow">Next</div>
+      <h2 class="module-title">Batch 3 preview</h2>
+      <p>Family Notification Center, Companion Visits, Hospital Companion Services, and Health Records Management. Family Notification Center will need to formally absorb the delivery-channel work already scoped by Smart Reminder System here rather than duplicate it — the division of labor is stated in advance in § Module 8 above.</p>
+    </section>
+
+    <footer class="doc-footer">Part 5 of the Project Setu PRD · Batch 2 of 7 covering 25 missing modules · builds on Parts 1–4 and the live schema</footer>
+  </main>
+</div>
