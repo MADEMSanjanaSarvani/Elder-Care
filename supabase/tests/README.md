@@ -18,7 +18,9 @@ comment), which would have meant a caregiver couldn't see the elder they
 were sent to help. Fixed in the same commit that added this test. TESTs
 14-16 cover the `erasure_requests` table added in `0004_erasure_requests.sql`
 the same way: a requester can file and read their own row, nobody else can
-read or resolve it.
+read or resolve it. TESTs 17-18 cover `caregiver_payout_accounts`
+(`0005_caregiver_payout_accounts.sql`): a caregiver can submit their own
+bank/UPI details, and a stranger can't read them.
 
 ## Running it
 

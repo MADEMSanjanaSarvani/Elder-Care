@@ -11,6 +11,7 @@ Schema and Edge Functions implementing `docs/prd/02-prd-part2-architecture.html`
 - `migrations/0002_rls.sql` — RLS policies, helper functions, consent audit trigger (Section 13)
 - `migrations/0003_realtime.sql` — adds `sos_events` to the `supabase_realtime` publication
 - `migrations/0004_erasure_requests.sql` — DPDP erasure-request queue (Section 12/13)
+- `migrations/0005_caregiver_payout_accounts.sql` — caregiver bank/UPI details for RazorpayX payouts (Section 15)
 - `seed.sql` — Visakhapatnam pilot region + MVP service catalog
 - `functions/` — Edge Functions (Section 12): everything that touches a secret or a cross-table rule
 
@@ -89,6 +90,8 @@ changes behavior; note them if you're used to seeing the more common imports.
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | all functions |
 | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` | `payments-create-order` |
 | `RAZORPAY_WEBHOOK_SECRET` | `payments-webhook` |
+| `RAZORPAYX_KEY_ID`, `RAZORPAYX_KEY_SECRET`, `RAZORPAYX_ACCOUNT_NUMBER` | `payouts-run` |
+| `PAYOUTS_RUN_SHARED_SECRET` | `payouts-run` (placeholder auth scheme, same shape as `IDFY_WEBHOOK_SHARED_SECRET` below — n8n sends this header on its scheduled call) |
 | `IDFY_WEBHOOK_SHARED_SECRET` | `verification-idfy-webhook` (placeholder auth scheme — confirm against IDfy's actual docs before launch) |
 | `OPENAI_API_KEY` | `ai-visit-summary`, `ai-translate` |
 
@@ -126,6 +129,33 @@ PRD Part 2 §12/§13. Both require a real user session (`requireUser`), same as 
   review) that a blanket delete would violate, so resolution is a human admin decision recorded via
   `erasure_requests.status`/`admin_notes` — no queue-draining job exists yet, by design.
 
+## Caregiver payouts (`payouts-run`)
+
+PRD Part 2 §15. `migrations/0005_caregiver_payout_accounts.sql` adds the caregiver bank/UPI
+destination the earlier payouts machinery was missing (`caregiver_payouts` rows have existed since
+`otp-end` since day one, but nothing recorded *where* to send the money). A caregiver submits their
+own account directly via a normal RLS-guarded insert/update (`caregiver_payout_accounts_insert`/
+`_update` in the migration) — no Edge Function needed for that half, same pattern as
+`consent_grants`. A `finance_ops`-scoped admin must set `verified = true` before `payouts-run` will
+ever touch that row; an unverified account is skipped, not paid.
+
+`POST /functions/v1/payouts-run` has no user session — it's meant to be triggered by n8n on a
+schedule, authenticated with a shared secret header (`x-payouts-run-secret`) the same way
+`verification-idfy-webhook` is. For every `caregiver_payouts` row with `status = 'scheduled'` and
+`scheduled_for <= now()`, it lazily creates a RazorpayX contact + fund account (caching the ids back
+onto `caregiver_payout_accounts` so that round-trip only happens once per caregiver), then calls
+RazorpayX's payouts endpoint. One caregiver's failure never blocks the batch — each payout is
+processed independently, and a failure just leaves that row `failed` (visible on the Admin
+Dashboard payouts page) rather than aborting everything queued behind it. Every outcome, success or
+failure, writes an `audit_log` row.
+
+Like the IDfy webhook, the RazorpayX field/endpoint names here are per Razorpay's public docs as of
+this writing, not a confirmed integration test against a real RazorpayX account — confirm before
+launch. Not yet built: the n8n schedule itself (this is the function it would call), and no live
+invocation of `payouts-run` has happened yet (it's validated locally: `deno check`/`deno lint`
+clean, and the new `caregiver_payout_accounts` RLS policies are covered by
+`tests/rls_smoke_test.sql` TESTs 17-18).
+
 ## CI/CD
 
 `.github/workflows/deploy-functions.yml` type-checks, lints, and unit-tests every function under
@@ -152,9 +182,8 @@ the next real push to `supabase/functions/**` will deploy automatically.
 
 ## Not yet implemented
 
-- `payouts-run` (RazorpayX batch payout, meant to be triggered by n8n on a schedule per PRD Part 2 §15) — also
-  blocked on a `fund_account_id`-equivalent not existing anywhere in the caregiver schema yet; see
-  `apps/admin-dashboard`'s payouts page for the same gap from the read side.
+- The n8n schedule that actually calls `payouts-run` — the function itself exists now (see above),
+  but nothing invokes it on a timer yet.
 - An admin-facing UI for reviewing/resolving `erasure_requests` (the table, RLS, and the
   submission endpoint exist; nothing in `apps/admin-dashboard` lists or resolves them yet).
 - Write-side instrumentation for `audit_log` outside the two `me-*` functions above — the table, RLS, and an

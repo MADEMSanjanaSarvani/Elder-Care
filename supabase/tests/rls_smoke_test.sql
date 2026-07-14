@@ -167,3 +167,18 @@ set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
 update erasure_requests set status = 'denied' where id = 'dddddddd-dddd-dddd-dddd-dddddddddddd';
 reset role;
 reset request.jwt.claim.sub;
+
+\echo '=== TEST 17: caregiver submits their own payout bank details — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+insert into caregiver_payout_accounts (id, caregiver_id, account_holder_name, bank_account_number, ifsc)
+values ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Meena', '000123456789', 'HDFC0000001');
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 18: a stranger cannot read another caregiver''s bank details — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select count(*) as visible_payout_accounts from caregiver_payout_accounts where id = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee';
+reset role;
+reset request.jwt.claim.sub;
