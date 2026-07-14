@@ -35,11 +35,13 @@ and all 13 Edge Functions deployed, with `regions-config` confirmed
 working end-to-end via a real authenticated request. The two newest
 functions (`me-data-export`, `me-erasure-request` — DPDP data-subject
 rights) were validated locally (type-check, lint, and an extended RLS
-smoke test) and then deployed manually the same way the first 11 were —
-`.github/workflows/deploy-functions.yml` exists and its two required
-repository secrets are now set, but the workflow itself hasn't actually
-been run yet, so treat it as unverified until someone triggers it once.
-See `supabase/README.md`'s Status section for the full story, including
+smoke test) and then deployed manually the same way the first 11 were.
+`.github/workflows/deploy-functions.yml` now also has a confirmed
+successful run (`check` + `deploy` both green, 54s) — the first attempt
+failed on a missing `supabase/config.toml` (never committed until that
+was diagnosed), fixed and re-verified; the next push touching
+`supabase/functions/**` will deploy automatically for real. See
+`supabase/README.md`'s Status section for the full story, including
 what the live milestone does and doesn't prove (short version: one
 function is confirmed working live via a real HTTP call; the rest
 deployed cleanly but aren't each individually verified yet, and no app

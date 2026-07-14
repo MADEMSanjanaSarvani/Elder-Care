@@ -144,8 +144,11 @@ run of this workflow failed in the `deploy` job (`check` passed) with an opaque
 `supabase init` when first setting this project up, but that command was run directly against
 the working tree without `git add`, so it never made it into version control). The CLI needs
 that file to know the project structure even when a `--project-ref` is passed explicitly and no
-`supabase link` has been run. Fixed by committing `config.toml`; re-run the workflow after that
-commit lands to confirm the pipeline actually works end-to-end.
+`supabase link` has been run. Fixed by committing `config.toml` — a fresh manual run of the
+workflow afterward (`Actions → Deploy Edge Functions → Run workflow`, not "Re-run jobs" on the
+old failed run, which replays the old commit and would have failed the same way) passed both
+`check` and `deploy` in 54s. This pipeline is now confirmed working end-to-end, not just written;
+the next real push to `supabase/functions/**` will deploy automatically.
 
 ## Not yet implemented
 
