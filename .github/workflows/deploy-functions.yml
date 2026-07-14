@@ -1,0 +1,44 @@
+name: Deploy Edge Functions
+
+# The Supabase-GitHub integration (Dashboard > Integrations) auto-applies
+# `supabase/migrations/` on push to this branch, but it does not deploy
+# `supabase/functions/` — that's this workflow's job. Push here, migration
+# there; keep both in mind when reviewing a PR that changes the backend.
+on:
+  push:
+    branches:
+      - claude/elder-care-platform-mx27jo
+    paths:
+      - "supabase/functions/**"
+  workflow_dispatch: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: supabase
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno check functions/*/index.ts functions/_shared/*.ts
+      - run: deno lint functions/
+      - run: deno test --allow-net=api.openai.com functions/_shared/
+
+  deploy:
+    needs: check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: supabase
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase functions deploy --project-ref "$SUPABASE_PROJECT_REF"
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}

@@ -145,3 +145,25 @@ set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
 select count(*) as visible_bookings from bookings where id = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
 reset role;
 reset request.jwt.claim.sub;
+
+\echo '=== TEST 14: elder files an erasure_requests row for themself — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+insert into erasure_requests (id, requested_by, reason)
+values ('dddddddd-dddd-dddd-dddd-dddddddddddd', '11111111-1111-1111-1111-111111111111', 'closing my account');
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 15: a different family member cannot read someone else''s erasure_requests row — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select count(*) as visible_requests from erasure_requests where id = 'dddddddd-dddd-dddd-dddd-dddddddddddd';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 16: a non-admin cannot resolve someone else''s erasure_requests row — expect an RLS no-op (0 rows updated), not a silent bypass ==='
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+update erasure_requests set status = 'denied' where id = 'dddddddd-dddd-dddd-dddd-dddddddddddd';
+reset role;
+reset request.jwt.claim.sub;

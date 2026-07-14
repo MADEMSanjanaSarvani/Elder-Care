@@ -6,6 +6,8 @@ Schema and Edge Functions implementing `docs/prd/02-prd-part2-architecture.html`
 
 - `migrations/0001_schema.sql` — tables (Section 11)
 - `migrations/0002_rls.sql` — RLS policies, helper functions, consent audit trigger (Section 13)
+- `migrations/0003_realtime.sql` — adds `sos_events` to the `supabase_realtime` publication
+- `migrations/0004_erasure_requests.sql` — DPDP erasure-request queue (Section 12/13)
 - `seed.sql` — Visakhapatnam pilot region + MVP service catalog
 - `functions/` — Edge Functions (Section 12): everything that touches a secret or a cross-table rule
 
@@ -93,14 +95,50 @@ delivered — the caller gets a "pending review" response instead. The
 Admin Dashboard's AI review queue (`apps/admin-dashboard/app/(dashboard)/ai-review`)
 now clears these for delivery or rejects them.
 
+## DPDP data-subject rights (`me-data-export`, `me-erasure-request`)
+
+PRD Part 2 §12/§13. Both require a real user session (`requireUser`), same as every other function.
+
+- `GET /functions/v1/me-data-export` — returns every record the caller is the *data principal*
+  for, scoped by `profiles.role` with explicit queries against the service-role client rather than
+  by replaying the caller's own RLS-scoped session. That distinction matters: RLS answers "can this
+  user *see* it" (which includes, say, a consented family member reading an elder's health notes),
+  not "is this the *caller's own* data" — an elder's export includes their health notes, medications,
+  locations, bookings, SOS events, AI interactions, consent grants, and payments; a family member's
+  export is limited to records they themselves created or own (their own consent grants, bookings
+  they requested, payments they made) and deliberately excludes elder data they merely have viewing
+  consent to; a caregiver's export is their caregiver record, documents, assigned bookings, and
+  payouts. Every export call logs an `audit_log` row.
+- `POST /functions/v1/me-erasure-request` — inserts a row into `erasure_requests`
+  (`migrations/0004_erasure_requests.sql`) and notifies every `super_admin`-scoped profile via
+  `notifications`. It deliberately does **not** perform a hard delete: payment records, audit trails,
+  and SOS events often carry independent legal retention requirements (tax law, safety-incident
+  review) that a blanket delete would violate, so resolution is a human admin decision recorded via
+  `erasure_requests.status`/`admin_notes` — no queue-draining job exists yet, by design.
+
+## CI/CD
+
+`.github/workflows/deploy-functions.yml` type-checks, lints, and unit-tests every function under
+`functions/` on push to `claude/elder-care-platform-mx27jo` (whenever `supabase/functions/**`
+changes), then runs `supabase functions deploy` against the live project if that passes. This is
+deliberately separate from the Supabase Dashboard's GitHub integration configured earlier, which
+only auto-applies `migrations/` — that integration does not know Edge Functions exist. Requires two
+repository secrets that are not currently set: `SUPABASE_ACCESS_TOKEN` (generate a fresh personal
+access token for this — the one used for the original manual deploy was meant to be revoked after
+that setup) and `SUPABASE_PROJECT_REF` (`veumfexjpxqhxemjaaor`). Until those secrets exist, the
+`deploy` job will fail after `check` passes; function changes still need a manual
+`supabase functions deploy` in the meantime.
+
 ## Not yet implemented
 
 - `payouts-run` (RazorpayX batch payout, meant to be triggered by n8n on a schedule per PRD Part 2 §15) — also
   blocked on a `fund_account_id`-equivalent not existing anywhere in the caregiver schema yet; see
   `apps/admin-dashboard`'s payouts page for the same gap from the read side.
-- `me/data-export`, `me/erasure-request` (DPDP data-subject rights, PRD Part 2 §12/§13)
-- Write-side instrumentation for `audit_log` — the table, RLS, and an admin viewer all exist, but nothing calls
-  INSERT on it yet. Postgres has no native SELECT-trigger auditing, so this needs explicit logging added at each
-  sensitive read path (consumer app repositories and Edge Functions alike), not a single migration.
+- An admin-facing UI for reviewing/resolving `erasure_requests` (the table, RLS, and the
+  submission endpoint exist; nothing in `apps/admin-dashboard` lists or resolves them yet).
+- Write-side instrumentation for `audit_log` outside the two `me-*` functions above — the table, RLS, and an
+  admin viewer all exist, but nothing else calls INSERT on it yet. Postgres has no native SELECT-trigger
+  auditing, so this needs explicit logging added at each sensitive read path (consumer app repositories and
+  the remaining Edge Functions alike), not a single migration.
 
 These were deferred rather than stubbed with fake logic — see the PRD for their intended design before implementing.

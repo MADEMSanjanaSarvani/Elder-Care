@@ -15,7 +15,10 @@ from reading the policy definitions — this test suite is what actually
 confirmed it, and it already caught one real bug: `elder_profiles_select`
 was missing its assigned-caregiver clause entirely (see TEST 11's
 comment), which would have meant a caregiver couldn't see the elder they
-were sent to help. Fixed in the same commit that added this test.
+were sent to help. Fixed in the same commit that added this test. TESTs
+14-16 cover the `erasure_requests` table added in `0004_erasure_requests.sql`
+the same way: a requester can file and read their own row, nobody else can
+read or resolve it.
 
 ## Running it
 
