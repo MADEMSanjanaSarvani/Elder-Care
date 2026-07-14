@@ -47,16 +47,30 @@ Deno.serve(async (req) => {
 
     if (elder_id) {
       const admin = supabaseAdmin();
-      await admin.from("ai_interactions").insert({
-        elder_id,
-        booking_id: booking_id ?? null,
-        initiated_by: user.id,
-        interaction_type: "translation",
-        input_ref: text,
-        output_text: translated,
-        flagged: guardrail.flagged,
-        human_reviewed: false,
-      });
+      const { data: interaction } = await admin
+        .from("ai_interactions")
+        .insert({
+          elder_id,
+          booking_id: booking_id ?? null,
+          initiated_by: user.id,
+          interaction_type: "translation",
+          input_ref: text,
+          output_text: translated,
+          flagged: guardrail.flagged,
+          human_reviewed: false,
+        })
+        .select("id")
+        .single();
+
+      if (interaction) {
+        await admin.from("audit_log").insert({
+          actor_user_id: user.id,
+          action: "write",
+          resource_type: "ai_interaction",
+          resource_id: interaction.id,
+          metadata: { interaction_type: "translation", flagged: guardrail.flagged },
+        });
+      }
     }
 
     if (guardrail.flagged) {

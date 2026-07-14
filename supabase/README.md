@@ -186,9 +186,12 @@ the next real push to `supabase/functions/**` will deploy automatically.
   but nothing invokes it on a timer yet.
 - An admin-facing UI for reviewing/resolving `erasure_requests` (the table, RLS, and the
   submission endpoint exist; nothing in `apps/admin-dashboard` lists or resolves them yet).
-- Write-side instrumentation for `audit_log` outside the two `me-*` functions above — the table, RLS, and an
-  admin viewer all exist, but nothing else calls INSERT on it yet. Postgres has no native SELECT-trigger
-  auditing, so this needs explicit logging added at each sensitive read path (consumer app repositories and
-  the remaining Edge Functions alike), not a single migration.
+- `audit_log` only covers writes, not reads. Every Edge Function that mutates state now logs an
+  `audit_log` row on success (`bookings-create`, `bookings-match`, `otp-start`, `otp-end`,
+  `sos-trigger`, `payments-create-order`, `payments-webhook`, `verification-idfy-webhook`,
+  `ai-visit-summary`, `ai-translate`, `payouts-run`, `me-data-export`, `me-erasure-request`) — but
+  Postgres has no native SELECT-trigger auditing, so read-path logging (a family member viewing an
+  elder's health notes, say) would need explicit instrumentation in every consumer app repository,
+  which hasn't been done. DPDP-grade "who looked at my data" needs both; only the write half exists.
 
 These were deferred rather than stubbed with fake logic — see the PRD for their intended design before implementing.

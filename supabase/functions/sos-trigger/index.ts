@@ -62,6 +62,14 @@ Deno.serve(async (req) => {
       .single();
     if (insertErr) return errorResponse(insertErr.message, 500);
 
+    await admin.from("audit_log").insert({
+      actor_user_id: user.id,
+      action: "write",
+      resource_type: "sos_event",
+      resource_id: sosEvent.id,
+      metadata: { elder_id },
+    });
+
     // Fan out to every active family link.
     const { data: familyLinks } = await admin
       .from("family_links")

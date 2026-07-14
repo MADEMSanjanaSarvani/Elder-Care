@@ -82,6 +82,14 @@ Deno.serve(async (req) => {
       .single();
     if (logErr) return errorResponse(logErr.message, 500);
 
+    await admin.from("audit_log").insert({
+      actor_user_id: user.id,
+      action: "write",
+      resource_type: "ai_interaction",
+      resource_id: interaction.id,
+      metadata: { interaction_type: "visit_summary", flagged: guardrail.flagged },
+    });
+
     if (guardrail.flagged) {
       // Never write a flagged output to family-visible storage — it stays
       // in ai_interactions (admin-visible for review) only, per Part 2 §14

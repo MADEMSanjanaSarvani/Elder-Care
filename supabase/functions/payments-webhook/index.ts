@@ -44,15 +44,40 @@ Deno.serve(async (req) => {
       // provider_payment_ref (the actual Razorpay payment id, distinct
       // from the order id) is what a refund action needs later — capture
       // it here since this is the only point that ever sees it.
-      await admin
+      const { data: updated } = await admin
         .from("payments")
         .update({ status: "captured", captured_at: new Date().toISOString(), provider_payment_ref: paymentId })
-        .eq("provider_order_ref", orderId);
+        .eq("provider_order_ref", orderId)
+        .select("id")
+        .maybeSingle();
+      if (updated) {
+        await admin.from("audit_log").insert({
+          actor_user_id: null,
+          action: "write",
+          resource_type: "payment",
+          resource_id: updated.id,
+          metadata: { via: "payments-webhook", event: "payment.captured" },
+        });
+      }
     }
   } else if (event.event === "payment.failed") {
     const orderId = event.payload?.payment?.entity?.order_id;
     if (orderId) {
-      await admin.from("payments").update({ status: "failed" }).eq("provider_order_ref", orderId);
+      const { data: updated } = await admin
+        .from("payments")
+        .update({ status: "failed" })
+        .eq("provider_order_ref", orderId)
+        .select("id")
+        .maybeSingle();
+      if (updated) {
+        await admin.from("audit_log").insert({
+          actor_user_id: null,
+          action: "write",
+          resource_type: "payment",
+          resource_id: updated.id,
+          metadata: { via: "payments-webhook", event: "payment.failed" },
+        });
+      }
     }
   }
   // Other event types are intentionally ignored rather than erroring, per

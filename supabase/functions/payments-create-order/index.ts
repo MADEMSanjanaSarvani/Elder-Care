@@ -67,6 +67,14 @@ Deno.serve(async (req) => {
       .single();
     if (insertErr) return errorResponse(insertErr.message, 500);
 
+    await admin.from("audit_log").insert({
+      actor_user_id: user.id,
+      action: "write",
+      resource_type: "payment",
+      resource_id: payment.id,
+      metadata: { booking_id, amount: service.base_price, currency: service.currency },
+    });
+
     // razorpay_order_id + razorpay_key_id are what the Flutter client needs
     // to open Razorpay's checkout; the key *secret* never leaves this function.
     return jsonResponse({ payment, razorpay_order_id: order.id, razorpay_key_id: RAZORPAY_KEY_ID });

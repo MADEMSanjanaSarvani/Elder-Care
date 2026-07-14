@@ -70,6 +70,14 @@ Deno.serve(async (req) => {
       payload: { caregiver_id: eligible.id },
     });
 
+    await admin.from("audit_log").insert({
+      actor_user_id: user.id,
+      action: "write",
+      resource_type: "booking",
+      resource_id: booking_id,
+      metadata: { event: "matched", caregiver_id: eligible.id },
+    });
+
     // TODO(Part 3 deployment): deliver otp_start/otp_end to the elder via
     // FCM push + SMS fallback rather than returning them in this response;
     // returned here only so the MVP flow is exercisable end-to-end.

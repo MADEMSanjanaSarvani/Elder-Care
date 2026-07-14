@@ -45,5 +45,13 @@ Deno.serve(async (req) => {
     .update({ bgv_status: bgvStatus, trust_tier: newTier })
     .eq("id", caregiver.id);
 
+  await admin.from("audit_log").insert({
+    actor_user_id: null,
+    action: "write",
+    resource_type: "caregiver",
+    resource_id: caregiver.id,
+    metadata: { via: "verification-idfy-webhook", bgv_status: bgvStatus, trust_tier: newTier },
+  });
+
   return jsonResponse({ received: true });
 });

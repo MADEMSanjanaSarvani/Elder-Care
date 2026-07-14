@@ -78,6 +78,14 @@ Deno.serve(async (req) => {
       payload: { service_id },
     });
 
+    await admin.from("audit_log").insert({
+      actor_user_id: user.id,
+      action: "write",
+      resource_type: "booking",
+      resource_id: booking.id,
+      metadata: { event: "requested", service_id },
+    });
+
     return jsonResponse(booking, 201);
   } catch (err) {
     return errorResponse((err as Error).message, 401);
