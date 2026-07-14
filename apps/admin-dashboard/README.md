@@ -52,11 +52,24 @@ insert into admin_scopes (profile_id, scope) values ('<their-auth-user-id>', 'su
 
 ## Known gaps (not built, not faked)
 
-- **Payout retries**: read-only reconciliation only. RazorpayX payouts
-  need a `fund_account_id` per caregiver (their bank/UPI destination),
-  which doesn't exist in the schema yet — see the payouts page.
-- **Audit log has no writers.** The viewer is real; nothing populates the
-  table yet.
 - **No document image viewer** for `caregiver_documents` (Supabase Storage
   signed URLs aren't wired up) — the verification queue shows verification
   *status*, not the uploaded ID/certificate images themselves.
+- **Erasure requests have no automatic follow-through.** The
+  `/erasure-requests` page lets a super_admin mark a request in review,
+  completed, or denied, but resolving it here never triggers an actual
+  data deletion — that's deliberate (see the page's own copy and
+  `supabase/migrations/0004_erasure_requests.sql`), but it does mean
+  "completed" is presently just a status label, not a guarantee anything
+  was deleted. Whatever removal work is decided on happens outside this UI.
+- **Payout account verification is a blunt yes/no.** `/payouts` lets a
+  finance_ops admin verify a caregiver's bank/UPI details before
+  `payouts-run` will pay them, but there's no way to *see* the account
+  number/IFSC/UPI value was entered correctly beyond eyeballing the row —
+  no bank-account-validation API call, no confirmation step.
+
+Previously listed here and now resolved: payout retries (RazorpayX
+payouts now have a `fund_account_id`-equivalent via
+`caregiver_payout_accounts`, and `payouts-run` exists), and audit log
+writers (every state-mutating Edge Function now logs a row — see
+`supabase/README.md`).

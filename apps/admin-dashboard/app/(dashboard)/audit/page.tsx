@@ -19,10 +19,10 @@ export default async function AuditLogPage() {
         Metadata only by design (PRD Part 2 §16) — health content itself is never shown here, even to super_admin.
       </p>
       <p className="mb-6 rounded border border-warning/40 bg-warning/5 px-3 py-2 text-sm text-warning">
-        Known gap: nothing currently writes to this table. Postgres has no native SELECT-trigger auditing, so
-        logging &quot;who read what&quot; needs explicit instrumentation added at each sensitive read path — in the
-        consumer apps&apos; repositories and in the Edge Functions alike. That instrumentation hasn&apos;t been
-        built yet; this page is a real, working viewer over a table nothing populates.
+        Write-side only: every state-mutating Edge Function now logs a row here on success. Reads
+        aren&apos;t covered — Postgres has no native SELECT-trigger auditing, so logging &quot;who
+        read what&quot; would need explicit instrumentation added at each sensitive read path in the
+        consumer apps&apos; repositories, which hasn&apos;t been built yet.
       </p>
 
       {error && <p className="text-sos">{error.message}</p>}
