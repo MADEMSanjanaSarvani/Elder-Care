@@ -24,12 +24,14 @@ supabase functions serve
 ## Status
 
 **A real Supabase project now exists and is live** — project ref
-`veumfexjpxqhxemjaaor`, region ap-southeast-1 (Singapore). All three
-migrations, the seed data, and all 11 Edge Functions have been applied /
-deployed against it for real (not a local approximation), from a
-Windows machine outside this sandboxed environment (whose network policy
-blocks `supabase.co` entirely — see the git log around this point for
-that whole saga). Confirmed end-to-end with a real authenticated request:
+`veumfexjpxqhxemjaaor`, region ap-southeast-1 (Singapore). All four
+migrations, the seed data, and all 13 Edge Functions (including
+`me-data-export`/`me-erasure-request`, deployed after `0004_erasure_requests.sql`
+was applied) have been applied / deployed against it for real (not a
+local approximation), from a Windows machine outside this sandboxed
+environment (whose network policy blocks `supabase.co` entirely — see the
+git log around this point for that whole saga). Confirmed end-to-end with
+a real authenticated request:
 
 ```
 GET https://veumfexjpxqhxemjaaor.supabase.co/functions/v1/regions-config?code=vizag-ap-in
@@ -49,16 +51,21 @@ expired session`, since `requireUser()` demands an actual signed-in user,
 not just an API key.
 
 **What this does *not* yet prove**: only `regions-config` has been
-exercised this way. The other 10 functions deployed successfully (no
+exercised this way. The other 12 functions deployed successfully (no
 build/upload errors) but haven't each been individually invoked and
-verified — `bookings-create`, `sos-trigger`, and the payments functions
-in particular are worth testing next given what's riding on them.
+verified — `bookings-create`, `sos-trigger`, the payments functions, and
+the two new DPDP endpoints in particular are worth testing next given
+what's riding on them.
 
 Database + RLS were also validated locally beforehand (`tests/README.md`)
 against a real Postgres 16 + PostGIS instance before ever touching the
-live project. All 11 Edge Functions plus `_shared/` still type-check
-clean (`deno check`) and lint clean (`deno lint`) under Deno 2.9, and the
-two pure-logic shared modules have real passing unit tests:
+live project — including the `erasure_requests` table added in
+`0004_erasure_requests.sql`, which was itself applied to the live
+database and confirmed present via the Table Editor before the two DPDP
+functions were deployed against it. All 13 Edge Functions plus `_shared/`
+still type-check clean (`deno check`) and lint clean (`deno lint`) under
+Deno 2.9, and the two pure-logic shared modules have real passing unit
+tests:
 
 ```bash
 deno test --allow-net=api.openai.com functions/_shared/
@@ -120,14 +127,18 @@ PRD Part 2 §12/§13. Both require a real user session (`requireUser`), same as 
 
 `.github/workflows/deploy-functions.yml` type-checks, lints, and unit-tests every function under
 `functions/` on push to `claude/elder-care-platform-mx27jo` (whenever `supabase/functions/**`
-changes), then runs `supabase functions deploy` against the live project if that passes. This is
-deliberately separate from the Supabase Dashboard's GitHub integration configured earlier, which
-only auto-applies `migrations/` — that integration does not know Edge Functions exist. Requires two
-repository secrets that are not currently set: `SUPABASE_ACCESS_TOKEN` (generate a fresh personal
-access token for this — the one used for the original manual deploy was meant to be revoked after
-that setup) and `SUPABASE_PROJECT_REF` (`veumfexjpxqhxemjaaor`). Until those secrets exist, the
-`deploy` job will fail after `check` passes; function changes still need a manual
-`supabase functions deploy` in the meantime.
+changes), then runs `supabase functions deploy` against the live project if that passes. This was
+originally meant to be separate from the Supabase Dashboard's GitHub integration (which only covers
+`migrations/`, not functions) — but that integration turned out to have never actually synced
+anything (Dashboard showed "No migrations" / "No branches" even after `0001`-`0003` were live), so
+in practice this workflow and manual `psql`/`supabase functions deploy` runs are the only things
+that have ever actually gotten code onto the live project; the Dashboard integration is unverified
+and shouldn't be relied on until someone confirms it actually fires. The workflow's two required
+repository secrets (`SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`) are now set, but the workflow
+itself has not yet been run — `me-data-export` and `me-erasure-request` were deployed manually via
+`supabase functions deploy <name> --project-ref veumfexjpxqhxemjaaor` instead. Triggering it once
+via **Actions → Deploy Edge Functions → Run workflow** is worth doing to confirm the pipeline
+actually works before relying on it for a real push.
 
 ## Not yet implemented
 
