@@ -1,0 +1,592 @@
+<title>Project Setu — Elder Care Platform PRD (Part 4)</title>
+<style>
+  :root{
+    --paper:#F2F4F0; --paper-raised:#FFFFFF; --ink:#15181A; --muted:#57625C; --border:#DADFD8;
+    --accent:#B8691A; --accent-ink:#5A3610; --accent-2:#1D6C5F; --danger:#A83F2A; --danger-bg:#F7EAE4;
+    --decision-bg:#EFEAF6; --decision-ink:#4B3B78; --decision-border:#D6CCEA;
+    --get-bg:#E6EFEA; --get-ink:#1D6C5F; --post-bg:#F3EBE0; --post-ink:#8A5A1C;
+    --radius:3px;
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+  }
+  :root[data-theme="dark"]{
+    --paper:#14181A; --paper-raised:#1B211F; --ink:#E9EDE9; --muted:#9AA69E; --border:#2A312C;
+    --accent:#E0A559; --accent-ink:#F4DEB8; --accent-2:#4BB6A3; --danger:#E2705C; --danger-bg:#3A2620;
+    --decision-bg:#2A2740; --decision-ink:#D9CFEF; --decision-border:#453D66;
+    --get-bg:#1C2E27; --get-ink:#5FCBB4; --post-bg:#332A1A; --post-ink:#E0A559;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#14181A; --paper-raised:#1B211F; --ink:#E9EDE9; --muted:#9AA69E; --border:#2A312C;
+      --accent:#E0A559; --accent-ink:#F4DEB8; --accent-2:#4BB6A3; --danger:#E2705C; --danger-bg:#3A2620;
+      --decision-bg:#2A2740; --decision-ink:#D9CFEF; --decision-border:#453D66;
+      --get-bg:#1C2E27; --get-ink:#5FCBB4; --post-bg:#332A1A; --post-ink:#E0A559;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--font-body); line-height:1.6; -webkit-font-smoothing:antialiased;}
+  a{color:var(--accent-2);}
+  a:focus-visible, button:focus-visible, .tocLink:focus-visible{outline:2px solid var(--accent-2); outline-offset:2px;}
+  .shell{display:grid; grid-template-columns:260px minmax(0,1fr); max-width:1200px; margin:0 auto;}
+  @media (max-width:880px){.shell{grid-template-columns:1fr;} .toc{position:static !important; height:auto !important; border-right:none !important; border-bottom:1px solid var(--border);}}
+  .toc{position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto; padding:32px 20px 32px 28px; border-right:1px solid var(--border);}
+  .toc-kicker{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:6px;}
+  .toc-title{font-family:var(--font-display); font-size:19px; margin:0 0 2px;}
+  .toc-sub{font-size:12px; color:var(--muted); margin-bottom:18px;}
+  .toc-group{font-family:var(--font-mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:16px 0 4px;}
+  .toc nav{display:flex; flex-direction:column; gap:1px;}
+  .tocLink{font-size:12.5px; color:var(--muted); text-decoration:none; padding:5px 8px; border-radius:var(--radius); display:flex; gap:8px;}
+  .tocLink:hover{background:var(--paper-raised); color:var(--ink);}
+  .tocLink .n{font-family:var(--font-mono); color:var(--accent); font-size:10.5px; padding-top:1px;}
+  .content{padding:48px 56px 96px; min-width:0;}
+  @media (max-width:880px){.content{padding:32px 24px 72px;}}
+  .doc-header{margin-bottom:40px; border-bottom:1px solid var(--border); padding-bottom:32px;}
+  .doc-kicker{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:14px;}
+  h1.doc-title{font-family:var(--font-display); font-size:clamp(28px,4vw,40px); line-height:1.12; margin:0 0 10px; text-wrap:balance;}
+  .doc-dek{font-size:16px; color:var(--muted); max-width:70ch; margin:0 0 20px;}
+  .meta-row{display:flex; flex-wrap:wrap; gap:20px; font-size:12px; font-family:var(--font-mono); color:var(--muted);}
+  .meta-row b{color:var(--ink); font-weight:600;}
+  .progress-strip{display:flex; flex-wrap:wrap; gap:8px; margin-top:18px;}
+  .prog-chip{font-family:var(--font-mono); font-size:11px; padding:5px 10px; border-radius:2px; border:1px solid var(--border);}
+  .prog-chip.done{background:var(--get-bg); color:var(--get-ink); border-color:var(--get-ink);}
+  .prog-chip.next{background:var(--post-bg); color:var(--post-ink); border-color:var(--post-ink);}
+  section.module{margin-bottom:96px; padding-bottom:8px; max-width:78ch;}
+  section.module.wide{max-width:none;}
+  .module-eyebrow{font-family:var(--font-mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;}
+  h2.module-title{font-family:var(--font-display); font-size:28px; margin:0 0 6px; padding-top:8px; text-wrap:balance;}
+  .module-dek{font-size:15px; color:var(--muted); margin:0 0 28px;}
+  h3{font-family:var(--font-display); font-size:18px; margin:30px 0 10px; padding-top:6px; border-top:1px solid var(--border); padding-top:22px;}
+  h3:first-of-type{border-top:none; padding-top:0;}
+  h3 .sec-n{font-family:var(--font-mono); font-size:11px; color:var(--accent); margin-right:8px; font-weight:400;}
+  p{margin:0 0 14px;}
+  ul,ol{margin:0 0 14px; padding-left:20px;}
+  li{margin-bottom:5px;}
+  strong{font-weight:600;}
+  table{width:100%; border-collapse:collapse; font-size:13px; margin:6px 0 14px;}
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:14px;}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
+  th{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); background:var(--paper-raised); white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  td.muted{color:var(--muted);}
+  code{font-family:var(--font-mono); font-size:0.87em; background:var(--paper-raised); padding:1px 5px; border-radius:2px; border:1px solid var(--border);}
+  .schema-card{border:1px solid var(--border); border-radius:var(--radius); background:var(--paper-raised); margin-bottom:14px; overflow:hidden;}
+  .schema-head{padding:11px 15px; border-bottom:1px solid var(--border); display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
+  .schema-head .tbl-name{font-family:var(--font-mono); font-weight:700; font-size:13.5px;}
+  .schema-head .tbl-note{font-size:12px; color:var(--muted);}
+  .schema-head .tag{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; padding:2px 7px; border-radius:2px; background:var(--decision-bg); color:var(--decision-ink);}
+  .schema-cols{padding:9px 15px 12px;}
+  .col-row{display:grid; grid-template-columns:150px 130px 1fr; gap:10px; font-size:12px; padding:4px 0; border-bottom:1px dotted var(--border);}
+  .col-row:last-child{border-bottom:none;}
+  .col-name{font-family:var(--font-mono); color:var(--accent-ink);}
+  .col-type{font-family:var(--font-mono); color:var(--accent-2);}
+  .col-desc{color:var(--muted);}
+  .endpoint{display:flex; gap:12px; align-items:baseline; padding:8px 0; border-bottom:1px dotted var(--border); font-size:13px;}
+  .endpoint:last-child{border-bottom:none;}
+  .method{font-family:var(--font-mono); font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:2px; white-space:nowrap;}
+  .method.get{background:var(--get-bg); color:var(--get-ink);}
+  .method.post{background:var(--post-bg); color:var(--post-ink);}
+  .method.none{background:var(--paper); color:var(--muted); border:1px dashed var(--border);}
+  .path{font-family:var(--font-mono); font-size:12.5px;}
+  .callout{border-left:3px solid var(--accent-2); background:var(--paper-raised); border-radius:0 var(--radius) var(--radius) 0; padding:14px 18px; margin:0 0 14px;}
+  .callout h4{margin:0 0 5px; font-size:13.5px;}
+  .callout p{margin:0; font-size:13.5px;}
+  .risk{border-left:3px solid var(--danger); background:var(--danger-bg); border-radius:0 var(--radius) var(--radius) 0; padding:14px 18px; margin:0 0 14px;}
+  .risk h4{margin:0 0 5px; font-size:13.5px;}
+  .risk p{margin:0; font-size:13.5px;}
+  .decision{border-left:3px solid var(--decision-ink); background:var(--decision-bg); border-radius:0 var(--radius) var(--radius) 0; padding:14px 18px; margin:0 0 14px;}
+  .decision h4{margin:0 0 5px; font-size:13.5px; color:var(--decision-ink);}
+  .decision p{margin:0; font-size:13.5px; color:var(--decision-ink);}
+  .flow-step{display:flex; gap:14px; padding:9px 0; border-bottom:1px dotted var(--border);}
+  .flow-step:last-child{border-bottom:none;}
+  .flow-step .idx{font-family:var(--font-mono); color:var(--accent); font-size:11px; min-width:18px;}
+  .flow-step .body{font-size:13.5px;}
+  .flow-step .body b{display:block; margin-bottom:2px;}
+  .persona-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:0 0 16px;}
+  .persona{border:1px solid var(--border); border-radius:var(--radius); padding:10px 12px; font-size:12.5px;}
+  .persona .role{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; color:var(--accent);}
+  .persona .access{color:var(--muted); font-size:11.5px; margin-top:3px;}
+  footer.doc-footer{margin-top:80px; padding-top:20px; border-top:1px solid var(--border); font-size:12px; color:var(--muted); font-family:var(--font-mono);}
+</style>
+
+<div class="shell">
+  <aside class="toc">
+    <div class="toc-kicker">Project Setu</div>
+    <div class="toc-title">PRD — Part 4</div>
+    <div class="toc-sub">Missing Modules — Batch 1: Family Experience</div>
+    <nav>
+      <a class="tocLink" href="#overview"><span class="n">·</span>Batch overview</a>
+      <div class="toc-group">Module 1</div>
+      <a class="tocLink" href="#m1"><span class="n">17</span>Family Dashboard</a>
+      <div class="toc-group">Module 2</div>
+      <a class="tocLink" href="#m2"><span class="n">17</span>Elder Care Timeline</a>
+      <div class="toc-group">Module 3</div>
+      <a class="tocLink" href="#m3"><span class="n">17</span>Daily Check-ins System</a>
+      <div class="toc-group">Module 4</div>
+      <a class="tocLink" href="#m4"><span class="n">17</span>Family Member Management</a>
+      <a class="tocLink" href="#cross"><span class="n">·</span>Touches to existing modules</a>
+      <a class="tocLink" href="#next"><span class="n">→</span>Batch 2 preview</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="doc-header">
+      <div class="doc-kicker">Product Requirements Document · Architecture &amp; requirements only, no implementation code</div>
+      <h1 class="doc-title">Missing Modules, Batch 1: Family Experience</h1>
+      <p class="doc-dek">Part 4 of the Project Setu PRD, covering the first of seven batches across 25 modules requested beyond the MVP already specified in Parts 1–3. This batch is the tightly-coupled core of what a family member actually opens the app to do: see how their elder is doing (Dashboard), understand the full history (Timeline), get a daily wellbeing signal even on days with no booked visit (Daily Check-ins), and manage who else in the family has access (Family Member Management). Every design here extends the already-implemented booking, OTP, caregiver verification, SOS, payments, and DPDP modules — none of those are modified except where explicitly called out in <a href="#cross">§ Touches to existing modules</a> as narrowly-scoped, additive, necessary changes.</p>
+      <div class="meta-row">
+        <span><b>Batch:</b> 1 of 7</span>
+        <span><b>Modules:</b> Family Dashboard · Elder Care Timeline · Daily Check-ins System · Family Member Management</span>
+        <span><b>Builds on:</b> PRD Parts 1–3, the live schema in <code>supabase/migrations/</code></span>
+      </div>
+      <div class="progress-strip">
+        <span class="prog-chip done">Batch 1 — this document</span>
+        <span class="prog-chip next">Batch 2 next — Medicine, Refills, Appointments, Reminders</span>
+      </div>
+    </div>
+
+    <section class="module wide" id="overview">
+      <div class="module-eyebrow">Batch overview</div>
+      <h2 class="module-title">Why these four, together</h2>
+      <p>Dashboard is the landing screen; Timeline is the data model that feeds its "recent activity" widget; Daily Check-ins is the single highest-value new *data source* Timeline needs to be worth building; Family Member Management is what makes "who sees this" — the question every other module in this batch has to answer — an actual product surface instead of a database table nobody can see or manage. Designing them together avoids four independent teams inventing four different answers to "how does consent-gated visibility render in the UI."</p>
+      <div class="decision">
+        <h4>One consistent rule, used by all four modules below</h4>
+        <p>A family member who lacks consent for a category never sees a blank space or a silently-missing widget — they see the category exists, with a "request access" affordance that notifies the elder. Hiding categories entirely would look like a bug; showing locked content in the clear would leak its existence without consent. This is decided once, here, and referenced rather than re-litigated in each module below.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 1 — FAMILY DASHBOARD -->
+    <!-- ============================================================ -->
+    <section class="module wide" id="m1">
+      <div class="module-eyebrow">Module 1 of 4</div>
+      <h2 class="module-title">Family Dashboard</h2>
+      <p class="module-dek">The landing screen for anyone signed in as <code>family_member</code>: one elder (or a switcher across several), one glance, consent-gated the same way every other read in this system is.</p>
+
+      <h3><span class="sec-n">01</span>Problem being solved</h3>
+      <p>Family members — often overseas, often managing an elder alongside a job and their own household — currently have no single view of how their elder is doing. The booking screen shows bookings; the consent screen shows grants; nothing shows the composite picture a worried adult child actually wants at a glance. This is the single highest-frequency screen in the whole family-facing app, and today it doesn't exist as a distinct surface — PRD Part 3's "family-mode home" is a basic placeholder, not a real dashboard.</p>
+
+      <h3><span class="sec-n">02</span>User personas</h3>
+      <div class="persona-grid">
+        <div class="persona"><div class="role">Family member</div>Primary user. Default landing screen on sign-in.<div class="access">full access, consent-gated per widget</div></div>
+        <div class="persona"><div class="role">Elder</div>Not a dashboard user — has their own elder-mode home (unchanged).<div class="access">no access to this screen</div></div>
+        <div class="persona"><div class="role">Caregiver</div>Not applicable.<div class="access">no access</div></div>
+        <div class="persona"><div class="role">Admin</div>Equivalent visibility already exists via the admin dashboard's booking/caregiver pages.<div class="access">no new admin surface</div></div>
+      </div>
+
+      <h3><span class="sec-n">03</span>Functional requirements</h3>
+      <ul>
+        <li><strong>Elder switcher</strong> for family members linked to more than one elder (e.g. both parents); last-viewed elder persisted as default.</li>
+        <li><strong>Widgets, each independently consent-gated:</strong> next scheduled visit (always visible — booking metadata isn't consent-gated when the viewer is the requester); recent visit history, last 5 (<code>visit_history</code>); medication adherence snapshot (<code>medication_list</code>); live location, shown only during an active booking or an explicit elder-app share toggle (<code>location_live</code>); recent AI visit summaries (<code>health_notes</code>); billing summary (<code>billing</code>); consent status (always visible — a family member always sees their <em>own</em> grants); care-team card showing the assigned caregiver's name, photo, and trust tier, no phone number (protects caregiver privacy, matches existing no-direct-contact pattern).</li>
+        <li><strong>Active SOS banner</strong> — always visible regardless of consent, life-safety overrides gating exactly as <code>sos_events_select</code> RLS already does.</li>
+        <li>All widget actions deep-link into existing screens (book, manage consent, message support) — the dashboard performs zero writes of its own.</li>
+        <li><strong>Empty states:</strong> no elder linked yet → invite-elder CTA; link status <code>pending</code> → "waiting for [elder] to accept," no data rendered; zero bookings ever → "book your first visit" CTA.</li>
+      </ul>
+
+      <h3><span class="sec-n">04</span>Non-functional requirements</h3>
+      <ul>
+        <li><strong>Performance:</strong> cold-start render &lt;1.5s p95 for the full widget set on a mid-tier Android device on 4G.</li>
+        <li><strong>Reliability:</strong> degrades to cached last-known state offline; never shows a blank crash state for a transient network failure.</li>
+        <li><strong>Scalability:</strong> read-only composition over already-indexed, already-scoped queries — no new write contention introduced anywhere.</li>
+        <li><strong>Accessibility:</strong> WCAG 2.1 AA baseline (this is the family-facing surface; elder-mode has its own stricter bar under Module 11).</li>
+        <li><strong>Compliance:</strong> zero new data paths outside the existing consent-gated RLS — see § Security below.</li>
+      </ul>
+
+      <h3><span class="sec-n">05</span>User flow</h3>
+      <div class="flow-step"><span class="idx">1</span><div class="body"><b>Family member signs in</b>Lands on Dashboard by default (replacing the placeholder family-mode home from Part 3).</div></div>
+      <div class="flow-step"><span class="idx">2</span><div class="body"><b>Multiple elders?</b>Elder switcher shown; otherwise single elder loads immediately.</div></div>
+      <div class="flow-step"><span class="idx">3</span><div class="body"><b>Widget renders per-category</b>Each widget independently checks its own consent category and either renders data or a locked "request access" card.</div></div>
+      <div class="flow-step"><span class="idx">4</span><div class="body"><b>Tap a widget</b>Deep-links to the relevant existing screen (booking detail, consent management, etc.) — never a dashboard-owned edit flow.</div></div>
+      <div class="flow-step"><span class="idx">5</span><div class="body"><b>Tap "request access"</b>Writes a notification to the elder; does not bypass consent, does not retry automatically.</div></div>
+
+      <h3><span class="sec-n">06</span>Information architecture</h3>
+      <p>Dashboard becomes the new root route for <code>family_member</code>. Children: Elder Switcher (modal sheet), and one deep-link target per widget into screens that already exist or are specified elsewhere in this batch (Timeline, Family Member Management) or in the existing MVP (bookings, consent, billing).</p>
+
+      <h3><span class="sec-n">07</span>Database design</h3>
+      <p>No required new tables — this module is a pure read composition over existing tables (<code>bookings</code>, <code>elder_health_notes</code>, <code>elder_medications</code>, <code>elder_locations</code>, <code>payments</code>, <code>consent_grants</code>, <code>caregivers</code>). One optional table, low priority:</p>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">dashboard_widget_prefs</span><span class="tbl-note">optional — per-family-member widget ordering/visibility</span><span class="tag">new · optional</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">family_user_id, elder_id</span><span class="col-type">uuid fks</span><span class="col-desc">composite scope</span></div>
+          <div class="col-row"><span class="col-name">widget_key, visible, sort_order</span><span class="col-type">text/bool/int</span><span class="col-desc">self-serve personalization only</span></div>
+        </div>
+      </div>
+
+      <h3><span class="sec-n">08</span>API design</h3>
+      <p><strong>No new Edge Function required for MVP.</strong> The client performs parallel direct Supabase queries per widget, each already RLS-scoped. An aggregation endpoint is explicitly <em>not</em> being specified here — inventing one before real usage shows the per-widget approach is too chatty would be exactly the "fake API" the brief warns against.</p>
+      <div class="table-wrap">
+        <table><tbody>
+          <tr><td style="width:1%"><div class="endpoint"><span class="method none">—</span><span class="path">no new endpoints</span></div></td><td class="muted">Deferred: a <code>dashboard-summary</code> read-aggregation Edge Function, only if Phase 2+ traffic shows per-widget round-trips are a real latency problem.</td></tr>
+        </tbody></table>
+      </div>
+
+      <h3><span class="sec-n">09</span>Security design</h3>
+      <div class="callout"><h4>No bypass of consent-gated RLS, ever</h4><p>Every widget query goes through the same <code>has_consent()</code>-backed policies as everything else. No dashboard-specific fast path.</p></div>
+      <div class="risk"><h4>"Who else has access" needs an explicit, opt-in decision</h4><p>A tempting widget — but today's <code>family_links_select</code> policy only lets a family member see their <em>own</em> link, not siblings'. Showing this list requires a new policy and an elder-controlled opt-in, specified fully under Module 4, not decided casually here as a dashboard feature.</p></div>
+      <div class="callout"><h4>Read-path audit logging — this is the highest-value place to close that gap</h4><p>Every write-path Edge Function now logs to <code>audit_log</code>; reads still don't. A family member viewing consent-gated widgets is exactly the kind of access DPDP's transparency principle cares about. Recommend: Dashboard is the first screen instrumented with client-triggered read-audit logging, not deferred indefinitely.</p></div>
+
+      <h3><span class="sec-n">10</span>AI architecture</h3>
+      <p>Not applicable directly — the AI-summary widget surfaces existing, already-guardrailed <code>ai_interactions.output_text</code>. No new model call originates here. Future "here's what to check on" proactive suggestions belong to the AI Recommendation Engine (Batch 4), explicitly deferred, not built as part of the dashboard.</p>
+
+      <h3><span class="sec-n">11</span>Accessibility requirements</h3>
+      <p>WCAG 2.1 AA: scalable text to 200%, 4.5:1 contrast minimum, screen-reader labels on every widget card, status never conveyed by color alone (the SOS banner uses icon + text), full keyboard/switch-access navigation.</p>
+
+      <h3><span class="sec-n">12</span>Notification requirements</h3>
+      <p>Dashboard itself sends nothing. It triggers exactly one notification type: a consent-access request to the elder when "request access" is tapped, delivered through the Family Notification Center (Batch 3).</p>
+
+      <h3><span class="sec-n">13</span>Edge cases</h3>
+      <ul>
+        <li>Elder revokes all consent while dashboard is open → next fetch returns empty for gated widgets, no crash, "request access" state renders.</li>
+        <li>Elder de-linked mid-session → same graceful empty-state handling, not an error screen.</li>
+        <li>Active in-progress booking → dashboard shows a distinct "visit in progress" live state, not lumped with "upcoming."</li>
+        <li>Family member's session expires mid-view → standard re-auth, no dashboard-specific handling needed.</li>
+      </ul>
+
+      <h3><span class="sec-n">14</span>Admin dashboard requirements</h3>
+      <p>None. Ops already has equivalent visibility via the existing caregiver/booking admin pages — deliberately not duplicating a second view of the same data for internal users.</p>
+
+      <h3><span class="sec-n">15</span>Flutter project structure</h3>
+      <p><code>apps/family_elder_app/lib/features/dashboard/</code> — data/domain/presentation per the existing convention. Each widget card consumes its <em>existing</em> feature's Riverpod provider (bookings, consent, etc.) rather than one monolithic dashboard provider, so consent-gating logic stays co-located with the feature that owns it instead of being duplicated.</p>
+
+      <h3><span class="sec-n">16</span>Supabase requirements</h3>
+      <p>No new tables required for MVP (optional <code>dashboard_widget_prefs</code> noted above). No new storage buckets, Edge Functions, or cron jobs. Zero new RLS policies for MVP scope.</p>
+
+      <h3><span class="sec-n">17</span>Future scalability</h3>
+      <p>Read-only composition scales horizontally without changes. Widget system is data-source-agnostic by design so Phase 2+ can add new widget types (wearable vitals, once that integration exists) without touching the dashboard shell. i18n-ready from day one via the existing <code>preferred_language</code> field.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 2 — ELDER CARE TIMELINE -->
+    <!-- ============================================================ -->
+    <section class="module wide" id="m2">
+      <div class="module-eyebrow">Module 2 of 4</div>
+      <h2 class="module-title">Elder Care Timeline</h2>
+      <p class="module-dek">One chronological, human-readable feed of everything that's happened for an elder — the data model the Dashboard's "recent activity" widget needs, and the first genuinely new table this batch requires.</p>
+
+      <h3><span class="sec-n">01</span>Problem being solved</h3>
+      <p>Visits, health notes, medication changes, and SOS events already exist as separate rows in separate tables with no unified narrative. A family member piecing together "what's been happening" today has to check four screens. Worse: <code>elder_medications</code> only stores current state (<code>active</code> boolean) — a medication being stopped just flips a flag with no record of when or why. There is no point-in-time history anywhere in the current schema.</p>
+
+      <h3><span class="sec-n">02</span>User personas</h3>
+      <div class="persona-grid">
+        <div class="persona"><div class="role">Family member</div>Consent-gated per event category, same rule as Dashboard.<div class="access">read, filtered</div></div>
+        <div class="persona"><div class="role">Elder</div>Full unfiltered view of their own history.<div class="access">read, unfiltered</div></div>
+        <div class="persona"><div class="role">Caregiver</div>Contributes events implicitly via existing writes; no new caregiver-facing timeline screen.<div class="access">no read access</div></div>
+        <div class="persona"><div class="role">Admin</div>Equivalent reconstruction already possible via <code>audit_log</code> + existing tables.<div class="access">no new admin surface (MVP)</div></div>
+      </div>
+
+      <h3><span class="sec-n">03</span>Functional requirements</h3>
+      <ul>
+        <li>Chronological, infinite-scroll feed per elder, filterable by category.</li>
+        <li>Locked (consent-gated) categories render as section headers with a "request access" affordance — never silently hidden, never leaked in the clear (the batch-wide rule from § Overview).</li>
+        <li>Event types at launch: <code>visit_scheduled</code>, <code>visit_started</code>, <code>visit_completed</code>, <code>medication_added</code>, <code>medication_stopped</code>, <code>health_note_added</code>, <code>sos_triggered</code>, <code>sos_resolved</code>. Stored as free text with an application-level enum, not a Postgres enum — so later batches (Appointments, Care Plans, …) can add their own event types without a schema migration each time.</li>
+        <li>Each event carries a short, pre-generated human-readable <code>summary</code> line — generated at write time by the source Edge Function, not rendered dynamically from raw metadata, so the feed reads consistently regardless of which module wrote the event.</li>
+      </ul>
+
+      <h3><span class="sec-n">04</span>Non-functional requirements</h3>
+      <ul>
+        <li>Append-only; indexed <code>(elder_id, occurred_at desc)</code> for pagination.</li>
+        <li>Writes are fire-and-forget relative to the primary transaction they accompany — a dropped timeline event is degraded UX, never a correctness bug, since the source-of-truth table (bookings, elder_medications, etc.) is unaffected.</li>
+        <li>Retention indefinite by default, subject to the same DPDP erasure workflow as everything else.</li>
+      </ul>
+
+      <h3><span class="sec-n">05</span>User flow</h3>
+      <div class="flow-step"><span class="idx">1</span><div class="body"><b>Family</b>Dashboard → "View full timeline" → chronological scroll, category filter chips.</div></div>
+      <div class="flow-step"><span class="idx">2</span><div class="body"><b>Elder</b>Elder-mode home → "My history" → same feed, unfiltered.</div></div>
+      <div class="flow-step"><span class="idx">3</span><div class="body"><b>Locked category</b>Tap → same "request access" flow as Dashboard, not a separate implementation.</div></div>
+
+      <h3><span class="sec-n">06</span>Information architecture</h3>
+      <p>One Timeline screen, two entry points (Dashboard for family, elder-mode home for the elder), sharing the same underlying provider and the same "locked category" widget as Dashboard — extracted into <code>setu_core</code> so the consent-request UX isn't implemented twice.</p>
+
+      <h3><span class="sec-n">07</span>Database design</h3>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">elder_timeline_events</span><span class="tbl-note">append-only aggregated feed</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">elder_id</span><span class="col-type">uuid fk</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">event_type</span><span class="col-type">text</span><span class="col-desc">app-level enum, extensible without migration — see FR above</span></div>
+          <div class="col-row"><span class="col-name">category</span><span class="col-type">consent_category</span><span class="col-desc">reuses the existing enum from 0001_schema.sql — which grant gates this event</span></div>
+          <div class="col-row"><span class="col-name">actor_user_id, related_booking_id</span><span class="col-type">uuid fks, nullable</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">summary</span><span class="col-type">text</span><span class="col-desc">pre-generated human-readable line</span></div>
+          <div class="col-row"><span class="col-name">metadata, occurred_at</span><span class="col-type">jsonb/timestamptz</span><span class="col-desc">—</span></div>
+        </div>
+      </div>
+      <p>RLS mirrors the existing <code>elder_health_notes</code>/<code>elder_locations</code> shape exactly: <code>is_elder_self()</code> OR <code>has_consent(category)</code> OR <code>is_admin()</code> OR the assigned caregiver during an active booking that matches <code>related_booking_id</code> — zero new security primitives, all existing helper functions from <code>0002_rls.sql</code> reused as-is.</p>
+
+      <h3><span class="sec-n">08</span>API design</h3>
+      <p>No new endpoint for reading (RLS-guarded direct query). No new endpoint for writing either — this is the one place in this batch where existing Edge Functions get touched, and it's covered fully under <a href="#cross">§ Touches to existing modules</a>: <code>bookings-match</code>, <code>otp-start</code>, <code>otp-end</code>, <code>sos-trigger</code>, and <code>ai-visit-summary</code> each gain one additive <code>insert into elder_timeline_events</code> call alongside their existing writes.</p>
+
+      <h3><span class="sec-n">09</span>Security design</h3>
+      <div class="callout"><h4>Reuses <code>has_consent()</code> — no new access logic</h4><p>The single riskiest thing a new table like this could do is invent its own authorization rule. It doesn't; it reuses the exact function every other consent-gated table already calls.</p></div>
+      <div class="decision"><h4>Timeline is where read-audit logging becomes a requirement, not a deferral</h4><p>A family member scrolling an elder's full history is the single highest-value place to close the platform-wide read-audit gap. Recommend building this module with client-triggered <code>audit_log</code> writes on render from day one, rather than adding it later as a retrofit.</p></div>
+
+      <h3><span class="sec-n">10</span>AI architecture</h3>
+      <p>Not applicable directly. Timeline surfaces existing AI-generated content (already guardrailed at the point of generation); it does not generate anything new. Could become an input signal for the AI Recommendation Engine (Batch 4) later — noted, not built here.</p>
+
+      <h3><span class="sec-n">11</span>Accessibility requirements</h3>
+      <p>Same WCAG 2.1 AA baseline as Dashboard for the family view. For the elder's own view specifically: larger text and an optional single-category-at-a-time mode, consistent with the Accessibility Module (Batch 5) rather than reinventing an elder-specific UI kit here.</p>
+
+      <h3><span class="sec-n">12</span>Notification requirements</h3>
+      <p>None — Timeline is passive and generates no notifications of its own.</p>
+
+      <h3><span class="sec-n">13</span>Edge cases</h3>
+      <ul>
+        <li>Brand-new elder, zero history → empty state, not an error.</li>
+        <li>Caregiver's booking-scoped visibility window closes (booking completed) → their access to <em>that booking's</em> entries persists (needed for dispute resolution), but does not extend to entries outside it — matches the existing <code>elder_health_notes_select</code> shape exactly.</li>
+        <li>Fire-and-forget insert silently fails → Phase 2+ hardening: a background reconciliation job that can rebuild missing entries from source tables, since those remain intact regardless. Not MVP-blocking.</li>
+      </ul>
+
+      <h3><span class="sec-n">14</span>Admin dashboard requirements</h3>
+      <p>None for MVP. A future "elder activity view" for support case investigation is a plausible Phase 2+ superset of the existing audit log viewer — deferred, not specified further here.</p>
+
+      <h3><span class="sec-n">15</span>Flutter project structure</h3>
+      <p><code>apps/family_elder_app/lib/features/timeline/</code> — <code>TimelineEvent</code> domain model, paginated repository, <code>TimelineScreen</code>, <code>CategoryFilterChips</code>, and a shared <code>LockedCategoryCard</code> widget pulled into <code>setu_core</code> so Dashboard and Timeline don't each build their own version of the same locked-content pattern.</p>
+
+      <h3><span class="sec-n">16</span>Supabase requirements</h3>
+      <p>One new table (<code>elder_timeline_events</code>) with its RLS policies. No new storage, no new scheduled Edge Functions. Five existing Edge Functions gain one additive insert call each — see § Touches to existing modules.</p>
+
+      <h3><span class="sec-n">17</span>Future scalability</h3>
+      <p>Unbounded per-elder growth — plan partitioning or cold-storage archival once per-elder event counts get large (a Phase 3+ concern). The text-based <code>event_type</code> is deliberately not a rigid Postgres enum specifically so the other 23 modules in this plan can log their own timeline-worthy events later without schema churn.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 3 — DAILY CHECK-INS SYSTEM -->
+    <!-- ============================================================ -->
+    <section class="module wide" id="m3">
+      <div class="module-eyebrow">Module 3 of 4</div>
+      <h2 class="module-title">Daily Check-ins System</h2>
+      <p class="module-dek">A one-tap daily wellbeing signal from the elder, for the days — most days — with no booked visit to otherwise confirm anything.</p>
+
+      <h3><span class="sec-n">01</span>Problem being solved</h3>
+      <p>A booked visit confirms wellbeing on the days it happens; most days have no visit. Family currently has no lightweight, low-effort way to know the elder is okay in between. The gap this closes is specifically the silent day, not an emergency — which is exactly why this must not be built as, or confused with, a second SOS path.</p>
+
+      <h3><span class="sec-n">02</span>User personas</h3>
+      <div class="persona-grid">
+        <div class="persona"><div class="role">Elder</div>Primary actor — performs the check-in.<div class="access">write own, read own</div></div>
+        <div class="persona"><div class="role">Family member</div>Receives status + missed-check-in alerts.<div class="access">read, consent-gated</div></div>
+        <div class="persona"><div class="role">Caregiver</div>Not involved — visit-scoped signals are already covered by <code>otp-start</code>/<code>otp-end</code>/<code>ai-visit-summary</code>.<div class="access">no access</div></div>
+        <div class="persona"><div class="role">Admin</div>Ops visibility into sweep-job health and a manual wellness-check override.<div class="access">limited, scope TBD — see § Admin</div></div>
+      </div>
+
+      <h3><span class="sec-n">03</span>Functional requirements</h3>
+      <ul>
+        <li>Elder-mode home gains a fourth large-touch-target action: "I'm okay" (extends the existing three-action home screen from Part 3 — additive, no change to Call for Help / Book Help / Today's Visit).</li>
+        <li>Optional short mood field: small fixed vocabulary, not freeform text — deliberately, so nothing resembling a health claim gets captured as "mood" (see § Security).</li>
+        <li>Configurable per-elder expected check-in time and timezone; a family member or the elder can adjust it.</li>
+        <li><strong>A completed booking on a given day auto-satisfies that day's check-in</strong> — otp-start/otp-end already proves the elder is fine; a redundant nudge on top of a real visit would just train family to ignore the feature.</li>
+        <li><strong>Pause window</strong> for travel or a hospital stay (<code>paused_until</code> date) — should auto-suggest itself when an active Hospital Companion Services booking exists (Batch 3), cross-referenced not built twice.</li>
+        <li>Missed check-in → gentle nudge to the elder first, then escalate to family only if the elder also doesn't respond within a further window. Escalation is a "haven't heard from them today" notification, never an automated SOS trigger — SOS stays human/elder-initiated and 108-first-gated per the existing locked decision, full stop.</li>
+        <li>Any family member can mark a missed-check-in alert "handled" (e.g. "I called, they're fine"), which suppresses further escalation for that day for <em>all</em> linked family — avoids duplicate anxiety-inducing alerts to siblings who all get the same notification.</li>
+      </ul>
+
+      <h3><span class="sec-n">04</span>Non-functional requirements</h3>
+      <ul>
+        <li>Notification delivery reliability is the load-bearing requirement here — a missed-alert that doesn't arrive defeats the feature. Depends on the Family Notification Center (Batch 3) meeting a real delivery SLA.</li>
+        <li>Must function for low digital literacy: single button, large target, works without navigating away from the home screen.</li>
+        <li>Sweep job (§ API) must scale across timezones without a rewrite — see § Future scalability.</li>
+      </ul>
+
+      <h3><span class="sec-n">05</span>User flow</h3>
+      <div class="flow-step"><span class="idx">1</span><div class="body"><b>Elder</b>Opens app → elder-mode home → taps "I'm okay" (or speaks it, cross-ref Voice Assistant, Batch 4) → confirmation toast, done.</div></div>
+      <div class="flow-step"><span class="idx">2</span><div class="body"><b>Elder misses the window</b>Receives one gentle in-app nudge before any family notification fires.</div></div>
+      <div class="flow-step"><span class="idx">3</span><div class="body"><b>Family</b>Receives "haven't heard from [elder] today" push/SMS at cutoff → taps "call now" or "mark as handled."</div></div>
+      <div class="flow-step"><span class="idx">4</span><div class="body"><b>Admin</b>(if a care-ops scope exists) sees sweep-job health and can manually trigger a wellness-check call for a flagged elder.</div></div>
+
+      <h3><span class="sec-n">06</span>Information architecture</h3>
+      <p>Check-in button lives on the existing elder-mode home (additive). Status + history surface on Family Dashboard (Module 1) as a widget, and in full in Timeline (Module 2) as <code>event_type = daily_checkin</code>. A lightweight schedule-settings screen under family/elder settings.</p>
+
+      <h3><span class="sec-n">07</span>Database design</h3>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">daily_checkins</span><span class="tbl-note">one row per check-in</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">elder_id, checked_in_at</span><span class="col-type">uuid fk / timestamptz</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">mood</span><span class="col-type">text, nullable</span><span class="col-desc">small fixed vocabulary, app-enforced — not freeform</span></div>
+          <div class="col-row"><span class="col-name">note</span><span class="col-type">text, nullable, length-capped</span><span class="col-desc">never fed to AI without the existing guardrail — see § Security</span></div>
+          <div class="col-row"><span class="col-name">source</span><span class="col-type">text</span><span class="col-desc">elder_app / voice_assistant</span></div>
+        </div>
+      </div>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">checkin_schedules</span><span class="tbl-note">per-elder configuration</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">elder_id</span><span class="col-type">uuid fk, unique</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">expected_by_time, timezone</span><span class="col-type">time / text</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">paused_until</span><span class="col-type">date, nullable</span><span class="col-desc">travel / hospital-stay override</span></div>
+          <div class="col-row"><span class="col-name">escalation_contact_family_user_id</span><span class="col-type">uuid fk, nullable</span><span class="col-desc">null = notify all linked family</span></div>
+        </div>
+      </div>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">checkin_escalations</span><span class="tbl-note">one row per missed day, tracks "handled" state</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">elder_id, date</span><span class="col-type">uuid fk / date, unique together</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">escalated_at</span><span class="col-type">timestamptz</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">handled_by, handled_at</span><span class="col-type">uuid fk / timestamptz, nullable</span><span class="col-desc">any linked family member can set this; suppresses the alert for all of them</span></div>
+        </div>
+      </div>
+      <div class="decision"><h4>New consent category: <code>wellbeing_checkins</code></h4><p>Check-ins are conceptually distinct from visit history — an elder might reasonably share daily wellbeing broadly while keeping detailed visit/health history more restricted, or the reverse. This needs one additive value on the existing <code>consent_category</code> enum (<code>alter type consent_category add value 'wellbeing_checkins'</code>) — a minimal, backward-compatible, and genuinely necessary touch to the existing consent model, flagged in full under § Touches to existing modules.</p></div>
+
+      <h3><span class="sec-n">08</span>API design</h3>
+      <div class="table-wrap">
+        <table><tbody>
+          <tr><td style="width:1%"><div class="endpoint"><span class="method none">—</span><span class="path">check-in write</span></div></td><td class="muted">No Edge Function — plain RLS-guarded insert, no secret, no cross-table rule.</td></tr>
+          <tr><td style="width:1%"><div class="endpoint"><span class="method post">POST</span><span class="path">/checkins/escalation-sweep</span></div></td><td class="muted">New scheduled Edge Function, triggered externally (n8n/cron — same pattern as <code>payouts-run</code>). Sweeps all elders past their <code>expected_by_time</code> with no check-in and no active pause, writes <code>checkin_escalations</code>, fans out notifications. A genuine batch job, not a per-request operation, so it earns its own endpoint unlike the write path above.</td></tr>
+        </tbody></table>
+      </div>
+
+      <h3><span class="sec-n">09</span>Security design</h3>
+      <div class="risk"><h4>Mood/note fields are explicitly not health data</h4><p><code>mood</code> is a fixed vocabulary, not freeform. <code>note</code> is short and, if a future feature ever summarizes it via AI, <strong>must</strong> reuse the existing two-layer guardrail (<code>_shared/aiGuardrail.ts</code>) — never a new, unguarded AI path. Stated explicitly because "just a quick note field" is exactly the kind of surface that quietly grows into an ungoverned health-data channel if this isn't decided up front.</p></div>
+      <div class="callout"><h4>Escalation is never SOS</h4><p>Restated for emphasis: a missed check-in triggers a family notification, never <code>sos-trigger</code>, never the 108-first flow. Conflating "haven't heard from them" with "emergency" would be a serious trust/safety regression, not a convenience.</p></div>
+
+      <h3><span class="sec-n">10</span>AI architecture</h3>
+      <p>Not required for MVP (button + optional short note, no generation). Voice-initiated check-in (Batch 4) is the only AI-adjacent surface — speech-to-intent, not diagnostic, not summarizing content.</p>
+
+      <h3><span class="sec-n">11</span>Accessibility requirements</h3>
+      <p>The clearest accessibility case study in this whole batch: one tap, no reading required beyond an icon + short label, large touch target for tremor/motor impairment, voice alternative. Baseline defined fully in the Accessibility Module (Batch 5), applied here rather than reinvented.</p>
+
+      <h3><span class="sec-n">12</span>Notification requirements</h3>
+      <p>Gentle in-app nudge to the elder before any family escalation. Missed-check-in alert to family via push + SMS fallback. "Handled" confirmation suppresses further alerts for that day across all linked family.</p>
+
+      <h3><span class="sec-n">13</span>Edge cases</h3>
+      <ul>
+        <li>Elder in hospital → <code>paused_until</code> covers it; should auto-suggest from an active Hospital Companion Services booking rather than requiring family to remember.</li>
+        <li>Elder's phone is dead/inaccessible that day → this is precisely the scenario the feature exists to catch; a booking existing that day does <em>not</em> suppress the alert unless that booking actually completed (see FR above).</li>
+        <li>Multiple family members, one marks "handled" → all others' pending alerts for that day are suppressed too.</li>
+        <li>Elder wants zero check-ins ever → schedule can be effectively disabled via a permanent pause; this is a real product/consent question (does disabling require family agreement?) flagged as needing a product decision, not decided unilaterally here.</li>
+      </ul>
+
+      <h3><span class="sec-n">14</span>Admin dashboard requirements</h3>
+      <p>Ops visibility into sweep-job health (last run, failure count) and a manual override to trigger a wellness-check call for a specific elder. Whether this needs a new, narrower <code>care_ops</code> admin scope or reuses <code>sos_operator</code>-adjacent access is an open decision for whoever prioritizes this — flagged, not pre-decided.</p>
+
+      <h3><span class="sec-n">15</span>Flutter project structure</h3>
+      <p><code>apps/family_elder_app/lib/features/checkins/</code> — <code>CheckInButton</code> (elder-mode home, additive), <code>CheckInHistoryWidget</code> (feeds Dashboard), <code>CheckInScheduleSettings</code>.</p>
+
+      <h3><span class="sec-n">16</span>Supabase requirements</h3>
+      <p>Three new tables (<code>daily_checkins</code>, <code>checkin_schedules</code>, <code>checkin_escalations</code>) with RLS mirroring existing elder-data patterns. One additive enum value on <code>consent_category</code>. One new scheduled Edge Function (<code>checkins-escalation-sweep</code>), externally triggered.</p>
+
+      <h3><span class="sec-n">17</span>Future scalability</h3>
+      <p>The sweep job must batch efficiently by timezone from day one — Vizag-only MVP is single-timezone, but designing the query to group by timezone now avoids a rewrite at Phase 2+ multi-region rollout. Cadence is currently a single daily slot; multiple-times-per-day for higher-acuity elders is a plausible later extension, noted as a known future migration, not built now.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 4 — FAMILY MEMBER MANAGEMENT -->
+    <!-- ============================================================ -->
+    <section class="module wide" id="m4">
+      <div class="module-eyebrow">Module 4 of 4</div>
+      <h2 class="module-title">Family Member Management</h2>
+      <p class="module-dek">The missing UI and light role concept on top of <code>family_links</code>, which today is a bare invite/accept/revoke table with no interface at all.</p>
+
+      <h3><span class="sec-n">01</span>Problem being solved</h3>
+      <p><code>family_links</code> (PRD Part 2 §11) already has the right lifecycle in the schema — but no screen exists to invite, view, or manage family members through it, and there's no way to differentiate "the sibling who coordinates scheduling" from "the sibling who just wants to be kept informed" beyond per-category consent, which answers <em>what</em> someone can see, not <em>who's the first point of contact</em>.</p>
+
+      <h3><span class="sec-n">02</span>User personas</h3>
+      <div class="persona-grid">
+        <div class="persona"><div class="role">Family member</div>Invites others, manages own settings, can self-revoke.<div class="access">full, scoped to self</div></div>
+        <div class="persona"><div class="role">Elder</div>Sovereign viewer — sees the full access list, can revoke anyone.<div class="access">full oversight</div></div>
+        <div class="persona"><div class="role">Admin</div>Guardian-process override already exists in <code>consent_grants.granted_via</code> (Part 2) — cross-referenced, not rebuilt.<div class="access">existing path only</div></div>
+      </div>
+
+      <h3><span class="sec-n">03</span>Functional requirements</h3>
+      <ul>
+        <li>Invite by phone/email; invitee doesn't need the app installed to <em>accept</em> — a lightweight web accept flow reduces friction for low-app-adoption relatives, though full access still requires the app.</li>
+        <li><strong>Coordinator flag</strong> (additive, see § Database): at most one primary coordinator per elder — a UX/notification-priority concept only. <strong>Coordinator status grants zero additional data access.</strong> This distinction is restated three times in this module because it is the single most likely place a future implementer conflates "coordinator" with "has more permissions."</li>
+        <li>Revoke rules: a family member may revoke <em>themself</em>; the <em>elder</em> may revoke anyone; one family member may <strong>never</strong> unilaterally revoke another's access — that would be a real abuse vector (a controlling sibling locking out a concerned one) and must be blocked at the RLS level, not just the UI.</li>
+        <li>"Who has access" list — primarily an <strong>elder</strong>-facing screen (elder is sovereign over their own data by design). Sharing that same list with other family members is an elder-controlled opt-in, off by default (resolves the open question flagged in Module 1).</li>
+      </ul>
+
+      <h3><span class="sec-n">04</span>Non-functional requirements</h3>
+      <ul>
+        <li>Invite flow must work over low bandwidth / SMS-only reachability — no app-only path for the invite itself.</li>
+        <li>Rate-limited invites per elder to prevent spam-inviting strangers.</li>
+      </ul>
+
+      <h3><span class="sec-n">05</span>User flow</h3>
+      <div class="flow-step"><span class="idx">1</span><div class="body"><b>Family</b>Settings → "Family &amp; Access" → Invite → phone/email → sent.</div></div>
+      <div class="flow-step"><span class="idx">2</span><div class="body"><b>Invitee</b>Receives SMS/link → accepts (web or app) → appears as pending → active once app onboarding completes.</div></div>
+      <div class="flow-step"><span class="idx">3</span><div class="body"><b>Elder</b>Settings → "Who has access" → full list, per-member consent summary, revoke action.</div></div>
+      <div class="flow-step"><span class="idx">4</span><div class="body"><b>Admin</b>Guardian-process override for consent — existing PRD Part 2 workflow, unchanged.</div></div>
+
+      <h3><span class="sec-n">06</span>Information architecture</h3>
+      <p>New "Family &amp; Access" section under settings, in both elder-mode and family-mode. Invite screen, pending-invites list, active-members list with a deep-link into the existing consent management screen per member — not a duplicate of it.</p>
+
+      <h3><span class="sec-n">07</span>Database design</h3>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">family_links</span><span class="tbl-note">existing table — additive change only</span><span class="tag">modified · additive</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">coordinator</span><span class="col-type">boolean, default false</span><span class="col-desc">new column; UX priority only, never a security boundary</span></div>
+        </div>
+      </div>
+      <p><code>create unique index idx_family_links_one_coordinator on family_links (elder_id) where coordinator = true;</code> — enforces the single-coordinator invariant at the database level, race-safe against two simultaneous "make me coordinator" taps.</p>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">elder_profiles</span><span class="tbl-note">existing table — additive change only</span><span class="tag">modified · additive</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">share_family_list</span><span class="col-type">boolean, default false</span><span class="col-desc">elder opt-in for the "who else has access" transparency view — off by default</span></div>
+        </div>
+      </div>
+
+      <h3><span class="sec-n">08</span>API design</h3>
+      <div class="table-wrap">
+        <table><tbody>
+          <tr><td style="width:1%"><div class="endpoint"><span class="method post">POST</span><span class="path">/family/invite</span></div></td><td class="muted">New Edge Function — creates the pending <code>family_links</code> row and sends the SMS/email invite. Needs a secret-holding SMS/email provider, so it can't be a raw client insert, same "Edge Functions own anything touching a secret" rule as everywhere else. Also owns rate-limiting.</td></tr>
+        </tbody></table>
+      </div>
+      <p>Accept, revoke, and coordinator-transfer stay as direct RLS-guarded writes against <code>family_links</code> — no secret, no cross-table rule beyond what RLS already expresses.</p>
+
+      <h3><span class="sec-n">09</span>Security design</h3>
+      <div class="risk"><h4>Coordinator ≠ access. Restated once more.</h4><p>The coordinator flag must never be read by any RLS policy or consent check. It is a display/notification-ordering hint, full stop.</p></div>
+      <div class="callout"><h4>Revoke policy, precisely</h4><p><code>family_links_update</code> must allow <code>family_user_id = auth.uid()</code> (self-revoke) or <code>is_elder_self(elder_id)</code> (elder revokes anyone) or <code>is_admin()</code> — and explicitly nothing else. No peer-to-peer revoke path, ever.</p></div>
+      <div class="callout"><h4>Revoking a link already revokes consent — no new logic needed</h4><p><code>is_linked_family()</code> already checks <code>status = 'active'</code>, so every consent-gated query already loses access the moment a link is revoked. Confirmed here rather than rebuilt.</p></div>
+
+      <h3><span class="sec-n">10</span>AI architecture</h3>
+      <p>Not applicable.</p>
+
+      <h3><span class="sec-n">11</span>Accessibility requirements</h3>
+      <p>The elder's "who has access" list must be scannable at a glance for low digital literacy: avatar, name, relationship, one-line consent summary — not a dense table.</p>
+
+      <h3><span class="sec-n">12</span>Notification requirements</h3>
+      <p>Invite sent / accepted / declined. Coordinator changed (to all linked family — transparency when the point of contact shifts). Revoked (to the removed member — a silent loss of access is a bad and confusing experience).</p>
+
+      <h3><span class="sec-n">13</span>Edge cases</h3>
+      <ul>
+        <li>The family member being revoked is also the one paying for bookings → their <code>billing</code> consent is already revoked automatically the moment the link is (see § Security), no special handling required.</li>
+        <li>Last remaining family member self-revokes, leaving the elder with zero oversight → allowed, with a strong confirmation warning and a notification to the elder — flagged as needing an actual product/legal opinion on whether this should ever be blocked, not decided unilaterally here.</li>
+        <li>Two family members simultaneously claim "coordinator" → prevented at the database level by the partial unique index.</li>
+      </ul>
+
+      <h3><span class="sec-n">14</span>Admin dashboard requirements</h3>
+      <p>None new for MVP — <code>family_links</code> is already queryable by ops if a support case needs it; the existing guardian-override consent workflow (Part 2) is the closest analog and isn't duplicated here.</p>
+
+      <h3><span class="sec-n">15</span>Flutter project structure</h3>
+      <p><code>apps/family_elder_app/lib/features/family_access/</code> — <code>InviteScreen</code>, <code>PendingInvitesList</code>, <code>FamilyMembersList</code> (elder and family variants sharing a base widget), <code>CoordinatorBadge</code>.</p>
+
+      <h3><span class="sec-n">16</span>Supabase requirements</h3>
+      <p>Two additive columns (<code>family_links.coordinator</code>, <code>elder_profiles.share_family_list</code>), one partial unique index, one new opt-in RLS policy for the transparency view, one new Edge Function (<code>family-invite</code>). No new tables, no new storage.</p>
+
+      <h3><span class="sec-n">17</span>Future scalability</h3>
+      <p>Coordinator is a boolean, not an enum, deliberately — keeps MVP simple while leaving room to widen to a primary/secondary tier later without breaking existing data. SMS invite delivery should eventually route through a per-region provider (mirroring the existing <code>regions.payment_provider</code> abstraction) once multi-country rollout needs more than one SMS vendor — deferred to Phase 2+, not built now.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="module wide" id="cross">
+      <div class="module-eyebrow">Cross-cutting</div>
+      <h2 class="module-title">Every touch to an existing, already-implemented module</h2>
+      <p>Consolidated here so nothing is buried inside an individual module's Database Design section. Every item below is additive — no existing column, policy, or function is changed in a way that alters current behavior.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Existing module</th><th>What's added</th><th>Why it's necessary</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Consent model</strong> (<code>consent_category</code> enum)</td><td class="muted">One new value: <code>wellbeing_checkins</code></td><td class="muted">Daily Check-ins is a genuinely new data category the existing six values have no slot for.</td></tr>
+            <tr><td><strong><code>family_links</code></strong></td><td class="muted">One new column: <code>coordinator boolean</code>, plus a partial unique index</td><td class="muted">The only way to express "who's the primary contact" without inventing a parallel table.</td></tr>
+            <tr><td><strong><code>elder_profiles</code></strong></td><td class="muted">One new column: <code>share_family_list boolean</code></td><td class="muted">Elder opt-in gate for the "who else has access" transparency view — off by default.</td></tr>
+            <tr><td><strong><code>bookings-match</code>, <code>otp-start</code>, <code>otp-end</code>, <code>sos-trigger</code>, <code>ai-visit-summary</code></strong> (Edge Functions)</td><td class="muted">One additive, fire-and-forget <code>insert into elder_timeline_events</code> call each, alongside their existing writes</td><td class="muted">Timeline has no other way to aggregate events without duplicating write logic elsewhere; scoped strictly to logging, no existing behavior changes.</td></tr>
+            <tr><td><strong>Elder-mode home screen</strong> (Flutter)</td><td class="muted">One new large-touch-target action: "I'm okay"</td><td class="muted">Daily Check-ins needs a zero-navigation entry point; the existing three actions (Call for Help, Book Help, Today's Visit) are unchanged.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="module" id="next">
+      <div class="module-eyebrow">Next</div>
+      <h2 class="module-title">Batch 2 preview</h2>
+      <p>Medicine Management, Medicine Refill Management, Appointment Management, and Smart Reminder System — the "care logistics" cluster, following immediately after this batch. All four extend the same <code>elder_timeline_events</code> table and consent model established here rather than inventing their own patterns.</p>
+    </section>
+
+    <footer class="doc-footer">Part 4 of the Project Setu PRD · Batch 1 of 7 covering 25 missing modules · builds on Parts 1–3 and the live schema</footer>
+  </main>
+</div>
