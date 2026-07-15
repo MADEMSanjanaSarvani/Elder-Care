@@ -1,0 +1,573 @@
+<title>Project Setu — Elder Care Platform PRD (Part 6)</title>
+<style>
+  :root{
+    --paper:#F2F4F0; --paper-raised:#FFFFFF; --ink:#15181A; --muted:#57625C; --border:#DADFD8;
+    --accent:#B8691A; --accent-ink:#5A3610; --accent-2:#1D6C5F; --danger:#A83F2A; --danger-bg:#F7EAE4;
+    --decision-bg:#EFEAF6; --decision-ink:#4B3B78; --decision-border:#D6CCEA;
+    --get-bg:#E6EFEA; --get-ink:#1D6C5F; --post-bg:#F3EBE0; --post-ink:#8A5A1C;
+    --radius:3px;
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+  }
+  :root[data-theme="dark"]{
+    --paper:#14181A; --paper-raised:#1B211F; --ink:#E9EDE9; --muted:#9AA69E; --border:#2A312C;
+    --accent:#E0A559; --accent-ink:#F4DEB8; --accent-2:#4BB6A3; --danger:#E2705C; --danger-bg:#3A2620;
+    --decision-bg:#2A2740; --decision-ink:#D9CFEF; --decision-border:#453D66;
+    --get-bg:#1C2E27; --get-ink:#5FCBB4; --post-bg:#332A1A; --post-ink:#E0A559;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#14181A; --paper-raised:#1B211F; --ink:#E9EDE9; --muted:#9AA69E; --border:#2A312C;
+      --accent:#E0A559; --accent-ink:#F4DEB8; --accent-2:#4BB6A3; --danger:#E2705C; --danger-bg:#3A2620;
+      --decision-bg:#2A2740; --decision-ink:#D9CFEF; --decision-border:#453D66;
+      --get-bg:#1C2E27; --get-ink:#5FCBB4; --post-bg:#332A1A; --post-ink:#E0A559;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--font-body); line-height:1.6; -webkit-font-smoothing:antialiased;}
+  a{color:var(--accent-2);}
+  a:focus-visible, button:focus-visible, .tocLink:focus-visible{outline:2px solid var(--accent-2); outline-offset:2px;}
+  .shell{display:grid; grid-template-columns:260px minmax(0,1fr); max-width:1200px; margin:0 auto;}
+  @media (max-width:880px){.shell{grid-template-columns:1fr;} .toc{position:static !important; height:auto !important; border-right:none !important; border-bottom:1px solid var(--border);}}
+  .toc{position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto; padding:32px 20px 32px 28px; border-right:1px solid var(--border);}
+  .toc-kicker{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:6px;}
+  .toc-title{font-family:var(--font-display); font-size:19px; margin:0 0 2px;}
+  .toc-sub{font-size:12px; color:var(--muted); margin-bottom:18px;}
+  .toc-group{font-family:var(--font-mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:16px 0 4px;}
+  .toc nav{display:flex; flex-direction:column; gap:1px;}
+  .tocLink{font-size:12.5px; color:var(--muted); text-decoration:none; padding:5px 8px; border-radius:var(--radius); display:flex; gap:8px;}
+  .tocLink:hover{background:var(--paper-raised); color:var(--ink);}
+  .tocLink .n{font-family:var(--font-mono); color:var(--accent); font-size:10.5px; padding-top:1px;}
+  .content{padding:48px 56px 96px; min-width:0;}
+  @media (max-width:880px){.content{padding:32px 24px 72px;}}
+  .doc-header{margin-bottom:40px; border-bottom:1px solid var(--border); padding-bottom:32px;}
+  .doc-kicker{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:14px;}
+  h1.doc-title{font-family:var(--font-display); font-size:clamp(28px,4vw,40px); line-height:1.12; margin:0 0 10px; text-wrap:balance;}
+  .doc-dek{font-size:16px; color:var(--muted); max-width:70ch; margin:0 0 20px;}
+  .meta-row{display:flex; flex-wrap:wrap; gap:20px; font-size:12px; font-family:var(--font-mono); color:var(--muted);}
+  .meta-row b{color:var(--ink); font-weight:600;}
+  .progress-strip{display:flex; flex-wrap:wrap; gap:8px; margin-top:18px;}
+  .prog-chip{font-family:var(--font-mono); font-size:11px; padding:5px 10px; border-radius:2px; border:1px solid var(--border);}
+  .prog-chip.done{background:var(--get-bg); color:var(--get-ink); border-color:var(--get-ink);}
+  .prog-chip.next{background:var(--post-bg); color:var(--post-ink); border-color:var(--post-ink);}
+  section.module{margin-bottom:96px; padding-bottom:8px; max-width:78ch;}
+  section.module.wide{max-width:none;}
+  .module-eyebrow{font-family:var(--font-mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;}
+  h2.module-title{font-family:var(--font-display); font-size:28px; margin:0 0 6px; padding-top:8px; text-wrap:balance;}
+  .module-dek{font-size:15px; color:var(--muted); margin:0 0 28px;}
+  h3{font-family:var(--font-display); font-size:18px; margin:30px 0 10px; border-top:1px solid var(--border); padding-top:22px;}
+  h3:first-of-type{border-top:none; padding-top:0;}
+  h3 .sec-n{font-family:var(--font-mono); font-size:11px; color:var(--accent); margin-right:8px; font-weight:400;}
+  p{margin:0 0 14px;}
+  ul,ol{margin:0 0 14px; padding-left:20px;}
+  li{margin-bottom:5px;}
+  strong{font-weight:600;}
+  table{width:100%; border-collapse:collapse; font-size:13px; margin:6px 0 14px;}
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:14px;}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
+  th{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); background:var(--paper-raised); white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  td.muted{color:var(--muted);}
+  code{font-family:var(--font-mono); font-size:0.87em; background:var(--paper-raised); padding:1px 5px; border-radius:2px; border:1px solid var(--border);}
+  .schema-card{border:1px solid var(--border); border-radius:var(--radius); background:var(--paper-raised); margin-bottom:14px; overflow:hidden;}
+  .schema-head{padding:11px 15px; border-bottom:1px solid var(--border); display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
+  .schema-head .tbl-name{font-family:var(--font-mono); font-weight:700; font-size:13.5px;}
+  .schema-head .tbl-note{font-size:12px; color:var(--muted);}
+  .schema-head .tag{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; padding:2px 7px; border-radius:2px; background:var(--decision-bg); color:var(--decision-ink);}
+  .schema-cols{padding:9px 15px 12px;}
+  .col-row{display:grid; grid-template-columns:150px 130px 1fr; gap:10px; font-size:12px; padding:4px 0; border-bottom:1px dotted var(--border);}
+  .col-row:last-child{border-bottom:none;}
+  .col-name{font-family:var(--font-mono); color:var(--accent-ink);}
+  .col-type{font-family:var(--font-mono); color:var(--accent-2);}
+  .col-desc{color:var(--muted);}
+  .endpoint{display:flex; gap:12px; align-items:baseline; padding:8px 0; border-bottom:1px dotted var(--border); font-size:13px;}
+  .endpoint:last-child{border-bottom:none;}
+  .method{font-family:var(--font-mono); font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:2px; white-space:nowrap;}
+  .method.get{background:var(--get-bg); color:var(--get-ink);}
+  .method.post{background:var(--post-bg); color:var(--post-ink);}
+  .method.none{background:var(--paper); color:var(--muted); border:1px dashed var(--border);}
+  .path{font-family:var(--font-mono); font-size:12.5px;}
+  .callout{border-left:3px solid var(--accent-2); background:var(--paper-raised); border-radius:0 var(--radius) var(--radius) 0; padding:14px 18px; margin:0 0 14px;}
+  .callout h4{margin:0 0 5px; font-size:13.5px;}
+  .callout p{margin:0; font-size:13.5px;}
+  .risk{border-left:3px solid var(--danger); background:var(--danger-bg); border-radius:0 var(--radius) var(--radius) 0; padding:14px 18px; margin:0 0 14px;}
+  .risk h4{margin:0 0 5px; font-size:13.5px;}
+  .risk p{margin:0; font-size:13.5px;}
+  .decision{border-left:3px solid var(--decision-ink); background:var(--decision-bg); border-radius:0 var(--radius) var(--radius) 0; padding:14px 18px; margin:0 0 14px;}
+  .decision h4{margin:0 0 5px; font-size:13.5px; color:var(--decision-ink);}
+  .decision p{margin:0; font-size:13.5px; color:var(--decision-ink);}
+  .flow-step{display:flex; gap:14px; padding:9px 0; border-bottom:1px dotted var(--border);}
+  .flow-step:last-child{border-bottom:none;}
+  .flow-step .idx{font-family:var(--font-mono); color:var(--accent); font-size:11px; min-width:18px;}
+  .flow-step .body{font-size:13.5px;}
+  .flow-step .body b{display:block; margin-bottom:2px;}
+  .persona-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:0 0 16px;}
+  .persona{border:1px solid var(--border); border-radius:var(--radius); padding:10px 12px; font-size:12.5px;}
+  .persona .role{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; color:var(--accent);}
+  .persona .access{color:var(--muted); font-size:11.5px; margin-top:3px;}
+  footer.doc-footer{margin-top:80px; padding-top:20px; border-top:1px solid var(--border); font-size:12px; color:var(--muted); font-family:var(--font-mono);}
+</style>
+
+<div class="shell">
+  <aside class="toc">
+    <div class="toc-kicker">Project Setu</div>
+    <div class="toc-title">PRD — Part 6</div>
+    <div class="toc-sub">Missing Modules — Batch 3: Visits &amp; Records</div>
+    <nav>
+      <a class="tocLink" href="#overview"><span class="n">·</span>Batch overview</a>
+      <div class="toc-group">Module 9</div>
+      <a class="tocLink" href="#m9"><span class="n">17</span>Family Notification Center</a>
+      <div class="toc-group">Module 10</div>
+      <a class="tocLink" href="#m10"><span class="n">17</span>Companion Visits</a>
+      <div class="toc-group">Module 11</div>
+      <a class="tocLink" href="#m11"><span class="n">17</span>Hospital Companion Services</a>
+      <div class="toc-group">Module 12</div>
+      <a class="tocLink" href="#m12"><span class="n">17</span>Health Records Management</a>
+      <a class="tocLink" href="#cross"><span class="n">·</span>Touches to existing modules</a>
+      <a class="tocLink" href="#next"><span class="n">→</span>Batch 4 preview</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="doc-header">
+      <div class="doc-kicker">Product Requirements Document · Architecture &amp; requirements only, no implementation code</div>
+      <h1 class="doc-title">Missing Modules, Batch 3: Visits &amp; Records</h1>
+      <p class="doc-dek">Part 6 of the Project Setu PRD, third of seven batches. This batch has a different shape from the first two: two of its four modules (Companion Visits, Hospital Companion Services) build on service types that <em>already exist and already work</em> in <code>service_catalog</code> — the question for each was specifically "what's missing beyond just being able to book this," not "how do we add this service." The other two (Family Notification Center, Health Records Management) give a UI and a proper security boundary to data that already exists in bare form (<code>notifications</code>, scattered health fields) but was never designed as a real module.</p>
+      <div class="meta-row">
+        <span><b>Batch:</b> 3 of 7</span>
+        <span><b>Modules:</b> Family Notification Center · Companion Visits · Hospital Companion Services · Health Records Management</span>
+        <span><b>Builds on:</b> Parts 1–5, the live schema, <code>elder_timeline_events</code> and <code>reminders</code> from Batches 1–2</span>
+      </div>
+      <div class="progress-strip">
+        <span class="prog-chip done">Batch 1 — Family Experience (done)</span>
+        <span class="prog-chip done">Batch 2 — Care Logistics (done)</span>
+        <span class="prog-chip done">Batch 3 — this document</span>
+        <span class="prog-chip next">Batch 4 next — AI Care Assistant, Visit Reports, Recommendations, Voice</span>
+      </div>
+    </div>
+
+    <section class="module wide" id="overview">
+      <div class="module-eyebrow">Batch overview</div>
+      <h2 class="module-title">Two already-bookable services, two already-bare tables</h2>
+      <p><code>hospital_companion</code> and <code>companionship_visit</code> are live entries in the seeded service catalog today — a family can already book either one and run it through the full existing <code>bookings-create</code> → <code>bookings-match</code> → OTP flow with no changes at all. What those two modules below actually specify is the richness a single isolated booking can't express: visit continuity with a preferred caregiver, shift-to-shift handoff during a multi-day hospital stay, structured activity logs. Meanwhile <code>notifications</code> and the health-adjacent fields already scattered across <code>elder_health_notes</code>/<code>elder_medications</code> get their first real product surface in this batch, not their first table.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 9 — FAMILY NOTIFICATION CENTER -->
+    <!-- ============================================================ -->
+    <section class="module wide" id="m9">
+      <div class="module-eyebrow">Module 9 of 4 in this batch (9th overall)</div>
+      <h2 class="module-title">Family Notification Center</h2>
+      <p class="module-dek">The existing <code>notifications</code> table already receives writes from <code>sos-trigger</code> and <code>me-erasure-request</code> — there has simply never been an inbox screen, a read/unread model, or a preferences layer built on top of it.</p>
+
+      <h3><span class="sec-n">01</span>Problem being solved</h3>
+      <p>Notifications are being written today with no way for a recipient to see them as a list, mark them read, or choose which channel a given category arrives on. Every module that needs to notify someone (Smart Reminder System, Family Member Management, SOS) currently has nowhere coherent to send them.</p>
+
+      <h3><span class="sec-n">02</span>User personas</h3>
+      <div class="persona-grid">
+        <div class="persona"><div class="role">Family member</div>Full inbox + preferences.<div class="access">own notifications only</div></div>
+        <div class="persona"><div class="role">Elder</div>Separate, simplified view — fewer categories, no preference matrix.<div class="access">own notifications only</div></div>
+        <div class="persona"><div class="role">Caregiver</div>Job-related notifications only (new assignment, payout status), same underlying table.<div class="access">own notifications only</div></div>
+        <div class="persona"><div class="role">Admin</div>Delivery-health visibility, not individual message content.<div class="access">aggregate, read-only</div></div>
+      </div>
+
+      <h3><span class="sec-n">03</span>Functional requirements</h3>
+      <ul>
+        <li>Unified inbox: chronological, filterable by type, read/unread, mark-all-read, badge count.</li>
+        <li>Deep-link from each notification to its source screen.</li>
+        <li>Per-type channel preference (push / SMS / in-app-only / push+SMS).</li>
+        <li><strong>Certain notification types cannot be disabled</strong> — SOS-class and the missed-check-in escalation from Batch 1 are safety-adjacent enough that family may choose <em>channel</em> but never turn them fully off. Enforced structurally, not by convention — see § Database.</li>
+        <li>Elder-mode gets a reduced category set (SOS confirmation, "family checked on you," visit reminders) with no configuration surface — family manages preferences on the elder's behalf.</li>
+      </ul>
+
+      <h3><span class="sec-n">04</span>Non-functional requirements</h3>
+      <ul>
+        <li>SOS-class delivery latency budget: under 5 seconds from trigger to device.</li>
+        <li>Preferences must never silently degrade a must-deliver category — the enforcement described below is a hard constraint, not a UI nudge.</li>
+      </ul>
+
+      <h3><span class="sec-n">05</span>User flow</h3>
+      <div class="flow-step"><span class="idx">1</span><div class="body"><b>Any user</b>Taps the bell icon (badge shows unread count) → inbox.</div></div>
+      <div class="flow-step"><span class="idx">2</span><div class="body"><b>Tap a notification</b>Deep-links to its source (booking, SOS monitor, reminder origin).</div></div>
+      <div class="flow-step"><span class="idx">3</span><div class="body"><b>Settings</b>Family member sets per-type channel preference; cannot disable must-deliver types.</div></div>
+
+      <h3><span class="sec-n">06</span>Information architecture</h3>
+      <p>Notification inbox (new screen), notification preferences (new screen), bell icon with badge in main nav (additive UI element, not a change to existing navigation logic).</p>
+
+      <h3><span class="sec-n">07</span>Database design</h3>
+      <p>Reuses the existing <code>notifications</code> table as-is — no changes to it. Three new tables:</p>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">notification_types</span><span class="tbl-note">config/reference table, not a hardcoded enum</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">type</span><span class="col-type">text, pk</span><span class="col-desc">matches <code>notifications.type</code> values</span></div>
+          <div class="col-row"><span class="col-name">can_disable</span><span class="col-type">boolean, default true</span><span class="col-desc"><code>false</code> for <code>sos_triggered</code>, <code>sos_ops_alert</code>, <code>checkin_missed_escalation</code></span></div>
+          <div class="col-row"><span class="col-name">default_channel, description</span><span class="col-type">text</span><span class="col-desc">—</span></div>
+        </div>
+      </div>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">notification_preferences</span><span class="tbl-note">per-user, per-type</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">user_id, type</span><span class="col-type">uuid fk / text fk, unique together</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">channel, enabled</span><span class="col-type">text / boolean</span><span class="col-desc">a trigger blocks <code>enabled = false</code> when <code>notification_types.can_disable = false</code> — see § Security</span></div>
+        </div>
+      </div>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">user_devices</span><span class="tbl-note">a real gap: nothing today stores an FCM token to push to</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">user_id, fcm_token, platform</span><span class="col-type">uuid fk / text / text</span><span class="col-desc">one user may have multiple devices (elder's tablet, family's phones)</span></div>
+          <div class="col-row"><span class="col-name">last_seen_at</span><span class="col-type">timestamptz</span><span class="col-desc">—</span></div>
+        </div>
+      </div>
+
+      <h3><span class="sec-n">08</span>API design</h3>
+      <p>No new Edge Function. Reading the inbox and writing preferences are both plain RLS-guarded operations. Actual delivery dispatch (SMS/push) stays owned by whichever module generates a given notification — <code>sos-trigger</code>, <code>reminders-dispatch-sweep</code>, <code>family-invite</code> — this module is presentation and preference, not a delivery pipeline, per the division of labor stated in Batch 2's Module 8.</p>
+
+      <h3><span class="sec-n">09</span>Security design</h3>
+      <div class="risk"><h4>Must-deliver enforcement is a database trigger, not a UI restriction</h4><p>A <code>BEFORE INSERT OR UPDATE</code> trigger on <code>notification_preferences</code> joins <code>notification_types</code> and raises an exception if <code>enabled = false</code> is attempted for a <code>can_disable = false</code> type. This mirrors the stock-decrement trigger pattern from Batch 2 — a cross-cutting invariant belongs in the database, not duplicated across every client that could write this row.</p></div>
+      <div class="callout"><h4>No new consent category</h4><p>A user's own notification preferences aren't elder health data — they're the recipient's own settings, gated by <code>user_id = auth.uid()</code> exactly as <code>notifications</code> already is.</p></div>
+
+      <h3><span class="sec-n">10</span>AI architecture</h3>
+      <p>Not applicable.</p>
+
+      <h3><span class="sec-n">11</span>Accessibility requirements</h3>
+      <p>Elder-mode's reduced category set (§ FR) <em>is</em> the accessibility decision here — no dense preference matrix for elders, ever.</p>
+
+      <h3><span class="sec-n">12</span>Notification requirements</h3>
+      <p>This module is the presentation layer for every notification type in the system — recursive by nature, no further sub-requirement.</p>
+
+      <h3><span class="sec-n">13</span>Edge cases</h3>
+      <ul>
+        <li>Notification references a since-deleted or cancelled source → tapping shows "this is no longer available" gracefully, not a crash.</li>
+        <li>Zero notifications ever → empty state.</li>
+        <li>Multiple devices per user → push targets every registered, recently-seen token, not just the most recent one.</li>
+      </ul>
+
+      <h3><span class="sec-n">14</span>Admin dashboard requirements</h3>
+      <p>Delivery-health visibility (success/failure rate by channel) — plausibly the same consolidated "scheduled jobs health" admin page floated in Batch 2, covering reminders, check-in sweeps, and notification delivery together rather than three separate pages.</p>
+
+      <h3><span class="sec-n">15</span>Flutter project structure</h3>
+      <p><code>apps/family_elder_app/lib/features/notifications/</code> — <code>NotificationInboxScreen</code>, <code>NotificationPreferencesScreen</code>, <code>NotificationBell</code>. <code>apps/caregiver_app</code> gets its own lightweight inbox variant, job-related types only.</p>
+
+      <h3><span class="sec-n">16</span>Supabase requirements</h3>
+      <p>Three new tables (<code>notification_types</code>, <code>notification_preferences</code>, <code>user_devices</code>) with RLS, one new trigger. <code>notifications</code> itself is unchanged. No new Edge Functions, no new consent category.</p>
+
+      <h3><span class="sec-n">17</span>Future scalability</h3>
+      <p><code>notification_types</code> as a config table means Batches 4–7 register new types with a data insert, not a schema migration — the same extensibility principle as <code>reminders.source_type</code> in Batch 2.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 10 — COMPANION VISITS -->
+    <!-- ============================================================ -->
+    <section class="module wide" id="m10">
+      <div class="module-eyebrow">Module 10 of 4 in this batch (10th overall)</div>
+      <h2 class="module-title">Companion Visits</h2>
+      <p class="module-dek"><code>companionship_visit</code> already books and completes today. This module adds caregiver continuity and a structured activity log — the two things that turn a one-off booking into an actual relationship.</p>
+
+      <h3><span class="sec-n">01</span>Problem being solved</h3>
+      <p>A family can already book a companionship visit and it runs through the existing flow correctly. What's missing is everything that makes repeat companion care feel like a relationship rather than a stranger every time: no way to request the same caregiver again, and no record of what actually happened during the visit beyond "completed."</p>
+
+      <h3><span class="sec-n">02</span>User personas</h3>
+      <div class="persona-grid">
+        <div class="persona"><div class="role">Family member</div>Sets caregiver preference and interests.<div class="access">full, consent-gated</div></div>
+        <div class="persona"><div class="role">Elder</div>Same visibility as family for their own preferences.<div class="access">full, own record</div></div>
+        <div class="persona"><div class="role">Caregiver</div>Logs the activity record during/after an assigned visit.<div class="access">booking-scoped write</div></div>
+        <div class="persona"><div class="role">Admin</div>None new required.<div class="access">none (MVP)</div></div>
+      </div>
+
+      <h3><span class="sec-n">03</span>Functional requirements</h3>
+      <ul>
+        <li>Preferred-caregiver setting per elder, plus a small structured list of interests (e.g. walking, cards, reading) — not freeform text, so it can drive matching without needing NLP.</li>
+        <li><strong>Preferred-caregiver continuity in matching</strong>: when a preference is set, <code>bookings-match</code> should prefer that caregiver among otherwise-eligible candidates, falling back to normal matching if they're unavailable or no longer eligible. This is the one place in this batch that touches an existing Edge Function — flagged fully under § API and in the batch's cross-cutting section, because there's no other way to express "prefer this caregiver" without touching the function that does caregiver selection.</li>
+        <li>Structured visit activity log: fixed checklist (walked, played a game, read together, watched TV, other) plus a caregiver-observed mood (small fixed vocabulary, mirroring Daily Check-ins' mood field) and a short capped note.</li>
+      </ul>
+
+      <h3><span class="sec-n">04</span>Non-functional requirements</h3>
+      <p>The matching preference must never reduce trust-tier safety — a preferred caregiver who no longer meets the service's required trust tier is never selected, preference or not.</p>
+
+      <h3><span class="sec-n">05</span>User flow</h3>
+      <div class="flow-step"><span class="idx">1</span><div class="body"><b>Family</b>Sets a preferred caregiver (optional) and interests once.</div></div>
+      <div class="flow-step"><span class="idx">2</span><div class="body"><b>Every future companion booking</b>Matching prefers that caregiver automatically — no need to re-request each time.</div></div>
+      <div class="flow-step"><span class="idx">3</span><div class="body"><b>Caregiver</b>During or right after the visit, logs the activity checklist + observed mood.</div></div>
+      <div class="flow-step"><span class="idx">4</span><div class="body"><b>Family</b>Sees the log on the Family Dashboard / Timeline (Batch 1).</div></div>
+
+      <h3><span class="sec-n">06</span>Information architecture</h3>
+      <p>Preference settings live under the elder's profile. Activity logs surface as Timeline entries and on the relevant booking's detail screen — not a separate top-level app section.</p>
+
+      <h3><span class="sec-n">07</span>Database design</h3>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">companion_visit_preferences</span><span class="tbl-note">one row per elder</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">elder_id</span><span class="col-type">uuid fk, unique</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">preferred_caregiver_id</span><span class="col-type">uuid fk, nullable</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">interests</span><span class="col-type">jsonb</span><span class="col-desc">fixed structured list, not freeform</span></div>
+        </div>
+      </div>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">visit_activity_logs</span><span class="tbl-note">one per companion-type booking</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">booking_id</span><span class="col-type">uuid fk, unique</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">activities</span><span class="col-type">jsonb</span><span class="col-desc">fixed checklist selections</span></div>
+          <div class="col-row"><span class="col-name">caregiver_observed_mood, note</span><span class="col-type">text, both nullable</span><span class="col-desc">mood: small fixed vocabulary; note: capped, same AI-guardrail rule as every free-text field in this plan</span></div>
+        </div>
+      </div>
+      <p>RLS for both: <code>is_elder_self</code>, <code>has_consent('visit_history')</code>, <code>is_admin</code>, plus — for <code>visit_activity_logs</code> writes only — the assigned caregiver during an <code>in_progress</code> or just-<code>completed</code> booking, the same shape as <code>elder_health_notes_insert</code>.</p>
+
+      <h3><span class="sec-n">08</span>API design</h3>
+      <div class="table-wrap">
+        <table><tbody>
+          <tr><td style="width:1%"><div class="endpoint"><span class="method none">—</span><span class="path">preferences, activity log</span></div></td><td class="muted">Both plain RLS-guarded writes — no secret, no cross-table rule beyond the policies above.</td></tr>
+        </tbody></table>
+      </div>
+      <div class="risk">
+        <h4>The one existing-module touch in this batch: <code>bookings-match</code></h4>
+        <p>Add a single additive tiebreak to the existing candidate query: among caregivers who already pass the current trust-tier/region/type eligibility filter unchanged, prefer <code>companion_visit_preferences.preferred_caregiver_id</code> if present in the eligible set; otherwise fall back to today's selection exactly as-is. This does not change what makes a caregiver eligible — only which eligible caregiver is picked first. Scoped this narrowly and stated explicitly because it is the only place in Batches 1–3 that modifies an already-implemented Edge Function's logic, not just its data.</p>
+      </div>
+
+      <h3><span class="sec-n">09</span>Security design</h3>
+      <p>No new sensitivity beyond existing <code>visit_history</code>-gated data. The matching preference carries no security weight — it cannot make an ineligible caregiver eligible, only reorder eligible ones.</p>
+
+      <h3><span class="sec-n">10</span>AI architecture</h3>
+      <p>Not required. Activity notes are subject to the standing never-unguarded-AI rule if ever summarized by a future module.</p>
+
+      <h3><span class="sec-n">11</span>Accessibility requirements</h3>
+      <p>Same baseline as prior batches; the activity checklist uses icons + short labels, consistent with the platform's low-literacy-friendly pattern.</p>
+
+      <h3><span class="sec-n">12</span>Notification requirements</h3>
+      <p>None new — activity logs surface passively via Timeline (Batch 1), no separate alert.</p>
+
+      <h3><span class="sec-n">13</span>Edge cases</h3>
+      <ul>
+        <li>Preferred caregiver becomes inactive or drops below required trust tier → matching falls back silently to normal selection this time; a "your regular companion wasn't available" family notification is a reasonable Phase 2+ addition, not required for MVP.</li>
+        <li>No interests set yet → checklist and matching both still function; nothing blocks on an empty preference.</li>
+      </ul>
+
+      <h3><span class="sec-n">14</span>Admin dashboard requirements</h3>
+      <p>None new for MVP.</p>
+
+      <h3><span class="sec-n">15</span>Flutter project structure</h3>
+      <p><code>apps/family_elder_app/lib/features/companion_visits/</code> — preference settings screen, activity log viewer (feeds Timeline). <code>apps/caregiver_app</code> gets an activity-log entry form scoped to companion-type bookings.</p>
+
+      <h3><span class="sec-n">16</span>Supabase requirements</h3>
+      <p>Two new tables with RLS. One additive, narrowly-scoped tiebreak added to the existing <code>bookings-match</code> query (see § API risk callout above). No new consent category, no new storage.</p>
+
+      <h3><span class="sec-n">17</span>Future scalability</h3>
+      <p>Structured <code>interests</code>/<code>activities</code> jsonb (not freeform) means a future recommendation feature (Batch 4's AI Recommendation Engine) can reason over them directly rather than needing NLP extraction from prose first.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 11 — HOSPITAL COMPANION SERVICES -->
+    <!-- ============================================================ -->
+    <section class="module wide" id="m11">
+      <div class="module-eyebrow">Module 11 of 4 in this batch (11th overall)</div>
+      <h2 class="module-title">Hospital Companion Services</h2>
+      <p class="module-dek">A single <code>hospital_companion</code> booking already works. This module coordinates a <em>series</em> of them into one continuous hospital stay with shift handoff — without changing the <code>bookings</code> table at all.</p>
+
+      <h3><span class="sec-n">01</span>Problem being solved</h3>
+      <p>Hospital stays span days and shifts. Today, family covering a multi-day admission would have to create disconnected bookings with no shared context between them — no way to see "3 shifts covered, 1 gap tomorrow morning," and no way for one caregiver to hand off context to the next.</p>
+
+      <h3><span class="sec-n">02</span>User personas</h3>
+      <div class="persona-grid">
+        <div class="persona"><div class="role">Family member</div>Creates the stay, books shifts against it, sees coverage.<div class="access">full</div></div>
+        <div class="persona"><div class="role">Elder</div>Same visibility as family for their own stay.<div class="access">full, own record</div></div>
+        <div class="persona"><div class="role">Caregiver</div>Leaves/reads handoff notes for shifts within the same stay, not just their own.<div class="access">stay-scoped, not booking-scoped</div></div>
+        <div class="persona"><div class="role">Admin</div>None new required.<div class="access">none (MVP)</div></div>
+      </div>
+
+      <h3><span class="sec-n">03</span>Functional requirements</h3>
+      <ul>
+        <li>"Hospital Stay" record: hospital name/location, admission date, expected/actual discharge, status.</li>
+        <li>Multiple <code>hospital_companion</code> bookings (shifts) linked to one stay via a junction table — deliberately <em>not</em> a new column on <code>bookings</code>, so the existing, already-implemented booking module is touched not at all.</li>
+        <li>Shift handoff note: the caregiver ending a shift can leave a brief note visible to family and to whichever caregiver covers the <em>next</em> shift on the same stay — not just their own booking.</li>
+        <li>Coverage gap visibility: a stay with no shift booked for the next several hours should be visually flagged to family.</li>
+        <li>Family marks the stay discharged when the elder leaves hospital, closing it.</li>
+      </ul>
+
+      <h3><span class="sec-n">04</span>Non-functional requirements</h3>
+      <p>Gap detection feeds the shared Smart Reminder System (Batch 2) as a new <code>source_type</code>, rather than a bespoke alert mechanism built just for this module.</p>
+
+      <h3><span class="sec-n">05</span>User flow</h3>
+      <div class="flow-step"><span class="idx">1</span><div class="body"><b>Family</b>Creates a Hospital Stay record on admission.</div></div>
+      <div class="flow-step"><span class="idx">2</span><div class="body"><b>Family</b>Books multiple <code>hospital_companion</code> shifts via the unmodified existing booking flow, each linked to the stay.</div></div>
+      <div class="flow-step"><span class="idx">3</span><div class="body"><b>Caregiver</b>Ending a shift, leaves a short handoff note.</div></div>
+      <div class="flow-step"><span class="idx">4</span><div class="body"><b>Next caregiver</b>Reads the prior shift's note before their own shift starts.</div></div>
+      <div class="flow-step"><span class="idx">5</span><div class="body"><b>Family</b>Marks the stay discharged; any still-scheduled shift prompts a cancellation confirmation, never an automatic cancel.</div></div>
+
+      <h3><span class="sec-n">06</span>Information architecture</h3>
+      <p>Hospital Stay detail screen showing a shift timeline (each linked booking + its handoff note), reachable from the elder's care overview. Individual shift bookings still appear in the normal bookings list too — the stay is a grouping lens, not a replacement screen.</p>
+
+      <h3><span class="sec-n">07</span>Database design</h3>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">hospital_stays</span><span class="tbl-note">the grouping record</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">elder_id, hospital_name</span><span class="col-type">uuid fk / text</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">admission_at, expected_discharge_at, actual_discharge_at</span><span class="col-type">timestamptz, latter two nullable</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">status, created_by</span><span class="col-type">enum / uuid fk</span><span class="col-desc">active / discharged / cancelled</span></div>
+        </div>
+      </div>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">hospital_stay_bookings</span><span class="tbl-note">junction table — the reason <code>bookings</code> itself needs no new column</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">hospital_stay_id, booking_id</span><span class="col-type">uuid fks, composite pk</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">shift_note</span><span class="col-type">text, nullable, capped</span><span class="col-desc">handoff note; same never-unguarded-AI rule</span></div>
+        </div>
+      </div>
+      <p>RLS for both new tables mirrors <code>bookings_select</code>'s shape (elder self, linked family with <code>visit_history</code> consent, admin). One deliberate extension: a caregiver may read <code>hospital_stay_bookings</code> rows for a stay if they are assigned to <em>any</em> booking within that same stay — not only their own — which is exactly what handoff continuity requires. This is a new, narrowly-scoped policy on a new table, not a change to any existing booking-visibility policy.</p>
+
+      <h3><span class="sec-n">08</span>API design</h3>
+      <p>No new Edge Function. Creating a stay, linking a booking to it, and writing a handoff note are all plain RLS-guarded operations against the two new tables above. Booking creation itself still goes through the unmodified, existing <code>bookings-create</code>/<code>bookings-match</code> flow.</p>
+
+      <h3><span class="sec-n">09</span>Security design</h3>
+      <p>The one genuinely new access decision in this module — a caregiver seeing another caregiver's shift note within the same stay — is scoped precisely to that junction table and justified by the handoff use case; it does not extend to seeing anything else about the elder outside this specific stay.</p>
+
+      <h3><span class="sec-n">10</span>AI architecture</h3>
+      <p>Not required.</p>
+
+      <h3><span class="sec-n">11</span>Accessibility requirements</h3>
+      <p>Same baseline as the rest of this batch.</p>
+
+      <h3><span class="sec-n">12</span>Notification requirements</h3>
+      <p>Coverage-gap alerts route through Smart Reminder System (Batch 2), not a bespoke mechanism.</p>
+
+      <h3><span class="sec-n">13</span>Edge cases</h3>
+      <ul>
+        <li>Overlapping shifts booked by mistake (or on purpose, e.g. for a difficult transfer) → warn, don't block; a genuine judgment call left to family, not auto-prevented.</li>
+        <li>Stay marked discharged with a shift still scheduled → prompts a cancellation confirmation; never auto-cancels, mirroring the appointment/booking decoupling principle from Batch 2.</li>
+      </ul>
+
+      <h3><span class="sec-n">14</span>Admin dashboard requirements</h3>
+      <p>None new for MVP — ops can already see the individual underlying bookings.</p>
+
+      <h3><span class="sec-n">15</span>Flutter project structure</h3>
+      <p><code>apps/family_elder_app/lib/features/hospital_stays/</code>. <code>apps/caregiver_app</code> gets a handoff-note entry point scoped to <code>hospital_companion</code> bookings linked to an active stay.</p>
+
+      <h3><span class="sec-n">16</span>Supabase requirements</h3>
+      <p>Two new tables with RLS (including the one deliberately extended cross-caregiver read policy above). No changes to <code>bookings</code>. No new Edge Function, no new consent category.</p>
+
+      <h3><span class="sec-n">17</span>Future scalability</h3>
+      <p>The junction-table design (rather than a column on <code>bookings</code>) is what keeps this module fully additive — the same pattern is available to any future module needing to group existing bookings without touching the booking module itself.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 12 — HEALTH RECORDS MANAGEMENT -->
+    <!-- ============================================================ -->
+    <section class="module wide" id="m12">
+      <div class="module-eyebrow">Module 12 of 4 in this batch (12th overall)</div>
+      <h2 class="module-title">Health Records Management</h2>
+      <p class="module-dek">A static reference profile — allergies, conditions, physician contact, insurance — distinct in shape from the append-only visit logs <code>elder_health_notes</code> already handles.</p>
+
+      <h3><span class="sec-n">01</span>Problem being solved</h3>
+      <p><code>elder_health_notes</code> is an append-only log of what happened at visits; <code>elder_medications</code> tracks current prescriptions. Neither has anywhere to put slow-changing reference information — allergies, chronic conditions, blood type, primary physician, insurance — that any caregiver dispatched to this elder needs as context, not something generated by a specific visit.</p>
+
+      <h3><span class="sec-n">02</span>User personas</h3>
+      <div class="persona-grid">
+        <div class="persona"><div class="role">Family member</div>Maintains the profile.<div class="access"><code>health_notes</code> consent</div></div>
+        <div class="persona"><div class="role">Elder</div>Full access to own profile.<div class="access">full, own record</div></div>
+        <div class="persona"><div class="role">Caregiver — emergency-relevant half only</div>Sees allergies/conditions/blood type/emergency notes during an active booking or SOS response.<div class="access">booking/SOS-scoped, life-safety override</div></div>
+        <div class="persona"><div class="role">Admin</div>None new.<div class="access">none (MVP)</div></div>
+      </div>
+
+      <h3><span class="sec-n">03</span>Functional requirements</h3>
+      <ul>
+        <li>Two-tier profile, split precisely by who needs to see what in an emergency versus who manages administrative logistics — see § Database for why this is two tables, not one.</li>
+        <li>Structured (not freeform) allergies and chronic-conditions lists — enables future drug-interaction or care-planning features without a schema change later.</li>
+        <li>Editable by family/elder at any time; every change is a straightforward update, not versioned for MVP (a full change-history is a plausible Phase 2+ addition once real usage shows it's needed, not built speculatively now).</li>
+      </ul>
+
+      <h3><span class="sec-n">04</span>Non-functional requirements</h3>
+      <p>Emergency-relevant fields must be readable by a caregiver in under one query, no multi-hop joins, since this data matters most in exactly the moment there's no time to spare.</p>
+
+      <h3><span class="sec-n">05</span>User flow</h3>
+      <div class="flow-step"><span class="idx">1</span><div class="body"><b>Family / elder</b>Fills in the profile once, updates as things change.</div></div>
+      <div class="flow-step"><span class="idx">2</span><div class="body"><b>Caregiver</b>Assigned to a booking or SOS response, sees the emergency-relevant fields automatically — no consent negotiation needed in the moment, the same principle already established for <code>sos_events</code>.</div></div>
+      <div class="flow-step"><span class="idx">3</span><div class="body"><b>Admin/billing context</b>Insurance and physician contact stay family/elder/admin-only, never surfaced to a caregiver.</div></div>
+
+      <h3><span class="sec-n">06</span>Information architecture</h3>
+      <p>One "Health Profile" screen for family/elder editing, split visually into an emergency-info section and an administrative-info section, matching the underlying data split.</p>
+
+      <h3><span class="sec-n">07</span>Database design</h3>
+      <div class="decision">
+        <h4>Split by who needs it in an emergency, not by topic</h4>
+        <p>Insurance and physician contact are administrative; allergies and DNR-equivalent notes are literally life-safety. A single table would force an all-or-nothing choice about caregiver visibility. Splitting means a non-clinical companion caregiver present during a medical emergency can see "penicillin allergy" without also seeing an insurance policy number they have no reason to need.</p>
+      </div>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">elder_health_profile</span><span class="tbl-note">emergency-relevant — caregiver-visible during active booking or SOS</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">elder_id</span><span class="col-type">uuid fk, unique</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">blood_type</span><span class="col-type">text, nullable</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">allergies, chronic_conditions</span><span class="col-type">jsonb</span><span class="col-desc">structured lists</span></div>
+          <div class="col-row"><span class="col-name">emergency_medical_notes</span><span class="col-type">text, nullable, column-encrypted</span><span class="col-desc">e.g. DNR-on-file equivalent — highest sensitivity, same pgsodium/pgcrypto treatment PRD Part 2 §13 already applies to raw medical notes</span></div>
+          <div class="col-row"><span class="col-name">updated_by, updated_at</span><span class="col-type">uuid fk / timestamptz</span><span class="col-desc">—</span></div>
+        </div>
+      </div>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">elder_administrative_profile</span><span class="tbl-note">family/elder/admin only — never caregiver-visible</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">elder_id</span><span class="col-type">uuid fk, unique</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">primary_physician_name, primary_physician_contact</span><span class="col-type">text, nullable</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">insurance_provider, insurance_policy_number</span><span class="col-type">text, nullable, latter column-encrypted</span><span class="col-desc">same encryption precedent as government ID fields</span></div>
+        </div>
+      </div>
+      <p>RLS on <code>elder_health_profile</code>: <code>is_elder_self</code>, <code>has_consent('health_notes')</code>, <code>is_admin</code>, plus the assigned caregiver during an active booking <em>or</em> an active SOS for this elder — the latter clause is a direct, reasoned extension of the existing principle that life-safety visibility overrides granular consent, already established for <code>sos_events</code>, not a new precedent invented here. RLS on <code>elder_administrative_profile</code>: identical shape minus the caregiver clause entirely — no caregiver override, ever.</p>
+
+      <h3><span class="sec-n">08</span>API design</h3>
+      <p>No new Edge Function — both tables are plain RLS-guarded reads/writes, reusing <code>is_assigned_caregiver()</code> and the existing SOS-active check pattern rather than inventing new authorization primitives.</p>
+
+      <h3><span class="sec-n">09</span>Security design</h3>
+      <div class="risk"><h4>Both sensitive columns get column-level encryption</h4><p><code>emergency_medical_notes</code> and <code>insurance_policy_number</code> qualify squarely under the existing PRD Part 2 §13 rule ("government ID numbers and raw medical notes are encrypted at the column level") — applying an already-decided pattern to new columns, not inventing new security infrastructure.</p></div>
+      <div class="decision"><h4>Single consent category, by design, with the trade-off named</h4><p>Both new tables reuse <code>health_notes</code> rather than splitting into a separate category — even though insurance data is arguably less sensitive than a DNR-equivalent note. Introducing a second category for one table would be disproportionate complexity for MVP; flagged here as a deliberate simplification rather than an oversight.</p></div>
+
+      <h3><span class="sec-n">10</span>AI architecture</h3>
+      <p>Not applicable. Structured allergy/condition lists exist partly so a future AI feature (Batch 4) could reason over them without needing to parse prose — noted, not built here.</p>
+
+      <h3><span class="sec-n">11</span>Accessibility requirements</h3>
+      <p>Same baseline; the profile form uses simple structured pickers for allergies/conditions rather than free-text entry wherever possible, both for accessibility and for the structured-data benefit noted above.</p>
+
+      <h3><span class="sec-n">12</span>Notification requirements</h3>
+      <p>None — this module is a reference profile, not an event stream.</p>
+
+      <h3><span class="sec-n">13</span>Edge cases</h3>
+      <ul>
+        <li>Non-clinical caregiver on a companionship visit still sees <code>elder_health_profile</code> (allergies, emergency notes) during that active booking — intentional: anyone present when something goes wrong needs emergency-relevant information, regardless of clinical training. They never see <code>elder_administrative_profile</code>.</li>
+        <li>Elder has no known allergies/conditions → fields are simply empty, not a blocking requirement to fill in before booking.</li>
+        <li>Profile edited while a caregiver is mid-visit → the caregiver's next read reflects the update immediately, same "no cache, RLS-guarded live query" principle as everything else in this schema.</li>
+      </ul>
+
+      <h3><span class="sec-n">14</span>Admin dashboard requirements</h3>
+      <p>None new for MVP. A printable/quick-view "elder emergency card" for ops use is a plausible Phase 2+ addition, not specified further here.</p>
+
+      <h3><span class="sec-n">15</span>Flutter project structure</h3>
+      <p><code>apps/family_elder_app/lib/features/health_profile/</code>. <code>apps/caregiver_app</code> surfaces the emergency-relevant half read-only, scoped to active bookings/SOS.</p>
+
+      <h3><span class="sec-n">16</span>Supabase requirements</h3>
+      <p>Two new tables with RLS (one with a caregiver life-safety-override clause, one without), reusing the existing <code>health_notes</code> consent category and the existing column-encryption pattern. No new Edge Function, no new consent category, no new storage.</p>
+
+      <h3><span class="sec-n">17</span>Future scalability</h3>
+      <p>Structured allergy/condition data is the foundation for later clinical-decision-support-adjacent features (still never diagnostic, per the platform's standing AI rule) without a schema migration first.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="module wide" id="cross">
+      <div class="module-eyebrow">Cross-cutting</div>
+      <h2 class="module-title">Every touch to an existing, already-implemented module</h2>
+      <p>One touch in this entire batch, and it's precisely scoped:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Existing module</th><th>What's added</th><th>Why it's necessary</th></tr></thead>
+          <tbody>
+            <tr><td><strong><code>bookings-match</code></strong> (Edge Function)</td><td class="muted">One additive tiebreak in the candidate query: prefer <code>companion_visit_preferences.preferred_caregiver_id</code> among already-eligible candidates</td><td class="muted">There is no way to express "prefer this caregiver" without touching the one function that selects a caregiver. Eligibility itself (trust tier, region, type) is completely unchanged — only the order of selection among already-eligible candidates.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Everything else in this batch — including the entire Hospital Companion Services module — was deliberately designed to avoid touching <code>bookings</code>, <code>notifications</code>, or any other existing table's schema, using junction tables and config tables instead.</p>
+    </section>
+
+    <section class="module" id="next">
+      <div class="module-eyebrow">Next</div>
+      <h2 class="module-title">Batch 4 preview</h2>
+      <p>AI Care Assistant, AI Visit Reports, AI Recommendation Engine, and Voice Assistant — the AI layer. Every one of these must be designed against the existing two-layer guardrail (<code>_shared/aiGuardrail.ts</code>) and the "never diagnose, never prescribe" constraint already locked in PRD Part 2 §14, not a fresh AI safety model invented per module.</p>
+    </section>
+
+    <footer class="doc-footer">Part 6 of the Project Setu PRD · Batch 3 of 7 covering 25 missing modules · builds on Parts 1–5 and the live schema</footer>
+  </main>
+</div>
