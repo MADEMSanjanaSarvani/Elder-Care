@@ -1,6 +1,8 @@
 -- Minimal stand-in for the parts of a real Supabase project the
--- migrations assume exist: the auth schema/roles, auth.uid(), and the
--- supabase_realtime publication.
+-- migrations assume exist: the auth schema/roles, auth.uid(), the
+-- supabase_realtime publication, and (as of 0006) a bare-bones
+-- storage.objects/storage.buckets pair so storage RLS policies can be
+-- exercised too.
 --
 -- This is NOT a claim that it reproduces Supabase exactly — there's no
 -- PostgREST, GoTrue, or Realtime server behind it. It exists because the
@@ -47,3 +49,28 @@ alter default privileges in schema public grant select on tables to anon;
 -- Postgres install — harmless for this purpose, just means nothing will
 -- actually stream through it here.)
 create publication supabase_realtime;
+
+-- Bare-bones stand-in for Supabase Storage's own tables — just enough
+-- columns for 0006_caregiver_documents_storage.sql's RLS policies to
+-- reference. The real storage.objects has many more columns (metadata,
+-- version, etc.); none of them matter to the policies being tested here.
+create schema if not exists storage;
+
+create table storage.buckets (
+  id text primary key,
+  name text not null,
+  public boolean not null default false
+);
+
+create table storage.objects (
+  id uuid primary key default gen_random_uuid(),
+  bucket_id text references storage.buckets (id),
+  name text,
+  owner uuid,
+  created_at timestamptz not null default now()
+);
+
+alter table storage.objects enable row level security;
+grant usage on schema storage to anon, authenticated, service_role;
+grant select, insert, update, delete on storage.buckets, storage.objects to authenticated, service_role;
+grant select on storage.buckets, storage.objects to anon;

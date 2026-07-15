@@ -182,3 +182,169 @@ set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
 select count(*) as visible_payout_accounts from caregiver_payout_accounts where id = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee';
 reset role;
 reset request.jwt.claim.sub;
+
+\echo '=== TEST 19: caregiver uploads their own document into the caregiver-documents bucket — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+insert into storage.objects (bucket_id, name, owner)
+values ('caregiver-documents', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/gov_id-1.jpg', '44444444-4444-4444-4444-444444444444');
+reset role;
+reset request.jwt.claim.sub;
+
+insert into caregiver_documents (caregiver_id, doc_type, storage_path)
+values ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'gov_id', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/gov_id-1.jpg');
+
+insert into auth.users (id, email) values
+  ('55555555-5555-5555-5555-555555555555', 'verification-agent@test.com');
+insert into profiles (id, role, phone, display_name) values
+  ('55555555-5555-5555-5555-555555555555', 'admin', '+915', 'Verification Agent');
+insert into admin_scopes (profile_id, scope) values
+  ('55555555-5555-5555-5555-555555555555', 'verification_agent');
+
+\echo '=== TEST 20: that same caregiver can read their own uploaded document — expect 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+select count(*) as visible_objects from storage.objects where name = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/gov_id-1.jpg';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 21: a stranger cannot read that document — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select count(*) as visible_objects from storage.objects where name = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/gov_id-1.jpg';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 22: a verification_agent admin can read any caregiver''s document — expect 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = '55555555-5555-5555-5555-555555555555';
+select count(*) as visible_objects from storage.objects where name = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/gov_id-1.jpg';
+reset role;
+reset request.jwt.claim.sub;
+
+-- ===================================================================
+-- Batch 1 (docs/prd/04-prd-part4-family-experience.html): Elder Care
+-- Timeline, Daily Check-ins System, Family Member Management.
+-- ===================================================================
+
+\echo '=== TEST 23: elder self-checks-in — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+insert into daily_checkins (id, elder_id, mood, source)
+values ('ffffffff-0000-0000-0000-000000000001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'okay', 'elder_app');
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 24: a family member cannot check in on the elder''s behalf — expect an RLS ERROR, not a silent success ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+insert into daily_checkins (elder_id, mood, source)
+values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'okay', 'elder_app');
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 25: daughter without wellbeing_checkins consent cannot see the check-in — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select count(*) as visible_checkins from daily_checkins where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 26: elder grants wellbeing_checkins consent, daughter can now see it — expect 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+insert into consent_grants (elder_id, family_user_id, category, granted, granted_via, granted_at)
+values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222', 'wellbeing_checkins', true, 'elder_app', now());
+reset role;
+reset request.jwt.claim.sub;
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select count(*) as visible_checkins from daily_checkins where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 27: daughter (linked family) can configure the check-in schedule — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+insert into checkin_schedules (elder_id, expected_by_time, timezone)
+values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '19:00', 'Asia/Kolkata');
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 28: a stranger cannot see the check-in schedule — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select count(*) as visible_schedules from checkin_schedules where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 29: daughter marks a missed-checkin escalation handled — expect success ==='
+insert into checkin_escalations (id, elder_id, date)
+values ('ffffffff-0000-0000-0000-000000000002', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', current_date);
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+update checkin_escalations set handled_by = '22222222-2222-2222-2222-222222222222', handled_at = now()
+where id = 'ffffffff-0000-0000-0000-000000000002';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 30: a booking-linked timeline event is visible to the assigned caregiver — expect 1 ==='
+insert into elder_timeline_events (id, elder_id, event_type, category, related_booking_id, summary)
+values ('ffffffff-0000-0000-0000-000000000003', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'visit_completed', 'visit_history', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'Visit completed');
+set role authenticated;
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+select count(*) as visible_events from elder_timeline_events where id = 'ffffffff-0000-0000-0000-000000000003';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 31: a stranger cannot see that timeline event — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select count(*) as visible_events from elder_timeline_events where id = 'ffffffff-0000-0000-0000-000000000003';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 32: elder makes daughter the family coordinator — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+update family_links set coordinator = true
+where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' and family_user_id = '22222222-2222-2222-2222-222222222222';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 33: a family member cannot revoke their own coordinator status — expect an RLS/trigger ERROR, not a silent success ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+update family_links set coordinator = false
+where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' and family_user_id = '22222222-2222-2222-2222-222222222222';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 33b: confirm it truly did not change — expect true ==='
+select coordinator from family_links
+where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' and family_user_id = '22222222-2222-2222-2222-222222222222';
+
+\echo '=== TEST 34: share_family_list defaults off — a second family member cannot see the daughter''s family_links row — expect 0 ==='
+insert into auth.users (id, email) values
+  ('66666666-6666-6666-6666-666666666666', 'second-sibling@test.com');
+insert into profiles (id, role, phone, display_name) values
+  ('66666666-6666-6666-6666-666666666666', 'family_member', '+916', 'Second Sibling');
+insert into family_links (elder_id, family_user_id, relationship, status, invited_by) values
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '66666666-6666-6666-6666-666666666666', 'son', 'active', '11111111-1111-1111-1111-111111111111');
+set role authenticated;
+set request.jwt.claim.sub = '66666666-6666-6666-6666-666666666666';
+select count(*) as visible_links from family_links where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' and family_user_id = '22222222-2222-2222-2222-222222222222';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 35: elder opts in to share_family_list — second family member can now see all links — expect 2 ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+update elder_profiles set share_family_list = true where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+reset role;
+reset request.jwt.claim.sub;
+set role authenticated;
+set request.jwt.claim.sub = '66666666-6666-6666-6666-666666666666';
+select count(*) as visible_links from family_links where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+reset role;
+reset request.jwt.claim.sub;

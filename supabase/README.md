@@ -12,6 +12,15 @@ Schema and Edge Functions implementing `docs/prd/02-prd-part2-architecture.html`
 - `migrations/0003_realtime.sql` — adds `sos_events` to the `supabase_realtime` publication
 - `migrations/0004_erasure_requests.sql` — DPDP erasure-request queue (Section 12/13)
 - `migrations/0005_caregiver_payout_accounts.sql` — caregiver bank/UPI details for RazorpayX payouts (Section 15)
+- `migrations/0006_caregiver_documents_storage.sql` — storage bucket + RLS for caregiver ID/certificate uploads,
+  unblocking the admin dashboard document viewer (still not built — see that module's own README/task tracking)
+- `migrations/0007_wellbeing_checkins_consent_category.sql` — additive `consent_category` enum value for Daily
+  Check-ins (`docs/prd/04-prd-part4-family-experience.html`), split into its own migration so nothing in the same
+  transaction can reference the new value before it's committed
+- `migrations/0008_family_experience.sql` — database layer for PRD Part 4 Batch 1 (Family Dashboard, Elder Care
+  Timeline, Daily Check-ins System, Family Member Management): `elder_timeline_events`, `daily_checkins`,
+  `checkin_schedules`, `checkin_escalations`, plus two additive columns (`family_links.coordinator`,
+  `elder_profiles.share_family_list`) and the trigger that keeps `coordinator` elder/admin-only to change
 - `seed.sql` — Visakhapatnam pilot region + MVP service catalog
 - `functions/` — Edge Functions (Section 12): everything that touches a secret or a cross-table rule
 

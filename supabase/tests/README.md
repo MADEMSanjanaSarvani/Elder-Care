@@ -20,7 +20,19 @@ were sent to help. Fixed in the same commit that added this test. TESTs
 the same way: a requester can file and read their own row, nobody else can
 read or resolve it. TESTs 17-18 cover `caregiver_payout_accounts`
 (`0005_caregiver_payout_accounts.sql`): a caregiver can submit their own
-bank/UPI details, and a stranger can't read them.
+bank/UPI details, and a stranger can't read them. TESTs 19-22 cover the
+`caregiver-documents` storage bucket RLS (`0006_caregiver_documents_storage.sql`):
+a caregiver can upload and read their own document, a stranger can't, a
+verification_agent admin can read any caregiver's. TESTs 23-35 cover PRD
+Part 4 Batch 1 (`0007_wellbeing_checkins_consent_category.sql`,
+`0008_family_experience.sql`) — daily check-ins are elder-only to write
+and `wellbeing_checkins`-consent-gated to read, `elder_timeline_events`
+follows the same caregiver/consent shape as `elder_health_notes`, and the
+`family_links.coordinator` trigger genuinely blocks a non-elder from
+changing it (TEST 33 caught a real false-positive in an earlier draft of
+that test itself — the second of two update statements silently no-op'd
+against a value the first statement's rollback had already left
+unchanged, which looked like a bypass until traced through).
 
 ## Running it
 
