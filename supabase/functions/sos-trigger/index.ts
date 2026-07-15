@@ -70,6 +70,21 @@ Deno.serve(async (req) => {
       metadata: { elder_id },
     });
 
+    // Fire-and-forget: feeds the Elder Care Timeline (PRD Part 4, Batch 1).
+    // category is 'visit_history' as the closest existing fit — consent_category
+    // has no dedicated "sos" value. This is a conservative choice, not a
+    // privacy gap: the authoritative sos_events row (which the SOS monitor
+    // and real-time alerts actually read) has its own life-safety-overrides-
+    // consent visibility, unaffected by this timeline entry's narrower gating.
+    await admin.from("elder_timeline_events").insert({
+      elder_id,
+      event_type: "sos_triggered",
+      category: "visit_history",
+      actor_user_id: user.id,
+      summary: "Emergency SOS raised",
+      metadata: { sos_event_id: sosEvent.id },
+    });
+
     // Fan out to every active family link.
     const { data: familyLinks } = await admin
       .from("family_links")

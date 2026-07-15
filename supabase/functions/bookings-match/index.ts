@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
 
     const { data: booking, error: bookingErr } = await admin
       .from("bookings")
-      .select("id, region_id, service_id, required_trust_tier, status, service_catalog(category)")
+      .select("id, elder_id, region_id, service_id, required_trust_tier, status, service_catalog(category)")
       .eq("id", booking_id)
       .single();
     if (bookingErr || !booking) return errorResponse("Booking not found", 404);
@@ -76,6 +76,19 @@ Deno.serve(async (req) => {
       resource_type: "booking",
       resource_id: booking_id,
       metadata: { event: "matched", caregiver_id: eligible.id },
+    });
+
+    // Fire-and-forget: feeds the Elder Care Timeline (PRD Part 4, Batch 1).
+    // A dropped row here is degraded UX, not a correctness bug — bookings
+    // and booking_events remain the source of truth.
+    await admin.from("elder_timeline_events").insert({
+      elder_id: booking.elder_id,
+      event_type: "visit_scheduled",
+      category: "visit_history",
+      actor_user_id: user.id,
+      related_booking_id: booking_id,
+      summary: "Matched with a caregiver",
+      metadata: { caregiver_id: eligible.id },
     });
 
     // TODO(Part 3 deployment): deliver otp_start/otp_end to the elder via

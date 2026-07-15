@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
     const admin = supabaseAdmin();
     const { data: booking, error } = await admin
       .from("bookings")
-      .select("id, status, otp_end, caregiver_id, caregivers(user_id), service_catalog(base_price, currency, commission_pct)")
+      .select("id, elder_id, status, otp_end, caregiver_id, caregivers(user_id), service_catalog(base_price, currency, commission_pct)")
       .eq("id", booking_id)
       .single();
     if (error || !booking) return errorResponse("Booking not found", 404);
@@ -69,6 +69,17 @@ Deno.serve(async (req) => {
       resource_type: "booking",
       resource_id: booking_id,
       metadata: { event: "visit_completed", payout_amount: caregiverAmount },
+    });
+
+    // Fire-and-forget: feeds the Elder Care Timeline (PRD Part 4, Batch 1).
+    await admin.from("elder_timeline_events").insert({
+      elder_id: booking.elder_id,
+      event_type: "visit_completed",
+      category: "visit_history",
+      actor_user_id: user.id,
+      related_booking_id: booking_id,
+      summary: "Visit completed",
+      metadata: { payout_amount: caregiverAmount },
     });
 
     return jsonResponse(updated);

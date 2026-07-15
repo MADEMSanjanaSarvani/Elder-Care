@@ -109,6 +109,19 @@ Deno.serve(async (req) => {
       created_by: user.id,
     });
 
+    // Fire-and-forget: feeds the Elder Care Timeline (PRD Part 4, Batch 1).
+    // Only logged on the delivered path — a flagged, held-for-review output
+    // was never actually shown to family, so it isn't a real timeline event yet.
+    await admin.from("elder_timeline_events").insert({
+      elder_id: booking.elder_id,
+      event_type: "health_note_added",
+      category: "health_notes",
+      actor_user_id: user.id,
+      related_booking_id: booking_id,
+      summary: "Visit summary added",
+      metadata: { interaction_id: interaction.id },
+    });
+
     return jsonResponse({ status: "delivered", summary: finalOutput, interaction_id: interaction.id });
   } catch (err) {
     return errorResponse((err as Error).message, 401);

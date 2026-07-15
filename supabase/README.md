@@ -120,6 +120,7 @@ changes behavior; note them if you're used to seeing the more common imports.
 | `PAYOUTS_RUN_SHARED_SECRET` | `payouts-run` (placeholder auth scheme, same shape as `IDFY_WEBHOOK_SHARED_SECRET` below — n8n sends this header on its scheduled call) |
 | `IDFY_WEBHOOK_SHARED_SECRET` | `verification-idfy-webhook` (placeholder auth scheme — confirm against IDfy's actual docs before launch) |
 | `OPENAI_API_KEY` | `ai-visit-summary`, `ai-translate` |
+| `CHECKINS_SWEEP_SHARED_SECRET` | `checkins-escalation-sweep` (same n8n-scheduled shared-secret pattern as `payouts-run`) |
 
 None of these are set in this repo. Configure them via `supabase secrets set` (or your CI's secret store) — never commit real keys.
 
@@ -181,6 +182,38 @@ launch. Not yet built: the n8n schedule itself (this is the function it would ca
 invocation of `payouts-run` has happened yet (it's validated locally: `deno check`/`deno lint`
 clean, and the new `caregiver_payout_accounts` RLS policies are covered by
 `tests/rls_smoke_test.sql` TESTs 17-18).
+
+## PRD Part 4, Batch 1: Family Dashboard, Timeline, Check-ins, Family Access
+
+`docs/prd/04-prd-part4-family-experience.html`. Database layer: `migrations/0007_wellbeing_checkins_consent_category.sql`
++ `migrations/0008_family_experience.sql` (see the Layout section above). Five existing functions
+(`bookings-match`, `otp-start`, `otp-end`, `sos-trigger`, `ai-visit-summary`) each gained one
+additive, fire-and-forget `elder_timeline_events` insert alongside their existing writes — the
+single touch to already-implemented modules this batch's cross-cutting section allowed for.
+
+Two new functions:
+
+- `POST /functions/v1/checkins-escalation-sweep` — no user session, n8n-scheduled, shared-secret
+  auth (`x-checkins-sweep-secret`), same shape as `payouts-run`. Sweeps every `checkin_schedules`
+  row past its `expected_by_time` with no check-in and no active pause, escalates to family once
+  (never repeatedly), and treats a completed booking that day as already satisfying the check-in.
+  **Simplified versus the PRD**: the doc describes a two-stage flow (a gentle nudge to the elder
+  first, escalating to family only if that goes unanswered) — this pass goes straight to family
+  escalation, since the nudge stage needs additional schema state (last-nudged-today) not built in
+  this pass. Documented in the function's own comment, not silently dropped.
+- `POST /functions/v1/family-invite` — real user session. Creates the invitee's account via the
+  Auth Admin API (`inviteUserByEmail`) before creating the `family_links` row, since
+  `family_links.family_user_id` is a `not null` fk to `profiles` — a bare phone number the PRD's
+  prose implied could stand in for an invitee can't satisfy that. **Deliberate deviation from the
+  PRD's SMS-first framing**: Supabase's built-in email invite already satisfies "the invitee
+  doesn't need the app installed to accept" without a third-party SMS integration; SMS as an
+  additional channel remains a reasonable Phase 2+ addition, not required for MVP.
+
+Validated: both new functions and all five modified ones type-check/lint clean under Deno; the new
+`elder_timeline_events`/`daily_checkins`/`checkin_schedules`/`checkin_escalations`/`family_links.coordinator`/
+`elder_profiles.share_family_list` RLS is covered by `tests/rls_smoke_test.sql` TESTs 23-35, including
+a real bug caught in the test suite itself (see `tests/README.md`). Neither new function has been
+invoked against the live project yet.
 
 ## CI/CD
 
