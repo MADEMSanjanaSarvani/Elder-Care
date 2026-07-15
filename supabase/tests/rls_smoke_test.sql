@@ -600,3 +600,31 @@ select
   count(*) filter (where status = 'pending') as pending_count,
   count(*) filter (where status = 'cancelled') as cancelled_count
 from reminders where source_type = 'appointment' and source_id = 'eeeeeeee-4444-4444-4444-444444444444';
+
+-- ===================================================================
+-- 0012_medication_discontinue_trigger.sql: found while building the
+-- medications screen — the PRD's functional requirements for
+-- discontinuing a medication (cancel pending doses, log a timeline
+-- event) were never wired up as a side effect anywhere in 0010.
+-- ===================================================================
+
+insert into medication_doses (id, medication_id, scheduled_at, status)
+values ('eeeeeeee-8888-8888-8888-888888888888', 'eeeeeeee-1111-1111-1111-111111111111', now() + interval '1 day', 'pending');
+
+\echo '=== TEST 58: elder discontinues the medication — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+update elder_medications set active = false where id = 'eeeeeeee-1111-1111-1111-111111111111';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 59: the pending future dose was cancelled, not left dangling — expect cancelled ==='
+select status from medication_doses where id = 'eeeeeeee-8888-8888-8888-888888888888';
+
+\echo '=== TEST 60: a medication_stopped timeline event was written — expect 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select count(*) as stopped_events from elder_timeline_events
+where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' and event_type = 'medication_stopped';
+reset role;
+reset request.jwt.claim.sub;

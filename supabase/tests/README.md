@@ -87,6 +87,14 @@ appointment cancels its stale pending reminder and creates exactly one
 new one (not a duplicate); TEST 57 confirms cancelling the appointment
 itself cancels its pending reminder too.
 
+TESTs 58-60 cover `0012_medication_discontinue_trigger.sql`, a third
+same-batch follow-up caught the same way as 0011: the Batch 2 PRD's
+functional requirements for discontinuing a medication describe two side
+effects (cancel pending future doses, log a `medication_stopped` timeline
+event) that 0010 never actually wired up, since neither was in the
+Database Design schema cards. Caught while building the medications
+screen's "discontinue" action against the real backend, not a hypothetical.
+
 ## Running it
 
 Prefer the real Supabase CLI (`supabase db reset`) if you have it and
@@ -102,7 +110,7 @@ for f in 0001_schema 0002_rls 0003_realtime 0004_erasure_requests \
          0005_caregiver_payout_accounts 0006_caregiver_documents_storage \
          0007_wellbeing_checkins_consent_category 0008_family_experience \
          0009_checkin_timeline_trigger 0010_batch2_care_logistics \
-         0011_appointment_reminder_trigger; do
+         0011_appointment_reminder_trigger 0012_medication_discontinue_trigger; do
   psql -d setu_test -v ON_ERROR_STOP=1 -f "../migrations/$f.sql"
 done
 psql -d setu_test -v ON_ERROR_STOP=1 -f ../seed.sql
