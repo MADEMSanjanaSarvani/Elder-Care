@@ -1,0 +1,762 @@
+<!doctype html>
+<title>Project Setu — Build Roadmap</title>
+<style>
+  @font-face {
+    font-family: "Setu Mono Fallback";
+    src: local("SF Mono"), local("Cascadia Code"), local("Consolas");
+  }
+
+  :root {
+    --paper: #f2f4f0;
+    --paper-raised: #ffffff;
+    --ink: #15181a;
+    --muted: #57625c;
+    --border: #dadfd8;
+    --accent: #b8691a;
+    --accent-soft: #b8691a1a;
+    --verified: #1d6c5f;
+    --verified-soft: #1d6c5f14;
+    --sos: #a83f2a;
+    --sos-soft: #a83f2a12;
+    --spine: #c7cec2;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #14181a;
+      --paper-raised: #1b211f;
+      --ink: #e9ede9;
+      --muted: #9aa69e;
+      --border: #2a312c;
+      --accent: #e0a559;
+      --accent-soft: #e0a5591f;
+      --verified: #4bb6a3;
+      --verified-soft: #4bb6a31a;
+      --sos: #e2705c;
+      --sos-soft: #e2705c1a;
+      --spine: #313a34;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #14181a; --paper-raised: #1b211f; --ink: #e9ede9; --muted: #9aa69e;
+    --border: #2a312c; --accent: #e0a559; --accent-soft: #e0a5591f;
+    --verified: #4bb6a3; --verified-soft: #4bb6a31a; --sos: #e2705c; --sos-soft: #e2705c1a;
+    --spine: #313a34;
+  }
+  :root[data-theme="light"] {
+    --paper: #f2f4f0; --paper-raised: #ffffff; --ink: #15181a; --muted: #57625c;
+    --border: #dadfd8; --accent: #b8691a; --accent-soft: #b8691a1a;
+    --verified: #1d6c5f; --verified-soft: #1d6c5f14; --sos: #a83f2a; --sos-soft: #a83f2a12;
+    --spine: #c7cec2;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", "Noto Serif", serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent-soft); }
+
+  a { color: var(--verified); }
+  a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 3px;
+  }
+
+  .sans {
+    font-family: -apple-system, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  }
+  .mono {
+    font-family: "Setu Mono Fallback", ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Consolas, monospace;
+  }
+
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 24px 96px; }
+
+  /* ---------- Header ---------- */
+  header.brief {
+    padding: 72px 0 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 56px;
+  }
+  .eyebrow {
+    font-family: -apple-system, "Segoe UI", sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 18px;
+  }
+  h1.title {
+    font-size: clamp(32px, 5vw, 48px);
+    line-height: 1.08;
+    margin: 0 0 18px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  .dek {
+    font-family: -apple-system, "Segoe UI", sans-serif;
+    font-size: 17px;
+    color: var(--muted);
+    max-width: 62ch;
+    margin: 0 0 28px;
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px 32px;
+    font-family: -apple-system, "Segoe UI", sans-serif;
+    font-size: 13px;
+  }
+  .meta-row dt { color: var(--muted); display: inline; }
+  .meta-row dd { display: inline; margin: 0 0 0 6px; font-weight: 600; }
+  .meta-item { display: flex; gap: 0; }
+
+  .howto {
+    background: var(--paper-raised);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px 24px;
+    margin-bottom: 64px;
+    font-family: -apple-system, "Segoe UI", sans-serif;
+    font-size: 14.5px;
+    color: var(--muted);
+  }
+  .howto strong { color: var(--ink); }
+  .howto .legend {
+    display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 14px; font-size: 12.5px;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .swatch { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+  .swatch.do { background: var(--ink); }
+  .swatch.dont { background: var(--sos); }
+  .swatch.dep { background: var(--accent); }
+  .swatch.del { background: var(--verified); }
+
+  /* ---------- Phase spine ---------- */
+  .phases { position: relative; }
+  .phases::before {
+    content: "";
+    position: absolute;
+    left: 27px;
+    top: 8px;
+    bottom: 8px;
+    width: 1px;
+    background: var(--spine);
+  }
+
+  .phase { position: relative; padding-left: 76px; margin-bottom: 64px; }
+  .phase:last-child { margin-bottom: 0; }
+
+  .phase-num {
+    position: absolute;
+    left: 0; top: 0;
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--paper-raised);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: -apple-system, "Segoe UI", sans-serif;
+    font-size: 20px; font-weight: 600;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .phase-head { margin-bottom: 22px; }
+  .phase-name {
+    font-size: clamp(22px, 3vw, 27px);
+    margin: 0 0 8px;
+    font-weight: 400;
+    text-wrap: balance;
+  }
+  .phase-thesis {
+    font-family: -apple-system, "Segoe UI", sans-serif;
+    font-size: 15px;
+    color: var(--muted);
+    max-width: 60ch;
+    margin: 0;
+  }
+
+  .block-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 640px) { .block-grid { grid-template-columns: 1fr; } }
+
+  .block {
+    background: var(--paper-raised);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 18px 20px;
+  }
+  .block h3 {
+    font-family: -apple-system, "Segoe UI", sans-serif;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin: 0 0 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .block ul {
+    margin: 0; padding: 0; list-style: none;
+    font-family: -apple-system, "Segoe UI", sans-serif;
+    font-size: 14px;
+  }
+  .block li {
+    padding: 6px 0;
+    border-top: 1px solid var(--border);
+  }
+  .block li:first-child { border-top: none; padding-top: 0; }
+  .block li:last-child { padding-bottom: 0; }
+
+  .block.do h3 { color: var(--ink); }
+  .block.do h3::before { content: ""; width: 9px; height: 9px; border-radius: 2px; background: var(--ink); flex: none; }
+
+  .block.dont { background: var(--sos-soft); border-color: color-mix(in srgb, var(--sos) 30%, var(--border)); }
+  .block.dont h3 { color: var(--sos); }
+  .block.dont h3::before { content: ""; width: 9px; height: 9px; border-radius: 2px; background: var(--sos); flex: none; }
+  .block.dont li { border-top-color: color-mix(in srgb, var(--sos) 18%, var(--border)); }
+
+  .block.dep { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 30%, var(--border)); }
+  .block.dep h3 { color: var(--accent); }
+  .block.dep h3::before { content: ""; width: 9px; height: 9px; border-radius: 2px; background: var(--accent); flex: none; }
+  .block.dep li { border-top-color: color-mix(in srgb, var(--accent) 18%, var(--border)); }
+  .block.dep.full { grid-column: 1 / -1; }
+  .block.dep .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .block.dep .tag {
+    font-size: 12.5px; padding: 4px 10px; border-radius: 100px;
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+    background: var(--paper-raised);
+  }
+
+  .block.del { background: var(--verified-soft); border-color: color-mix(in srgb, var(--verified) 30%, var(--border)); grid-column: 1 / -1; }
+  .block.del h3 { color: var(--verified); }
+  .block.del h3::before { content: ""; width: 9px; height: 9px; border-radius: 2px; background: var(--verified); flex: none; }
+  .block.del li { border-top-color: color-mix(in srgb, var(--verified) 18%, var(--border)); }
+  .block.del li::before { content: "✓ "; color: var(--verified); font-weight: 700; }
+
+  .order-strip {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 4px 2px 0;
+  }
+  .order-strip .lbl {
+    font-family: -apple-system, "Segoe UI", sans-serif;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); flex: none;
+  }
+  .order-strip p {
+    margin: 0; font-size: 13.5px; color: var(--muted);
+    font-family: "Setu Mono Fallback", ui-monospace, "SF Mono", "Cascadia Code", monospace;
+  }
+  .order-strip .arrow { color: var(--accent); }
+
+  /* ---------- Closing ---------- */
+  .closing {
+    margin-top: 80px;
+    padding-top: 40px;
+    border-top: 1px solid var(--border);
+  }
+  .closing h2 {
+    font-size: 20px; font-weight: 400; margin: 0 0 14px;
+  }
+  .closing p {
+    font-family: -apple-system, "Segoe UI", sans-serif;
+    font-size: 15px; color: var(--muted); max-width: 66ch; margin: 0 0 14px;
+  }
+  .closing p:last-child { margin-bottom: 0; }
+  .closing strong { color: var(--ink); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .phase { animation: rise 0.5s ease both; }
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+</style>
+
+<div class="wrap">
+
+  <header class="brief">
+    <p class="eyebrow">Project Setu — Founding CTO Brief</p>
+    <h1 class="title">Build Roadmap: Problem Validation to MVP Launch</h1>
+    <p class="dek">A phase-gated sequence for building a trusted, verified elder-care marketplace in India — ordered so that no phase begins before the one before it has produced what it depends on.</p>
+    <dl class="meta-row">
+      <div class="meta-item"><dt>Category</dt><dd>Elder care marketplace, India</dd></div>
+      <div class="meta-item"><dt>Pilot city</dt><dd>Visakhapatnam</dd></div>
+      <div class="meta-item"><dt>Prepared</dt><dd>15 July 2026</dd></div>
+      <div class="meta-item"><dt>Scope</dt><dd>Phase 1 → Phase 9, MVP only</dd></div>
+    </dl>
+  </header>
+
+  <div class="howto">
+    <p><strong>How to read this.</strong> Each phase below is a gate, not a suggestion: it lists what has to happen, what's deliberately off-limits until later, what it can't start without, what it must produce, and the order to do the work in. A phase's <em>Dependencies</em> should point only at a prior phase's <em>Deliverables</em> — if it doesn't, the sequence is wrong and needs fixing before work starts, not after.</p>
+    <div class="legend">
+      <span><i class="swatch do"></i>Do now</span>
+      <span><i class="swatch dont"></i>Not yet</span>
+      <span><i class="swatch dep"></i>Depends on</span>
+      <span><i class="swatch del"></i>Produces</span>
+    </div>
+  </div>
+
+  <div class="phases">
+
+    <!-- PHASE 1 -->
+    <section class="phase">
+      <div class="phase-num">1</div>
+      <div class="phase-head">
+        <h2 class="phase-name">Problem Validation</h2>
+        <p class="phase-thesis">Prove the problem is real, for both the elder and the family paying for care, before a single screen gets drawn.</p>
+      </div>
+      <div class="block-grid">
+        <div class="block do">
+          <h3>Do now</h3>
+          <ul>
+            <li>Write the problem hypothesis as one falsifiable sentence, not a mission statement</li>
+            <li>Separate and interview two personas: the elder (care recipient) and the family payer (usually an adult child, often out-of-city) — their needs diverge, so validate them separately</li>
+            <li>Run 30–50 qualitative interviews in the pilot city across both personas</li>
+            <li>Test willingness to pay: who pays, how often, subscription vs. per-visit</li>
+            <li>Name the trust barrier explicitly — what it actually takes for a family to let a stranger into a parent's home — this is the category's real risk, ahead of demand</li>
+            <li>Teardown existing options: informal caregiver networks, nursing agencies, hospital home-care wings, other elder-care startups</li>
+            <li>Scan the regulatory landscape (DPDP, gig-worker classification, care-worker liability) to know the constraints exist — not to design for them yet</li>
+            <li>Set an explicit go / no-go bar before starting</li>
+          </ul>
+        </div>
+        <div class="block dont">
+          <h3>Not yet</h3>
+          <ul>
+            <li>Wireframes, branding, or a name</li>
+            <li>Caregiver recruiting or verification</li>
+            <li>Technology or vendor selection</li>
+            <li>Final pricing — hypotheses only</li>
+            <li>Anything resembling a prototype</li>
+          </ul>
+        </div>
+        <div class="block dep full">
+          <h3>Depends on</h3>
+          <div class="tags"><span class="tag">Nothing — first phase</span></div>
+        </div>
+        <div class="block del">
+          <h3>Produces</h3>
+          <ul>
+            <li>Interview synthesis across both personas</li>
+            <li>Two persona definitions (elder, family payer)</li>
+            <li>Willingness-to-pay findings</li>
+            <li>Competitive teardown</li>
+            <li>Go / no-go recommendation</li>
+          </ul>
+        </div>
+        <div class="order-strip">
+          <span class="lbl">Order</span>
+          <p>desk research <span class="arrow">‖</span> interviews (parallel) <span class="arrow">→</span> synthesis <span class="arrow">→</span> go/no-go gate</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHASE 2 -->
+    <section class="phase">
+      <div class="phase-num">2</div>
+      <div class="phase-head">
+        <h2 class="phase-name">Business Model Planning</h2>
+        <p class="phase-thesis">Decide who pays, who's liable, and who the caregiver legally is — before those choices get baked into a product flow.</p>
+      </div>
+      <div class="block-grid">
+        <div class="block do">
+          <h3>Do now</h3>
+          <ul>
+            <li>Choose and pressure-test the revenue model (commission, subscription, or hybrid) against Phase 1's willingness-to-pay data</li>
+            <li>Model unit economics: CAC, LTV, contribution margin per visit, caregiver payout share</li>
+            <li>Decide the legal posture — merchant-of-record marketplace vs. facilitator — this determines licensing, tax, and liability</li>
+            <li>Decide the caregiver engagement model: employee, gig/contract, or partner-agency sourcing, and its exposure under the Code on Social Security 2020</li>
+            <li>Set trust & safety commitments as business requirements: verification standard, insurance, SOS response SLA</li>
+            <li>Select and justify the pilot city</li>
+            <li>Define pilot success metrics before building anything</li>
+            <li>Build a 12–24 month financial model</li>
+          </ul>
+        </div>
+        <div class="block dont">
+          <h3>Not yet</h3>
+          <ul>
+            <li>Screens, flows, or wireframes</li>
+            <li>Engineering or data modeling</li>
+            <li>Ops hiring beyond pilot-scale headcount</li>
+            <li>Multi-city planning</li>
+          </ul>
+        </div>
+        <div class="block dep full">
+          <h3>Depends on</h3>
+          <div class="tags"><span class="tag">Phase 1 → validated problem</span><span class="tag">Phase 1 → two personas</span><span class="tag">Phase 1 → willingness-to-pay data</span></div>
+        </div>
+        <div class="block del">
+          <h3>Produces</h3>
+          <ul>
+            <li>Business model canvas</li>
+            <li>Unit economics model</li>
+            <li>Legal / licensing posture memo</li>
+            <li>Pricing hypothesis</li>
+            <li>Pilot success metrics</li>
+          </ul>
+        </div>
+        <div class="order-strip">
+          <span class="lbl">Order</span>
+          <p>legal posture <span class="arrow">→</span> revenue &amp; caregiver model <span class="arrow">→</span> unit economics <span class="arrow">→</span> pilot metrics lock</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHASE 3 -->
+    <section class="phase">
+      <div class="phase-num">3</div>
+      <div class="phase-head">
+        <h2 class="phase-name">Product Planning</h2>
+        <p class="phase-thesis">Cut the MVP down to the smallest loop that proves the core promise — book, verify, visit safely, see proof of care — and freeze it.</p>
+      </div>
+      <div class="block-grid">
+        <div class="block do">
+          <h3>Do now</h3>
+          <ul>
+            <li>Write core journeys as narratives first: elder onboarding, family onboarding, booking, visit lifecycle, emergency, payment, trust touchpoints</li>
+            <li>Derive a prioritized MVP feature list from those journeys, not the other way around</li>
+            <li>Name the non-negotiable trust minimum for MVP: verified background checks, visit-start/-end verification, SOS, consent controls — these ship on day one or the category promise is broken</li>
+            <li>Apply a prioritization framework (MoSCoW or RICE) to split MVP-must from later</li>
+            <li>Write an explicit in/out scope document and get it signed off</li>
+            <li>Define launch-day content needs: service catalog, pilot-region configuration, initial pricing</li>
+            <li>Define MVP success metrics: activation, booking completion, SOS response time, verification cycle time</li>
+          </ul>
+        </div>
+        <div class="block dont">
+          <h3>Not yet</h3>
+          <ul>
+            <li>Visual design or UI components</li>
+            <li>Schema or API contracts</li>
+            <li>Caregiver recruiting execution</li>
+            <li>Any code</li>
+          </ul>
+        </div>
+        <div class="block dep full">
+          <h3>Depends on</h3>
+          <div class="tags"><span class="tag">Phase 2 → revenue model</span><span class="tag">Phase 2 → pilot metrics</span><span class="tag">Phase 1 → journeys &amp; personas</span></div>
+        </div>
+        <div class="block del">
+          <h3>Produces</h3>
+          <ul>
+            <li>Prioritized MVP feature list</li>
+            <li>Written user journeys</li>
+            <li>Signed-off scope document (in / out)</li>
+            <li>MVP success metrics</li>
+          </ul>
+        </div>
+        <div class="order-strip">
+          <span class="lbl">Order</span>
+          <p>journeys <span class="arrow">→</span> feature list <span class="arrow">→</span> prioritize <span class="arrow">→</span> scope lock (sign-off gate)</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHASE 4 -->
+    <section class="phase">
+      <div class="phase-num">4</div>
+      <div class="phase-head">
+        <h2 class="phase-name">UI/UX Design</h2>
+        <p class="phase-thesis">Design for the persona with the least patience for complexity — an elder, often with low digital literacy — and let that discipline the whole system.</p>
+      </div>
+      <div class="block-grid">
+        <div class="block do">
+          <h3>Do now</h3>
+          <ul>
+            <li>Information architecture per surface: family/elder app, caregiver app, admin dashboard</li>
+            <li>Wireframes for the locked MVP journeys only</li>
+            <li>Accessibility-first rules for the elder persona: large touch targets, one decision per screen, high contrast, low-literacy-friendly copy</li>
+            <li>A minimal design system: type scale, color, spacing tokens — foundation, not a full library</li>
+            <li>Design the trust signals deliberately: verification badges, the SOS control, "who can see what" consent screens</li>
+            <li>Usability-test wireframes with real elders and real family members</li>
+            <li>Decide the multi-language content strategy — which languages, how switching works — at a design level</li>
+          </ul>
+        </div>
+        <div class="block dont">
+          <h3>Not yet</h3>
+          <ul>
+            <li>Engineering environment or dev setup</li>
+            <li>A full post-MVP design system</li>
+            <li>Caregiver-app features beyond MVP</li>
+            <li>Motion and animation polish</li>
+          </ul>
+        </div>
+        <div class="block dep full">
+          <h3>Depends on</h3>
+          <div class="tags"><span class="tag">Phase 3 → locked MVP scope</span><span class="tag">Phase 3 → user journeys</span></div>
+        </div>
+        <div class="block del">
+          <h3>Produces</h3>
+          <ul>
+            <li>Wireframes / prototypes for MVP journeys</li>
+            <li>Baseline design system</li>
+            <li>Accessibility guidelines</li>
+            <li>Usability test findings</li>
+            <li>Localization content plan</li>
+          </ul>
+        </div>
+        <div class="order-strip">
+          <span class="lbl">Order</span>
+          <p>IA <span class="arrow">→</span> low-fi wireframes <span class="arrow">→</span> usability round 1 <span class="arrow">→</span> refine <span class="arrow">→</span> design tokens <span class="arrow">→</span> hi-fi MVP screens</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHASE 5 -->
+    <section class="phase">
+      <div class="phase-num">5</div>
+      <div class="phase-head">
+        <h2 class="phase-name">Technical Architecture</h2>
+        <p class="phase-thesis">Decide the consent and access model as an architectural principle, not a feature — everything the platform is trusted to do rests on it.</p>
+      </div>
+      <div class="block-grid">
+        <div class="block do">
+          <h3>Do now</h3>
+          <ul>
+            <li>Choose the stack for speed-to-MVP and team fit, not novelty</li>
+            <li>Model core entities conceptually: users, elder profiles, bookings, caregivers, verification records, payments, consent — relationships, not full schema yet</li>
+            <li>Fix the security/privacy principles up front: consent-first data access, role-based access, audit logging, a DPDP compliance approach</li>
+            <li>Map integration boundaries: payments, background verification, notifications, location</li>
+            <li>Flag the scalability seams that are cheap now and expensive later, even for a single-city launch</li>
+            <li>Decide build vs. buy per capability (payments processor, ID verification vendor, OTP provider)</li>
+            <li>Plan environments (dev / staging / prod) and a CI/CD approach</li>
+            <li>Keep a technical risk register: vendor lock-in, cost-at-scale, compliance exposure</li>
+          </ul>
+        </div>
+        <div class="block dont">
+          <h3>Not yet</h3>
+          <ul>
+            <li>Writing code</li>
+            <li>Provisioning production infrastructure</li>
+            <li>API endpoints or migrations</li>
+            <li>Finalizing every table and field</li>
+          </ul>
+        </div>
+        <div class="block dep full">
+          <h3>Depends on</h3>
+          <div class="tags"><span class="tag">Phase 3 → MVP scope</span><span class="tag">Phase 4 → client-side needs</span></div>
+        </div>
+        <div class="block del">
+          <h3>Produces</h3>
+          <ul>
+            <li>Architecture decision record</li>
+            <li>Conceptual data model</li>
+            <li>Security &amp; privacy principles document</li>
+            <li>Build-vs-buy decisions</li>
+            <li>Environment / deployment plan</li>
+            <li>Technical risk register</li>
+          </ul>
+        </div>
+        <div class="order-strip">
+          <span class="lbl">Order</span>
+          <p>data model &amp; security principles <span class="arrow">→</span> stack selection <span class="arrow">→</span> integrations &amp; build-vs-buy <span class="arrow">→</span> environment plan</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHASE 6 -->
+    <section class="phase">
+      <div class="phase-num">6</div>
+      <div class="phase-head">
+        <h2 class="phase-name">Development</h2>
+        <p class="phase-thesis">Ship the whole loop thin before making any single part of it wide — a booking that goes safely end-to-end beats ten features that don't connect.</p>
+      </div>
+      <div class="block-grid">
+        <div class="block do">
+          <h3>Do now</h3>
+          <ul>
+            <li>Set up repos, environments, and CI/CD per the Phase 5 plan</li>
+            <li>Build in vertical slices tied to the core value loop, not by technical layer</li>
+            <li>Sequence: identity &amp; auth → elder/family profile → caregiver verification → booking → visit lifecycle → payments → SOS → consent controls → notifications</li>
+            <li>Hold the Phase 3 scope line — anything not in MVP goes to a tracked backlog, not into this build</li>
+            <li>Keep code review and documentation discipline from the first commit</li>
+            <li>Build the admin/ops tooling needed to actually run the pilot: verification queue, SOS monitor, booking oversight</li>
+          </ul>
+        </div>
+        <div class="block dont">
+          <h3>Not yet</h3>
+          <ul>
+            <li>Anything explicitly deferred in the Phase 3 scope doc</li>
+            <li>Scaling work beyond what Phase 5 flagged as cheap now</li>
+            <li>Cutting the trust/safety core to hit a date</li>
+          </ul>
+        </div>
+        <div class="block dep full">
+          <h3>Depends on</h3>
+          <div class="tags"><span class="tag">Phase 5 → architecture decisions</span><span class="tag">Phase 4 → approved designs</span></div>
+        </div>
+        <div class="block del">
+          <h3>Produces</h3>
+          <ul>
+            <li>Working MVP codebase for the locked scope</li>
+            <li>Admin / ops tooling</li>
+            <li>Technical documentation</li>
+            <li>A staging environment running the full flow</li>
+          </ul>
+        </div>
+        <div class="order-strip">
+          <span class="lbl">Order</span>
+          <p>each slice above ships demoable and testable before the next begins — no slice starts while the prior one is unverified</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHASE 7 -->
+    <section class="phase">
+      <div class="phase-num">7</div>
+      <div class="phase-head">
+        <h2 class="phase-name">Testing</h2>
+        <p class="phase-thesis">Test the consent model adversarially, not just the happy path — "who can see what" is the platform's actual trust claim.</p>
+      </div>
+      <div class="block-grid">
+        <div class="block do">
+          <h3>Do now</h3>
+          <ul>
+            <li>Functional, end-to-end testing of every MVP journey</li>
+            <li>Adversarial access-control testing of the consent model — who can see what, verified by attempted bypass, not by reading the policy</li>
+            <li>Trust &amp; safety scenario testing: SOS response, caregiver-verification rejection, OTP mismatch/fraud paths</li>
+            <li>Payment reconciliation testing: refunds, payout edge cases, webhook retries — money has to be exactly right</li>
+            <li>Load/performance testing sized to pilot scale, not hypothetical future scale</li>
+            <li>A second usability round with real elder and family users, now on the real product</li>
+            <li>A formal pilot-readiness go/no-go review</li>
+          </ul>
+        </div>
+        <div class="block dont">
+          <h3>Not yet</h3>
+          <ul>
+            <li>Testing features outside MVP scope</li>
+            <li>Any public or marketing activity</li>
+            <li>Infrastructure scaling decisions beyond what testing actually shows is needed</li>
+          </ul>
+        </div>
+        <div class="block dep full">
+          <h3>Depends on</h3>
+          <div class="tags"><span class="tag">Phase 6 → MVP scope complete</span></div>
+        </div>
+        <div class="block del">
+          <h3>Produces</h3>
+          <ul>
+            <li>Functional, security, load, and usability test results</li>
+            <li>Defect log with resolution status</li>
+            <li>Pilot-readiness go/no-go report</li>
+          </ul>
+        </div>
+        <div class="order-strip">
+          <span class="lbl">Order</span>
+          <p>functional <span class="arrow">→</span> access control <span class="arrow">→</span> trust &amp; safety scenarios <span class="arrow">→</span> payments <span class="arrow">→</span> load <span class="arrow">→</span> usability <span class="arrow">→</span> go/no-go</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHASE 8 -->
+    <section class="phase">
+      <div class="phase-num">8</div>
+      <div class="phase-head">
+        <h2 class="phase-name">Deployment</h2>
+        <p class="phase-thesis">Go live to a limited cohort with a verified caregiver pool already in place — never a public switch-on with an empty supply side.</p>
+      </div>
+      <div class="block-grid">
+        <div class="block do">
+          <h3>Do now</h3>
+          <ul>
+            <li>Provision production per the Phase 5 environment plan</li>
+            <li>Seed pilot-city data: region config, service catalog, initial pricing</li>
+            <li>Recruit, verify, and train the initial pilot caregiver pool — start this early enough to overlap late Development/Testing, since real bookings can't run without it</li>
+            <li>Set up monitoring, alerting, and an on-call plan — SOS in particular cannot have downtime</li>
+            <li>Write the rollback and incident-response plan before go-live, not during an incident</li>
+            <li>Launch as invite-only or capacity-capped in the pilot area, not a full public switch-on</li>
+            <li>Stand up customer support — a manual, human process is fine for MVP, but it has to exist</li>
+          </ul>
+        </div>
+        <div class="block dont">
+          <h3>Not yet</h3>
+          <ul>
+            <li>Marketing spend or PR</li>
+            <li>Any multi-city rollout</li>
+            <li>Feature additions during deployment — freeze scope</li>
+          </ul>
+        </div>
+        <div class="block dep full">
+          <h3>Depends on</h3>
+          <div class="tags"><span class="tag">Phase 7 → go/no-go approval</span></div>
+        </div>
+        <div class="block del">
+          <h3>Produces</h3>
+          <ul>
+            <li>Live production environment</li>
+            <li>Seeded pilot-city data</li>
+            <li>Verified initial caregiver pool</li>
+            <li>Monitoring &amp; incident-response runbook</li>
+            <li>Soft-launch plan</li>
+          </ul>
+        </div>
+        <div class="order-strip">
+          <span class="lbl">Order</span>
+          <p>infra &amp; monitoring <span class="arrow">→</span> caregiver onboarding (overlaps earlier phases) <span class="arrow">→</span> data seeding <span class="arrow">→</span> soft launch <span class="arrow">→</span> stability watch</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHASE 9 -->
+    <section class="phase">
+      <div class="phase-num">9</div>
+      <div class="phase-head">
+        <h2 class="phase-name">MVP Launch</h2>
+        <p class="phase-thesis">Launch is the start of measurement, not the finish line — hold every claim from Phase 2 up against what the pilot actually does.</p>
+      </div>
+      <div class="block-grid">
+        <div class="block do">
+          <h3>Do now</h3>
+          <ul>
+            <li>Launch to the pilot city only, targeting the personas validated in Phase 1</li>
+            <li>Track launch success against the exact metrics set in Phase 2 and Phase 3 — bookings completed, repeat rate, SOS SLA, caregiver supply/demand balance, NPS from both personas</li>
+            <li>Review pilot health on a fixed cadence (e.g. daily) for the first 2–4 weeks</li>
+            <li>Feed real early-user feedback directly into backlog prioritization</li>
+            <li>Run a formal retrospective at the end of the pilot window: what was validated, what wasn't, what changes before scaling</li>
+          </ul>
+        </div>
+        <div class="block dont">
+          <h3>Not yet</h3>
+          <ul>
+            <li>Any multi-city expansion decision, before the pilot metrics are reviewed</li>
+            <li>Caregiver hiring beyond pilot needs</li>
+            <li>New feature development outside urgent fixes, before the retrospective is done</li>
+          </ul>
+        </div>
+        <div class="block dep full">
+          <h3>Depends on</h3>
+          <div class="tags"><span class="tag">Phase 8 → stable soft launch</span></div>
+        </div>
+        <div class="block del">
+          <h3>Produces</h3>
+          <ul>
+            <li>Launch report against pilot success metrics</li>
+            <li>User feedback synthesis</li>
+            <li>Go / no-go recommendation for scale-up</li>
+            <li>Prioritized post-MVP roadmap</li>
+          </ul>
+        </div>
+        <div class="order-strip">
+          <span class="lbl">Order</span>
+          <p>launch to pilot cohort <span class="arrow">→</span> monitor against metrics <span class="arrow">→</span> collect feedback continuously <span class="arrow">→</span> retrospective <span class="arrow">→</span> scale decision</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="closing">
+    <h2>Where this project actually stands against this sequence</h2>
+    <p>This roadmap is written from a clean slate, as asked. In reality, this codebase already has a working MVP core — booking, matching, OTP visit verification, SOS, Razorpay payments/payouts, and DPDP data rights — live-verified against a real Supabase project, plus a full architecture for 25 further modules and one batch of that already built (Family Dashboard, Elder Care Timeline, Daily Check-ins, Family Member Management).</p>
+    <p>That work was not built in this exact phase order, and Phases 1–2 here were never run as formal, documented exercises against real interview data. If useful, the next step is a short gap review: hold the existing build against this sequence, name what Phase 1 and Phase 2 evidence is actually missing, and decide whether to backfill it before continuing forward, or treat the pilot itself as the validation. <strong>That review is a separate task — say the word and it's next.</strong></p>
+  </div>
+
+</div>
