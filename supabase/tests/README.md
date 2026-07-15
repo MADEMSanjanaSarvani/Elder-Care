@@ -67,7 +67,25 @@ client insert path at all (service-role only, TEST 51), and the
 row by the sensitivity of what the reminder is *about*, not a single
 fixed category (TEST 53 — a family member with `medication_list` but not
 `visit_history` consent sees exactly the medication-sourced reminder,
-not the appointment-sourced one).
+not the appointment-sourced ones).
+
+TESTs 56-57 cover `0011_appointment_reminder_trigger.sql`, a same-day
+follow-up to 0010: the Batch 2 PRD's functional requirements for
+Appointment Management mention a "reminder lead time" field, but the
+Database Design section for `appointments` never defined a column for
+it, so nothing could ever enqueue a reminder for an appointment without
+this migration — caught while actually wiring Smart Reminder System up to
+its stated source modules, the same way the Batch 1 check-in timeline gap
+was caught by building the Timeline screen on top of it. Adding the
+trigger changed real row counts TESTs 52 and 53 depend on (TEST 47 and
+TEST 50 each now genuinely enqueue a reminder on insert), so those two
+tests were updated to assert on the real resulting counts rather than a
+synthetic stand-in row — the synthetic 'appointment'-sourced reminder in
+the original draft was removed as redundant once the trigger made a real
+one available to test against instead. TEST 56 confirms rescheduling an
+appointment cancels its stale pending reminder and creates exactly one
+new one (not a duplicate); TEST 57 confirms cancelling the appointment
+itself cancels its pending reminder too.
 
 ## Running it
 
@@ -83,7 +101,8 @@ psql -d setu_test -f local_auth_stub.sql
 for f in 0001_schema 0002_rls 0003_realtime 0004_erasure_requests \
          0005_caregiver_payout_accounts 0006_caregiver_documents_storage \
          0007_wellbeing_checkins_consent_category 0008_family_experience \
-         0009_checkin_timeline_trigger 0010_batch2_care_logistics; do
+         0009_checkin_timeline_trigger 0010_batch2_care_logistics \
+         0011_appointment_reminder_trigger; do
   psql -d setu_test -v ON_ERROR_STOP=1 -f "../migrations/$f.sql"
 done
 psql -d setu_test -v ON_ERROR_STOP=1 -f ../seed.sql

@@ -530,13 +530,15 @@ values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'medication_dose', 'eeeeeeee-222
 reset role;
 reset request.jwt.claim.sub;
 
--- Simulates what medications-generate-doses / the appointment recurrence
--- step would do server-side (service role).
+-- Simulates what medications-generate-doses would do server-side
+-- (service role). Note: TEST 47 and TEST 50 above already each triggered
+-- a real 'appointment'-sourced reminder via trg_enqueue_appointment_reminder
+-- (0011) — those are exercised for real below rather than duplicated with
+-- a synthetic insert.
 insert into reminders (id, elder_id, source_type, source_id, remind_at, recipient_scope) values
-  ('eeeeeeee-6666-6666-6666-666666666666', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'medication_dose', 'eeeeeeee-2222-2222-2222-222222222222', now() + interval '1 hour', 'both'),
-  ('eeeeeeee-7777-7777-7777-777777777777', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'appointment', 'eeeeeeee-4444-4444-4444-444444444444', now() + interval '2 hours', 'both');
+  ('eeeeeeee-6666-6666-6666-666666666666', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'medication_dose', 'eeeeeeee-2222-2222-2222-222222222222', now() + interval '1 hour', 'both');
 
-\echo '=== TEST 52: the elder sees both reminders regardless of source type — expect 2 ==='
+\echo '=== TEST 52: the elder sees every reminder regardless of source type — expect 3 (the seeded medication_dose one, plus the two real appointment ones auto-enqueued by TEST 47 and TEST 50) ==='
 set role authenticated;
 set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
 select count(*) as visible_reminders from reminders where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
@@ -559,11 +561,42 @@ select status from reminders where id = 'eeeeeeee-6666-6666-6666-666666666666';
 reset role;
 reset request.jwt.claim.sub;
 
-\echo '=== TEST 55: a stranger cannot see any reminder and their update is a silent no-op (0 rows), not a bypass — expect 0 visible, 0 rows updated ==='
+\echo '=== TEST 55: a stranger cannot see any of this elder''s reminders, and an attempt to dismiss all of them is a silent no-op (0 rows), not a bypass — expect 0 visible, 0 rows updated, 0 actually dismissed ==='
 set role authenticated;
 set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
 select count(*) as visible_reminders from reminders where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
-update reminders set status = 'dismissed' where id = 'eeeeeeee-7777-7777-7777-777777777777';
+update reminders set status = 'dismissed' where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 reset role;
 reset request.jwt.claim.sub;
-select status from reminders where id = 'eeeeeeee-7777-7777-7777-777777777777';
+select count(*) as dismissed_count from reminders where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' and status = 'dismissed';
+
+-- ===================================================================
+-- 0011_appointment_reminder_trigger.sql: the appointment -> reminder
+-- enqueue trigger itself, found while wiring Smart Reminder System —
+-- the Batch 2 PRD's own appointments schema never defined a
+-- reminder_lead_time column despite the functional requirements
+-- mentioning one, so nothing could enqueue an appointment reminder at all
+-- without this migration.
+-- ===================================================================
+
+\echo '=== TEST 56: rescheduling TEST 47''s appointment cancels its old pending reminder and creates exactly one new one — expect 1 pending, 1 cancelled ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+update appointments set scheduled_at = now() + interval '10 days' where id = 'eeeeeeee-4444-4444-4444-444444444444';
+reset role;
+reset request.jwt.claim.sub;
+select
+  count(*) filter (where status = 'pending') as pending_count,
+  count(*) filter (where status = 'cancelled') as cancelled_count
+from reminders where source_type = 'appointment' and source_id = 'eeeeeeee-4444-4444-4444-444444444444';
+
+\echo '=== TEST 57: cancelling the appointment cancels its pending reminder too — expect 0 pending, 2 cancelled ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+update appointments set status = 'cancelled' where id = 'eeeeeeee-4444-4444-4444-444444444444';
+reset role;
+reset request.jwt.claim.sub;
+select
+  count(*) filter (where status = 'pending') as pending_count,
+  count(*) filter (where status = 'cancelled') as cancelled_count
+from reminders where source_type = 'appointment' and source_id = 'eeeeeeee-4444-4444-4444-444444444444';
