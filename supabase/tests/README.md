@@ -128,6 +128,13 @@ all — mirroring the real, narrower `sos_events` precedent (visibility
 only for the specifically dispatched `responder_caregiver_id`) rather
 than the PRD's looser text implying any caregiver during an active SOS.
 
+TESTs 82-83 cover `0014_hospital_stay_gap_reminders.sql`: without
+registering `hospital_stay_gap` in `required_consent_for_source()`, the
+shared reminder engine fails closed for the new type (null mapping means
+no family visibility at all) — TEST 82 confirms a family member with
+`visit_history` consent sees a coverage-gap reminder, TEST 83 confirms a
+stranger doesn't.
+
 Also worth stating: this migration does **not** implement column-level
 encryption for `emergency_medical_notes`/`insurance_policy_number`, even
 though the PRD claims it should reuse "an already-decided pattern." No
@@ -155,7 +162,7 @@ for f in 0001_schema 0002_rls 0003_realtime 0004_erasure_requests \
          0007_wellbeing_checkins_consent_category 0008_family_experience \
          0009_checkin_timeline_trigger 0010_batch2_care_logistics \
          0011_appointment_reminder_trigger 0012_medication_discontinue_trigger \
-         0013_batch3_visits_and_records; do
+         0013_batch3_visits_and_records 0014_hospital_stay_gap_reminders; do
   psql -d setu_test -v ON_ERROR_STOP=1 -f "../migrations/$f.sql"
 done
 psql -d setu_test -v ON_ERROR_STOP=1 -f ../seed.sql

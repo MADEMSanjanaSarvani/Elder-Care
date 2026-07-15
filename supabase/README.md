@@ -123,6 +123,7 @@ changes behavior; note them if you're used to seeing the more common imports.
 | `CHECKINS_SWEEP_SHARED_SECRET` | `checkins-escalation-sweep` (same n8n-scheduled shared-secret pattern as `payouts-run`) |
 | `MEDICATIONS_SWEEP_SHARED_SECRET` | `medications-generate-doses` (same n8n-scheduled shared-secret pattern) |
 | `REMINDERS_SWEEP_SHARED_SECRET` | `reminders-dispatch-sweep` (same n8n-scheduled shared-secret pattern) |
+| `HOSPITAL_GAP_SWEEP_SHARED_SECRET` | `hospital-stays-gap-sweep` (same n8n-scheduled shared-secret pattern) |
 
 None of these are set in this repo. Configure them via `supabase secrets set` (or your CI's secret store) — never commit real keys.
 
@@ -256,6 +257,32 @@ visibility, and `reminders`' per-row consent gating via `required_consent_for_so
 by `tests/rls_smoke_test.sql` TESTs 39-57, which caught and fixed a real bug in the first draft of
 `medication_doses_write` (see `tests/README.md`). Neither function has been invoked against the live
 project yet.
+
+## PRD Part 6, Batch 3: Notification Center, Companion Visits, Hospital Stays, Health Records
+
+`docs/prd/06-prd-part6-visits-and-records.html`. Database layer: `migrations/0013_batch3_visits_and_records.sql`
+(notification config/preferences/devices with a must-deliver trigger, companion visit preferences +
+activity logs, hospital stays + a junction table so `bookings` needs no new column, and the two-tier
+health-profile split), plus a follow-up `migrations/0014_hospital_stay_gap_reminders.sql` registering
+the `hospital_stay_gap` source type with `required_consent_for_source()` and `notification_types` —
+without which both shared systems fail closed and a coverage-gap reminder could never be seen or sent.
+
+The one existing-Edge-Function touch this batch's PRD allows: `bookings-match` gained a
+preferred-caregiver tiebreak (reorders already-eligible candidates only; eligibility unchanged).
+
+One new scheduled function, same no-user-session/shared-secret shape as the other sweeps:
+
+- `POST /functions/v1/hospital-stays-gap-sweep` (`x-hospital-gap-sweep-secret`) — for each active
+  hospital stay, checks whether any non-cancelled linked shift is running or starts within the next
+  6 hours; if not, enqueues one `hospital_stay_gap` reminder (recipient scope `family`). Never
+  re-enqueues while an open (pending/sent/snoozed) gap reminder exists for the stay — the same
+  anti-notification-fatigue principle as the check-in escalation's once-per-day rule.
+  `reminders-dispatch-sweep` learned the new source type's staleness check (stay still `active`).
+
+Validated: `deno check`/`deno lint` clean; RLS covered by `tests/rls_smoke_test.sql` TESTs 61-83
+(83/83 total passing), which caught a real "infinite recursion detected in policy" error in the
+first draft of the hospital-stay cross-caregiver read — see `tests/README.md`. Not yet invoked
+against the live project.
 
 ## CI/CD
 

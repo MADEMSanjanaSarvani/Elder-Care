@@ -96,6 +96,13 @@ async function sourceStillWarrantsReminder(
     const { data } = await admin.from("appointments").select("status").eq("id", sourceId).maybeSingle();
     return data?.status === "scheduled";
   }
+  if (sourceType === "hospital_stay_gap") {
+    // A discharged or cancelled stay has no coverage to worry about; the
+    // gap-sweep itself handles "gap since filled" by never re-enqueueing
+    // while one is open, so active-stay status is the right staleness check.
+    const { data } = await admin.from("hospital_stays").select("status").eq("id", sourceId).maybeSingle();
+    return data?.status === "active";
+  }
   // Unrecognized source_type — fail closed, same guardrail philosophy as
   // required_consent_for_source() treating an unknown type as "deny."
   return false;

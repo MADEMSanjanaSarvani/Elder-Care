@@ -826,3 +826,28 @@ set request.jwt.claim.sub = 'dddddddd-1111-1111-1111-111111111111';
 select count(*) as visible_profiles from elder_health_profile where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 reset role;
 reset request.jwt.claim.sub;
+
+-- ===================================================================
+-- 0014_hospital_stay_gap_reminders.sql: the hospital_stay_gap source
+-- type registered with the shared reminder engine's consent mapping —
+-- without it, required_consent_for_source() returns null (fail-closed)
+-- and no family member could ever see a coverage-gap reminder.
+-- ===================================================================
+
+-- Simulates what hospital-stays-gap-sweep would do server-side.
+insert into reminders (id, elder_id, source_type, source_id, remind_at, recipient_scope) values
+  ('11113333-1111-3333-1111-333311113333', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'hospital_stay_gap', '11112222-1111-2222-1111-222211112222', now(), 'family');
+
+\echo '=== TEST 82: daughter (visit_history consent from TEST 69) can see the coverage-gap reminder — expect 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select count(*) as visible_gap_reminders from reminders where id = '11113333-1111-3333-1111-333311113333';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 83: a stranger cannot — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select count(*) as visible_gap_reminders from reminders where id = '11113333-1111-3333-1111-333311113333';
+reset role;
+reset request.jwt.claim.sub;
