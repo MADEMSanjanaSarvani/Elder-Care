@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
+import '../../visit_tools/presentation/visit_tools_section.dart';
 import '../data/otp_visit_repository.dart';
 
 /// One-handed use standing in a doorway (PRD Part 3 §17): a single OTP
@@ -92,11 +93,9 @@ class _OtpVisitScreenState extends ConsumerState<OtpVisitScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Visit')),
-      body: Padding(
+      body: ListView(
         padding: const EdgeInsets.all(SetuSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+        children: [
             const Text('Ask the family for the visit code to start or end.'),
             const SizedBox(height: SetuSpacing.md),
             TextField(
@@ -145,8 +144,8 @@ class _OtpVisitScreenState extends ConsumerState<OtpVisitScreen> {
                 label: const Text('Send visit summary to family'),
               ),
             ],
+            VisitToolsSection(bookingId: widget.bookingId),
           ],
-        ),
       ),
     );
   }
