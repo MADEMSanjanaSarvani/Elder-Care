@@ -6,11 +6,16 @@ import 'package:setu_core/setu_core.dart';
 import '../features/appointments/presentation/appointments_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/booking/presentation/booking_screen.dart';
+import '../features/companion_visits/presentation/companion_preferences_screen.dart';
 import '../features/consent/presentation/consent_screen.dart';
 import '../features/elder_home/presentation/elder_home_screen.dart';
 import '../features/family_access/presentation/family_access_screen.dart';
 import '../features/family_home/presentation/family_home_screen.dart';
+import '../features/health_profile/presentation/health_profile_screen.dart';
+import '../features/hospital_stays/presentation/hospital_stays_screen.dart';
 import '../features/medications/presentation/medications_screen.dart';
+import '../features/notifications/presentation/notification_inbox_screen.dart';
+import '../features/notifications/presentation/notification_preferences_screen.dart';
 import '../features/reminders/presentation/reminders_screen.dart';
 import '../features/sos/presentation/sos_screen.dart';
 import '../features/timeline/presentation/timeline_screen.dart';
@@ -73,20 +78,62 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>
             RemindersScreen(elderId: state.pathParameters['elderId']!),
       ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationInboxScreen(),
+      ),
+      GoRoute(
+        path: '/notifications/preferences',
+        builder: (context, state) => const NotificationPreferencesScreen(),
+      ),
+      GoRoute(
+        path: '/elder/:elderId/hospital-stays',
+        builder: (context, state) =>
+            HospitalStaysScreen(elderId: state.pathParameters['elderId']!),
+      ),
+      GoRoute(
+        path: '/elder/:elderId/health-profile',
+        builder: (context, state) =>
+            HealthProfileScreen(elderId: state.pathParameters['elderId']!),
+      ),
+      GoRoute(
+        path: '/elder/:elderId/companion-preferences',
+        builder: (context, state) => CompanionPreferencesScreen(
+            elderId: state.pathParameters['elderId']!),
+      ),
     ],
   );
 });
 
 /// Decides elder-mode vs. family-mode purely from `profiles.role` — see
 /// PRD Part 3 §17/§18 for why these are two different presentations of
-/// the same underlying data rather than one shrunken UI.
+/// the same underlying data rather than one shrunken UI. The notification
+/// bell (PRD Part 6, Batch 3, Module 9) is an additive app-bar element on
+/// this shared shell, not a change to either home screen's own logic.
 class HomeRouterScreen extends ConsumerWidget {
   const HomeRouterScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(currentProfileProvider);
+    final unreadAsync = ref.watch(unreadCountProvider);
+    final unread = unreadAsync.asData?.value ?? 0;
+
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Setu'),
+        actions: [
+          IconButton(
+            tooltip: 'Notifications',
+            icon: Badge(
+              isLabelVisible: unread > 0,
+              label: Text('$unread'),
+              child: const Icon(Icons.notifications_outlined),
+            ),
+            onPressed: () => context.push('/notifications'),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: profileAsync.when(
           data: (profile) {

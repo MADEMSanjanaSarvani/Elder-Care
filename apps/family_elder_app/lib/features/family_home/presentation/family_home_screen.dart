@@ -102,6 +102,24 @@ class FamilyHomeScreen extends ConsumerWidget {
                           label: const Text('Reminders'),
                         ),
                         TextButton.icon(
+                          onPressed: () => context
+                              .push('/elder/${elder.id}/hospital-stays'),
+                          icon: const Icon(Icons.local_hospital_outlined),
+                          label: const Text('Hospital stays'),
+                        ),
+                        TextButton.icon(
+                          onPressed: () => context
+                              .push('/elder/${elder.id}/health-profile'),
+                          icon: const Icon(Icons.favorite_outline),
+                          label: const Text('Health profile'),
+                        ),
+                        TextButton.icon(
+                          onPressed: () => context.push(
+                              '/elder/${elder.id}/companion-preferences'),
+                          icon: const Icon(Icons.diversity_1_outlined),
+                          label: const Text('Companion'),
+                        ),
+                        TextButton.icon(
                           onPressed: () =>
                               context.push('/elder/${elder.id}/consent'),
                           icon: const Icon(Icons.privacy_tip_outlined),
