@@ -1,0 +1,376 @@
+<title>Project Setu — Elder Care Platform PRD (Part 10)</title>
+<style>
+  :root{
+    --paper:#F2F4F0; --paper-raised:#FFFFFF; --ink:#15181A; --muted:#57625C; --border:#DADFD8;
+    --accent:#B8691A; --accent-ink:#5A3610; --accent-2:#1D6C5F; --danger:#A83F2A; --danger-bg:#F7EAE4;
+    --decision-bg:#EFEAF6; --decision-ink:#4B3B78; --decision-border:#D6CCEA;
+    --get-bg:#E6EFEA; --get-ink:#1D6C5F; --post-bg:#F3EBE0; --post-ink:#8A5A1C;
+    --radius:3px;
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+  }
+  :root[data-theme="dark"]{
+    --paper:#14181A; --paper-raised:#1B211F; --ink:#E9EDE9; --muted:#9AA69E; --border:#2A312C;
+    --accent:#E0A559; --accent-ink:#F4DEB8; --accent-2:#4BB6A3; --danger:#E2705C; --danger-bg:#3A2620;
+    --decision-bg:#2A2740; --decision-ink:#D9CFEF; --decision-border:#453D66;
+    --get-bg:#1C2E27; --get-ink:#5FCBB4; --post-bg:#332A1A; --post-ink:#E0A559;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#14181A; --paper-raised:#1B211F; --ink:#E9EDE9; --muted:#9AA69E; --border:#2A312C;
+      --accent:#E0A559; --accent-ink:#F4DEB8; --accent-2:#4BB6A3; --danger:#E2705C; --danger-bg:#3A2620;
+      --decision-bg:#2A2740; --decision-ink:#D9CFEF; --decision-border:#453D66;
+      --get-bg:#1C2E27; --get-ink:#5FCBB4; --post-bg:#332A1A; --post-ink:#E0A559;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--font-body); line-height:1.6; -webkit-font-smoothing:antialiased;}
+  a{color:var(--accent-2);}
+  a:focus-visible, button:focus-visible, .tocLink:focus-visible{outline:2px solid var(--accent-2); outline-offset:2px;}
+  .shell{display:grid; grid-template-columns:260px minmax(0,1fr); max-width:1200px; margin:0 auto;}
+  @media (max-width:880px){.shell{grid-template-columns:1fr;} .toc{position:static !important; height:auto !important; border-right:none !important; border-bottom:1px solid var(--border);}}
+  .toc{position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto; padding:32px 20px 32px 28px; border-right:1px solid var(--border);}
+  .toc-kicker{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:6px;}
+  .toc-title{font-family:var(--font-display); font-size:19px; margin:0 0 2px;}
+  .toc-sub{font-size:12px; color:var(--muted); margin-bottom:18px;}
+  .toc-group{font-family:var(--font-mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:16px 0 4px;}
+  .toc nav{display:flex; flex-direction:column; gap:1px;}
+  .tocLink{font-size:12.5px; color:var(--muted); text-decoration:none; padding:5px 8px; border-radius:var(--radius); display:flex; gap:8px;}
+  .tocLink:hover{background:var(--paper-raised); color:var(--ink);}
+  .tocLink .n{font-family:var(--font-mono); color:var(--accent); font-size:10.5px; padding-top:1px;}
+  .content{padding:48px 56px 96px; min-width:0;}
+  @media (max-width:880px){.content{padding:32px 24px 72px;}}
+  .doc-header{margin-bottom:40px; border-bottom:1px solid var(--border); padding-bottom:32px;}
+  .doc-kicker{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:14px;}
+  h1.doc-title{font-family:var(--font-display); font-size:clamp(28px,4vw,40px); line-height:1.12; margin:0 0 10px; text-wrap:balance;}
+  .doc-dek{font-size:16px; color:var(--muted); max-width:70ch; margin:0 0 20px;}
+  .meta-row{display:flex; flex-wrap:wrap; gap:20px; font-size:12px; font-family:var(--font-mono); color:var(--muted);}
+  .meta-row b{color:var(--ink); font-weight:600;}
+  .progress-strip{display:flex; flex-wrap:wrap; gap:8px; margin-top:18px;}
+  .prog-chip{font-family:var(--font-mono); font-size:11px; padding:5px 10px; border-radius:2px; border:1px solid var(--border);}
+  .prog-chip.done{background:var(--get-bg); color:var(--get-ink); border-color:var(--get-ink);}
+  .prog-chip.next{background:var(--post-bg); color:var(--post-ink); border-color:var(--post-ink);}
+  section.module{margin-bottom:96px; padding-bottom:8px; max-width:78ch;}
+  section.module.wide{max-width:none;}
+  .module-eyebrow{font-family:var(--font-mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;}
+  h2.module-title{font-family:var(--font-display); font-size:28px; margin:0 0 6px; padding-top:8px; text-wrap:balance;}
+  .module-dek{font-size:15px; color:var(--muted); margin:0 0 28px;}
+  h3{font-family:var(--font-display); font-size:18px; margin:30px 0 10px; border-top:1px solid var(--border); padding-top:22px;}
+  h3:first-of-type{border-top:none; padding-top:0;}
+  h3 .sec-n{font-family:var(--font-mono); font-size:11px; color:var(--accent); margin-right:8px; font-weight:400;}
+  p{margin:0 0 14px;}
+  ul,ol{margin:0 0 14px; padding-left:20px;}
+  li{margin-bottom:5px;}
+  strong{font-weight:600;}
+  table{width:100%; border-collapse:collapse; font-size:13px; margin:6px 0 14px;}
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:14px;}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
+  th{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); background:var(--paper-raised); white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  td.muted{color:var(--muted);}
+  code{font-family:var(--font-mono); font-size:0.87em; background:var(--paper-raised); padding:1px 5px; border-radius:2px; border:1px solid var(--border);}
+  .schema-card{border:1px solid var(--border); border-radius:var(--radius); background:var(--paper-raised); margin-bottom:14px; overflow:hidden;}
+  .schema-head{padding:11px 15px; border-bottom:1px solid var(--border); display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
+  .schema-head .tbl-name{font-family:var(--font-mono); font-weight:700; font-size:13.5px;}
+  .schema-head .tbl-note{font-size:12px; color:var(--muted);}
+  .schema-head .tag{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; padding:2px 7px; border-radius:2px; background:var(--decision-bg); color:var(--decision-ink);}
+  .schema-cols{padding:9px 15px 12px;}
+  .col-row{display:grid; grid-template-columns:150px 130px 1fr; gap:10px; font-size:12px; padding:4px 0; border-bottom:1px dotted var(--border);}
+  .col-row:last-child{border-bottom:none;}
+  .col-name{font-family:var(--font-mono); color:var(--accent-ink);}
+  .col-type{font-family:var(--font-mono); color:var(--accent-2);}
+  .col-desc{color:var(--muted);}
+  .endpoint{display:flex; gap:12px; align-items:baseline; padding:8px 0; border-bottom:1px dotted var(--border); font-size:13px;}
+  .endpoint:last-child{border-bottom:none;}
+  .method{font-family:var(--font-mono); font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:2px; white-space:nowrap;}
+  .method.get{background:var(--get-bg); color:var(--get-ink);}
+  .method.post{background:var(--post-bg); color:var(--post-ink);}
+  .method.none{background:var(--paper); color:var(--muted); border:1px dashed var(--border);}
+  .path{font-family:var(--font-mono); font-size:12.5px;}
+  .callout{border-left:3px solid var(--accent-2); background:var(--paper-raised); border-radius:0 var(--radius) var(--radius) 0; padding:14px 18px; margin:0 0 14px;}
+  .callout h4{margin:0 0 5px; font-size:13.5px;}
+  .callout p{margin:0; font-size:13.5px;}
+  .risk{border-left:3px solid var(--danger); background:var(--danger-bg); border-radius:0 var(--radius) var(--radius) 0; padding:14px 18px; margin:0 0 14px;}
+  .risk h4{margin:0 0 5px; font-size:13.5px;}
+  .risk p{margin:0; font-size:13.5px;}
+  .decision{border-left:3px solid var(--decision-ink); background:var(--decision-bg); border-radius:0 var(--radius) var(--radius) 0; padding:14px 18px; margin:0 0 14px;}
+  .decision h4{margin:0 0 5px; font-size:13.5px; color:var(--decision-ink);}
+  .decision p{margin:0; font-size:13.5px; color:var(--decision-ink);}
+  .flow-step{display:flex; gap:14px; padding:9px 0; border-bottom:1px dotted var(--border);}
+  .flow-step:last-child{border-bottom:none;}
+  .flow-step .idx{font-family:var(--font-mono); color:var(--accent); font-size:11px; min-width:18px;}
+  .flow-step .body{font-size:13.5px;}
+  .flow-step .body b{display:block; margin-bottom:2px;}
+  .persona-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:0 0 16px;}
+  .persona{border:1px solid var(--border); border-radius:var(--radius); padding:10px 12px; font-size:12.5px;}
+  .persona .role{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; color:var(--accent);}
+  .persona .access{color:var(--muted); font-size:11.5px; margin-top:3px;}
+  .completion{border:1px solid var(--get-ink); background:var(--get-bg); border-radius:var(--radius); padding:24px 28px; margin-top:8px;}
+  .completion h3{border-top:none; padding-top:0; margin-top:0; color:var(--get-ink);}
+  footer.doc-footer{margin-top:80px; padding-top:20px; border-top:1px solid var(--border); font-size:12px; color:var(--muted); font-family:var(--font-mono);}
+</style>
+
+<div class="shell">
+  <aside class="toc">
+    <div class="toc-kicker">Project Setu</div>
+    <div class="toc-title">PRD — Part 10</div>
+    <div class="toc-sub">Missing Modules — Batch 7: Trust &amp; Safety (Final)</div>
+    <nav>
+      <a class="tocLink" href="#overview"><span class="n">·</span>Batch overview</a>
+      <div class="toc-group">Module 24</div>
+      <a class="tocLink" href="#m24"><span class="n">17</span>Consent &amp; Privacy Management</a>
+      <div class="toc-group">Module 25</div>
+      <a class="tocLink" href="#m25"><span class="n">17</span>Enhanced Emergency Services</a>
+      <a class="tocLink" href="#cross"><span class="n">·</span>Touches to existing modules</a>
+      <a class="tocLink" href="#complete"><span class="n">✓</span>Plan complete</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="doc-header">
+      <div class="doc-kicker">Product Requirements Document · Architecture &amp; requirements only, no implementation code</div>
+      <h1 class="doc-title">Missing Modules, Batch 7: Trust &amp; Safety</h1>
+      <p class="doc-dek">Part 10 of the Project Setu PRD, the seventh and final batch. Both modules here sit directly adjacent to the two most safety-critical systems already built — the DPDP consent model and SOS — which is exactly why they were scheduled last rather than first: every architectural habit established across Batches 1–6 (additive-only touches, named trade-offs, junction tables over new columns, separate tables over overloaded ones) gets applied here at its highest stakes, not invented under pressure at the start.</p>
+      <div class="meta-row">
+        <span><b>Batch:</b> 7 of 7 — final</span>
+        <span><b>Modules:</b> Consent &amp; Privacy Management · Enhanced Emergency Services</span>
+        <span><b>Builds on:</b> PRD Part 2 §13/§14, <code>consent_grants</code>, <code>audit_log</code>, <code>sos_events</code>, <code>me-data-export</code>, <code>me-erasure-request</code>, all of Batches 1–6</span>
+      </div>
+      <div class="progress-strip">
+        <span class="prog-chip done">Batches 1–6 — done (23 modules)</span>
+        <span class="prog-chip done">Batch 7 — this document, plan complete</span>
+      </div>
+    </div>
+
+    <section class="module wide" id="overview">
+      <div class="module-eyebrow">Batch overview</div>
+      <h2 class="module-title">Neither module rebuilds what already exists</h2>
+      <p>The consent model (<code>consent_grants</code>, <code>has_consent()</code>, RLS as the enforcement layer) and the SOS flow (108-first, <code>sos-trigger</code>, life-safety-overrides-consent) are both already fully implemented and explicitly off-limits to modification. It would have been easy to scope these two modules as "improve consent" and "improve SOS" and end up quietly rewriting both. Instead, each module below is scoped to something specific and already named as missing in the existing codebase's own comments and prior batches' cross-references — not invented fresh, and not a rewrite of anything that works today.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 24 — CONSENT & PRIVACY MANAGEMENT -->
+    <!-- ============================================================ -->
+    <section class="module wide" id="m24">
+      <div class="module-eyebrow">Module 24 of 2 in this batch (24th overall)</div>
+      <h2 class="module-title">Consent &amp; Privacy Management</h2>
+      <p class="module-dek">Three things the existing consent/DPDP backend has always been able to support but never had a UI or workflow for — each one named as future work in the codebase's own comments before this module existed.</p>
+
+      <h3><span class="sec-n">01</span>Problem being solved</h3>
+      <p>The consent-grant model, the guardian-override <em>path</em> (<code>consent_grants.granted_via = 'documented_guardian_process'</code>), <code>me-data-export</code>, and <code>me-erasure-request</code> already exist. Three things don't: a real UI making any of this usable end to end, an actual review workflow for guardian-override requests (PRD Part 2 §13 calls this out explicitly as needing to be "a real workflow, not a checkbox," deferred to exactly this kind of module), and the elder-facing "who accessed my data" view that <code>migrations/0002_rls.sql</code>'s own comment on <code>audit_log</code> named as a Part 3/4 feature "built on top of this table through a dedicated Edge Function, not raw RLS."</p>
+
+      <h3><span class="sec-n">02</span>User personas</h3>
+      <div class="persona-grid">
+        <div class="persona"><div class="role">Elder</div>Primary — sovereign over their own grants, sees who accessed their data.<div class="access">full, own record</div></div>
+        <div class="persona"><div class="role">Family member</div>Requests guardian-override consent when the elder lacks capacity; sees their own grants.<div class="access">own grants, request submission</div></div>
+        <div class="persona"><div class="role">Admin — super_admin</div>Reviews and decides guardian-override requests, exactly as the existing consent write policy already permits.<div class="access">existing scope, new queue</div></div>
+      </div>
+
+      <h3><span class="sec-n">03</span>Functional requirements</h3>
+      <ul>
+        <li><strong>Privacy Center screen</strong>: every <code>consent_grants</code> row for the elder in one place, grant/revoke with a single tap — a UI layer over an access model that already fully supports this, not a new access model.</li>
+        <li><strong>Guardian-override request queue</strong>: a family member submits a request (category, basis description, optional supporting document) for an elder who lacks capacity to consent themselves. An admin reviews and approves or denies — approval means the admin performs the actual grant through the <em>existing</em>, already-permitted <code>consent_grants_write</code> policy path (<code>granted_via = 'documented_guardian_process' and is_admin()</code>), which needs no change at all.</li>
+        <li><strong>"Who accessed my data"</strong>: an elder-facing view over <code>audit_log</code>, translating raw <code>resource_type</code>/<code>resource_id</code> rows into a readable "who did what, when" list scoped to entries that trace back to this elder — the dedicated-Edge-Function approach the existing RLS migration's own comment called for, not a direct RLS policy on <code>audit_log</code> (which can't express "does this row belong to me" generically across every resource type).</li>
+        <li>Existing <code>me-data-export</code>/<code>me-erasure-request</code> functions get a real UI entry point for the first time — they've only been exercised via direct HTTP calls so far.</li>
+      </ul>
+
+      <h3><span class="sec-n">04</span>Non-functional requirements</h3>
+      <div class="risk">
+        <h4>An honest limit on "who accessed my data," stated plainly</h4>
+        <p><code>audit_log</code> today only receives write-path events — every state-mutating Edge Function logs to it, but nothing logs a <em>read</em> yet (the gap named repeatedly since Batch 1's Family Dashboard and Timeline sections). This feature therefore shows real data — bookings, payments, SOS events, erasure requests — but cannot yet show "family member X viewed your medication list on this date," because nothing generates that event today. The feature's value grows exactly as more read paths adopt logging; it is not silently more complete than what actually exists.</p>
+      </div>
+
+      <h3><span class="sec-n">05</span>User flow</h3>
+      <div class="flow-step"><span class="idx">1</span><div class="body"><b>Elder</b>Opens Privacy Center, sees every grant, toggles any category directly.</div></div>
+      <div class="flow-step"><span class="idx">2</span><div class="body"><b>Family (guardian scenario)</b>Submits a guardian-override request with a documented basis.</div></div>
+      <div class="flow-step"><span class="idx">3</span><div class="body"><b>Admin</b>Reviews, approves (grants via the existing, unmodified path) or denies with notes.</div></div>
+      <div class="flow-step"><span class="idx">4</span><div class="body"><b>Elder</b>Views "who accessed my data" — today, write-path events only, honestly labeled as such.</div></div>
+      <div class="flow-step"><span class="idx">5</span><div class="body"><b>Elder or family</b>Requests a data export or files an erasure request from the same screen, calling the existing, unmodified functions.</div></div>
+
+      <h3><span class="sec-n">06</span>Information architecture</h3>
+      <p>One Privacy Center screen consolidating: consent grants, access history, data export, erasure request — everything DPDP-related in one place rather than scattered, plus a family-facing guardian-override request form.</p>
+
+      <h3><span class="sec-n">07</span>Database design</h3>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">guardian_consent_requests</span><span class="tbl-note">the request queue; the actual grant still uses the existing, unmodified path</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">elder_id, requested_by, category</span><span class="col-type">uuid fk / uuid fk / consent_category</span><span class="col-desc">reuses the existing enum, no new value needed here</span></div>
+          <div class="col-row"><span class="col-name">basis_description, basis_document_storage_path</span><span class="col-type">text / text nullable</span><span class="col-desc">the documented basis PRD Part 2 §13 requires — medical certification, power of attorney, etc.</span></div>
+          <div class="col-row"><span class="col-name">status, reviewed_by, reviewed_at, admin_notes</span><span class="col-type">enum / uuid fk nullable / timestamptz nullable / text nullable</span><span class="col-desc">pending / approved / denied</span></div>
+        </div>
+      </div>
+      <p>RLS: <code>is_elder_self</code> or <code>is_linked_family</code> may insert/select their own elder's requests; only <code>is_admin</code> may update status. No changes to <code>consent_grants</code>, <code>has_consent()</code>, or any existing consent policy — the actual grant on approval goes through the policy that already exists.</p>
+
+      <h3><span class="sec-n">08</span>API design</h3>
+      <div class="table-wrap">
+        <table><tbody>
+          <tr><td style="width:1%"><div class="endpoint"><span class="method get">GET</span><span class="path">/me/access-history</span></div></td><td class="muted">New Edge Function. <code>requireUser()</code>, resolves the caller's own <code>elder_id</code>, queries <code>audit_log</code> for entries whose <code>resource_type</code>/<code>resource_id</code> trace back to that elder (a per-resource-type mapping, since <code>audit_log</code> has no direct <code>elder_id</code> column), returns a human-readable list. Exactly the "dedicated Edge Function, not raw RLS" approach <code>0002_rls.sql</code>'s own comment anticipated.</td></tr>
+          <tr><td style="width:1%"><div class="endpoint"><span class="method none">—</span><span class="path">guardian request submission</span></div></td><td class="muted">Plain RLS-guarded insert. The actual grant on approval is a plain RLS-guarded write against the existing, already-permitted <code>consent_grants</code> policy — no new endpoint needed there either.</td></tr>
+        </tbody></table>
+      </div>
+
+      <h3><span class="sec-n">09</span>Security design</h3>
+      <div class="decision">
+        <h4>Zero touches to the consent enforcement layer itself</h4>
+        <p>This module is presentation (Privacy Center), a previously-deferred read (access history), and a request queue in front of a grant mechanism that was already fully permitted. <code>consent_grants</code>, <code>has_consent()</code>, and every RLS policy that depends on them are unchanged by this module, full stop.</p>
+      </div>
+
+      <h3><span class="sec-n">10</span>AI architecture</h3>
+      <p>Not applicable.</p>
+
+      <h3><span class="sec-n">11</span>Accessibility requirements</h3>
+      <p>The Privacy Center is one of the highest-stakes screens for plain language — every consent category label must be understandable without legal or technical vocabulary, consistent with the platform's low-digital-literacy design principle throughout.</p>
+
+      <h3><span class="sec-n">12</span>Notification requirements</h3>
+      <p>Guardian-override request submitted/approved/denied, via the existing notification infrastructure (Batch 3).</p>
+
+      <h3><span class="sec-n">13</span>Edge cases</h3>
+      <ul>
+        <li>Guardian-override request denied → the family member is notified with the admin's stated reason where appropriate; the elder's default of no access remains, exactly as it should.</li>
+        <li>Elder later regains capacity and wants to review/revoke a guardian-granted category themselves → the existing <code>consent_grants_write</code> policy already allows <code>is_elder_self</code> to revoke any grant regardless of how it was originally created — no new logic needed, confirmed rather than assumed.</li>
+        <li>Access history requested for an elder with zero logged write-path events yet → an honest empty state explaining what the view currently covers, not a blank screen with no context.</li>
+      </ul>
+
+      <h3><span class="sec-n">14</span>Admin dashboard requirements</h3>
+      <p>A guardian-override review queue, additive to the admin dashboard, in the same shape as the existing erasure-requests review page (Batch 1's Family Member Management era work) — approve/deny with notes, not a novel workflow pattern.</p>
+
+      <h3><span class="sec-n">15</span>Flutter project structure</h3>
+      <p><code>apps/family_elder_app/lib/features/privacy_center/</code> — consolidates consent, access history, export, and erasure request entry points into one screen.</p>
+
+      <h3><span class="sec-n">16</span>Supabase requirements</h3>
+      <p>One new table (<code>guardian_consent_requests</code>) with RLS reusing the existing <code>consent_category</code> enum. One new Edge Function (<code>me-access-history</code>). No changes to <code>consent_grants</code>, <code>has_consent()</code>, or any existing consent/DPDP policy or function.</p>
+
+      <h3><span class="sec-n">17</span>Future scalability</h3>
+      <p><code>me-access-history</code>'s value scales directly with how many read paths eventually adopt <code>audit_log</code> instrumentation — this module doesn't need to change as that gap closes elsewhere; it just starts surfacing more.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 25 — ENHANCED EMERGENCY SERVICES -->
+    <!-- ============================================================ -->
+    <section class="module wide" id="m25">
+      <div class="module-eyebrow">Module 25 of 2 in this batch (25th overall, final module)</div>
+      <h2 class="module-title">Enhanced Emergency Services</h2>
+      <p class="module-dek">Four additions around the existing, untouched <code>sos-trigger</code> flow — one small enrichment to its payload, three entirely new and separate capabilities, with the practice/drill mode kept structurally incapable of being confused with a real emergency.</p>
+
+      <h3><span class="sec-n">01</span>Problem being solved</h3>
+      <p>SOS triggering, 108-first enforcement, and family/ops notification fan-out already work. Four real gaps remain: responders don't automatically see the elder's emergency-relevant medical info, ops has no distance-based suggestion for who to dispatch, nothing captures a structured post-incident record, and there's no safe way for a family to practice the flow before they need it for real.</p>
+
+      <h3><span class="sec-n">02</span>User personas</h3>
+      <div class="persona-grid">
+        <div class="persona"><div class="role">Elder / family</div>Triggers real SOS (unchanged) or a drill (new, clearly separate).<div class="access">unchanged for real SOS; new for drills</div></div>
+        <div class="persona"><div class="role">Admin — sos_operator</div>Sees enriched medical context, a responder suggestion, files the incident report.<div class="access">existing scope, extended surface</div></div>
+        <div class="persona"><div class="role">Caregiver</div>Unchanged.<div class="access">unchanged</div></div>
+      </div>
+
+      <h3><span class="sec-n">03</span>Functional requirements</h3>
+      <ul>
+        <li>SOS notifications sent to family and ops include a snapshot of the elder's emergency-relevant health profile (allergies, chronic conditions, blood type, emergency notes from Batch 3's <code>elder_health_profile</code>) — read via the life-safety-override RLS clause Batch 3 already established for exactly this purpose, not a new access rule.</li>
+        <li>A nearest-available-responder <strong>suggestion</strong> for the ops-facing SOS monitor, based on available location signals (active-booking caregiver locations, registered service-area radius from Caregiver Management, Batch 5) — <strong>a suggestion for a human to act on, never automatic dispatch.</strong> Emergency response assignment stays a human decision, consistent with every other place in this plan where automation proposes and a person decides.</li>
+        <li>A structured post-incident report, filed by ops after resolution: whether 108/local EMS was actually engaged, an outcome summary, optional lessons notes — a QA and documentation layer, not a blocker on the resolution flow itself.</li>
+        <li>A practice/drill mode, walking through the same 108-first screen and confirmation flow as a real SOS, for family/elder familiarity — <strong>entirely separate data path from real SOS events</strong>, never fanning out real family/ops notifications, and visually unmistakable as practice throughout.</li>
+      </ul>
+
+      <h3><span class="sec-n">04</span>Non-functional requirements</h3>
+      <p>The nearest-responder suggestion is explicitly best-effort — caregiver location is only known during active bookings today, so coverage is partial by design, and the UI must say so rather than implying a comprehensive dispatch system that doesn't exist.</p>
+
+      <h3><span class="sec-n">05</span>User flow</h3>
+      <div class="flow-step"><span class="idx">1</span><div class="body"><b>Real SOS</b>Triggered exactly as today; the notification ops and family receive now additionally includes the elder's emergency-relevant medical snapshot.</div></div>
+      <div class="flow-step"><span class="idx">2</span><div class="body"><b>Ops</b>Sees a best-effort nearest-responder suggestion on the SOS monitor, decides and dispatches manually.</div></div>
+      <div class="flow-step"><span class="idx">3</span><div class="body"><b>Ops, after resolution</b>Files a structured incident report.</div></div>
+      <div class="flow-step"><span class="idx">4</span><div class="body"><b>Family/elder, separately</b>Can run a practice drill any time, reached through an "Emergency Preparedness" area distinct from the real SOS button — never adjacent to it, to eliminate mis-tap risk.</div></div>
+
+      <h3><span class="sec-n">06</span>Information architecture</h3>
+      <p>Real SOS UI is entirely unchanged. Drill mode lives in a separate "Emergency Preparedness" settings area, deliberately not co-located with the live SOS trigger. The admin SOS monitor (existing page) gains an incident-report form and a responder-suggestion panel as additive sections.</p>
+
+      <h3><span class="sec-n">07</span>Database design</h3>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">sos_incident_reports</span><span class="tbl-note">post-resolution QA/documentation layer</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">sos_event_id</span><span class="col-type">uuid fk, unique</span><span class="col-desc">→ existing <code>sos_events</code>, read-only reference</span></div>
+          <div class="col-row"><span class="col-name">emergency_services_engaged</span><span class="col-type">boolean</span><span class="col-desc">was 108/local EMS actually contacted</span></div>
+          <div class="col-row"><span class="col-name">outcome_summary, lessons_notes</span><span class="col-type">text / text nullable</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">filed_by, filed_at</span><span class="col-type">uuid fk / timestamptz</span><span class="col-desc">—</span></div>
+        </div>
+      </div>
+      <div class="risk">
+        <h4><code>sos_drills</code> is a completely separate table from <code>sos_events</code> — this is the module's central safety decision</h4>
+        <p>Co-mingling drills and real events in one table, even with an <code>is_drill</code> flag, creates a standing risk that any future query, report, or admin view that forgets to filter it treats a drill as real or a real event as practice — for a life-safety table, that risk is unacceptable regardless of how small it seems at design time. A structurally separate table makes that class of bug impossible rather than merely unlikely.</p>
+      </div>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">sos_drills</span><span class="tbl-note">structurally incapable of being mistaken for <code>sos_events</code></span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">elder_id, triggered_by</span><span class="col-type">uuid fks</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">ack_108_shown_at</span><span class="col-type">timestamptz</span><span class="col-desc">drills walk through the same 108-first screen, for real practice value</span></div>
+          <div class="col-row"><span class="col-name">completed_at, created_at</span><span class="col-type">timestamptz</span><span class="col-desc">—</span></div>
+        </div>
+      </div>
+      <p>RLS: <code>sos_incident_reports</code> — <code>has_admin_scope('sos_operator')</code> or <code>is_admin</code>; whether family/elder ever see the filed report is an open product/legal question, flagged rather than decided here, the same way caregiver-deactivation-reason visibility was left open in Batch 5. <code>sos_drills</code> — <code>is_elder_self</code>, <code>is_linked_family</code>, <code>is_admin</code>.</p>
+
+      <h3><span class="sec-n">08</span>API design</h3>
+      <div class="table-wrap">
+        <table><tbody>
+          <tr><td style="width:1%"><div class="endpoint"><span class="method post">POST</span><span class="path">/sos/drill-trigger</span></div></td><td class="muted">New Edge Function, <strong>deliberately separate from <code>sos-trigger</code></strong> — no shared code path with the real emergency trigger, eliminating any risk that a bug in shared logic could cause a drill to fan out real notifications, or vice versa.</td></tr>
+          <tr><td style="width:1%"><div class="endpoint"><span class="method none">—</span><span class="path">incident report</span></div></td><td class="muted">Plain RLS-guarded insert by ops after resolution — no new Edge Function needed.</td></tr>
+        </tbody></table>
+      </div>
+
+      <h3><span class="sec-n">09</span>Security design</h3>
+      <div class="risk">
+        <h4>The one touch to <code>sos-trigger</code> in this entire batch, stated precisely</h4>
+        <p>Enriching the notification payload it already constructs with <code>elder_health_profile</code>'s emergency-relevant fields, read via the life-safety-override RLS clause Batch 3 already put in place for exactly this scenario. The trigger, escalation, and status logic are completely unmodified — only what's included in the message being sent changes.</p>
+      </div>
+      <div class="callout"><h4>Drills never touch real notification infrastructure</h4><p><code>sos-drill-trigger</code> gives feedback only to the practicing user's own device — no family push, no ops alert, no <code>notifications</code> row indistinguishable from a real one. Stated explicitly to prevent both alarm fatigue and any possibility of a drill being mistaken for a real emergency by anyone but the person running it.</p></div>
+
+      <h3><span class="sec-n">10</span>AI architecture</h3>
+      <p>Not applicable.</p>
+
+      <h3><span class="sec-n">11</span>Accessibility requirements</h3>
+      <p>Drill mode must be at least as accessible as the real SOS flow it practices — the entire point is building elder familiarity and confidence with a screen they may one day need to use under stress.</p>
+
+      <h3><span class="sec-n">12</span>Notification requirements</h3>
+      <p>Real SOS notifications are unchanged except for the medical-info enrichment above. Drills generate no external notifications by design (see § Security).</p>
+
+      <h3><span class="sec-n">13</span>Edge cases</h3>
+      <ul>
+        <li>Elder or family triggers a drill thinking it might be treated as real by ops → structurally impossible, since drills never reach <code>sos_events</code>, <code>notifications</code>, or the ops SOS monitor at all.</li>
+        <li>Nearest-responder suggestion has no location data available → shows "no location-based suggestion available, use standard dispatch," never a broken or misleadingly empty panel.</li>
+        <li>Incident report never filed → the underlying <code>sos_event</code>'s own resolution status is completely unaffected; the report is documentation, not a gate.</li>
+      </ul>
+
+      <h3><span class="sec-n">14</span>Admin dashboard requirements</h3>
+      <p>Incident report filing and the responder-suggestion panel, both additive to the existing SOS monitor page. A separate drill-history view for ops visibility into practice-mode usage (distinct from, never mixed with, the real SOS event list).</p>
+
+      <h3><span class="sec-n">15</span>Flutter project structure</h3>
+      <p><code>apps/family_elder_app/lib/features/emergency_preparedness/</code> — drill entry point and flow, structurally and visually separated from the existing real SOS trigger screen.</p>
+
+      <h3><span class="sec-n">16</span>Supabase requirements</h3>
+      <p>Two new tables (<code>sos_incident_reports</code>, <code>sos_drills</code>) with RLS. One new Edge Function (<code>sos-drill-trigger</code>), deliberately independent of <code>sos-trigger</code>. One small, precisely-scoped enrichment to <code>sos-trigger</code>'s existing notification payload — the batch's only touch to that function's behavior.</p>
+
+      <h3><span class="sec-n">17</span>Future scalability</h3>
+      <p>The nearest-responder suggestion's coverage improves automatically as Caregiver Management's availability/location data (Batch 5) matures — no redesign needed here when that happens, just a richer input to a query that already exists.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="module wide" id="cross">
+      <div class="module-eyebrow">Cross-cutting</div>
+      <h2 class="module-title">Every touch to an existing, already-implemented module</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Existing module</th><th>What's added</th><th>Why it's necessary</th></tr></thead>
+          <tbody>
+            <tr><td><strong><code>sos-trigger</code></strong> (Edge Function)</td><td class="muted">One additive enrichment to the notification payload it already builds: emergency-relevant fields from <code>elder_health_profile</code></td><td class="muted">There's no way to give responders immediate medical context without touching the one function that composes the SOS notification. Trigger, escalation, and status logic are all unchanged.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>Explicitly not touched:</strong> <code>consent_grants</code>, <code>has_consent()</code>, any existing consent RLS policy, <code>sos_events</code>, or any part of <code>sos-trigger</code>'s actual trigger/escalation logic. Both modules in this batch went to real lengths — a request queue in front of an already-permitted grant path, a structurally separate drill table — specifically to avoid needing to.</p>
+    </section>
+
+    <section class="completion" id="complete">
+      <h3>All 25 modules specified</h3>
+      <p>Seven batches, 25 modules, architecture and requirements only — no implementation code, as instructed throughout. Across the full plan, the total footprint on the six already-implemented modules (booking, OTP verification, caregiver verification, SOS, payments, DPDP) is: three additive enum values (<code>consent_category</code>, <code>ai_interaction_type</code> ×3, <code>admin_scope</code>), one additive column pair on <code>family_links</code>/<code>elder_profiles</code>, one additive tiebreak and one additive authorization clause in <code>bookings-match</code>/<code>bookings-create</code>, and one additive notification-payload enrichment in <code>sos-trigger</code>. The <code>payments</code> table and both payment Edge Functions were never touched at all. Every other new capability across all 25 modules — dozens of new tables, a dozen-plus new Edge Functions, three new consent-respecting RLS patterns — is fully additive, built alongside the existing system rather than through it.</p>
+    </section>
+
+    <footer class="doc-footer">Part 10 of the Project Setu PRD · Batch 7 of 7, final · 25 of 25 missing modules specified · builds on Parts 1–9 and the live schema</footer>
+  </main>
+</div>
