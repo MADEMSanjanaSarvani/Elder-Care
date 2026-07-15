@@ -121,6 +121,8 @@ changes behavior; note them if you're used to seeing the more common imports.
 | `IDFY_WEBHOOK_SHARED_SECRET` | `verification-idfy-webhook` (placeholder auth scheme — confirm against IDfy's actual docs before launch) |
 | `OPENAI_API_KEY` | `ai-visit-summary`, `ai-translate` |
 | `CHECKINS_SWEEP_SHARED_SECRET` | `checkins-escalation-sweep` (same n8n-scheduled shared-secret pattern as `payouts-run`) |
+| `MEDICATIONS_SWEEP_SHARED_SECRET` | `medications-generate-doses` (same n8n-scheduled shared-secret pattern) |
+| `REMINDERS_SWEEP_SHARED_SECRET` | `reminders-dispatch-sweep` (same n8n-scheduled shared-secret pattern) |
 
 None of these are set in this repo. Configure them via `supabase secrets set` (or your CI's secret store) — never commit real keys.
 
@@ -214,6 +216,46 @@ Validated: both new functions and all five modified ones type-check/lint clean u
 `elder_profiles.share_family_list` RLS is covered by `tests/rls_smoke_test.sql` TESTs 23-35, including
 a real bug caught in the test suite itself (see `tests/README.md`). Neither new function has been
 invoked against the live project yet.
+
+## PRD Part 5, Batch 2: Medicine Management, Refills, Appointments, Reminders
+
+`docs/prd/05-prd-part5-care-logistics.html`. Database layer: `migrations/0010_batch2_care_logistics.sql`
+(`medication_doses`, `medication_stock` + its auto-decrement trigger, `appointments`, `reminders` +
+`required_consent_for_source()`) and a same-day follow-up, `migrations/0011_appointment_reminder_trigger.sql`
+(see the Layout section above for both). Fully additive — no existing table, policy, or function
+touched.
+
+Two new scheduled functions, both no-user-session / shared-secret auth, same shape as
+`checkins-escalation-sweep`:
+
+- `POST /functions/v1/medications-generate-doses` (`x-medications-sweep-secret`) — turns each active
+  medication's `schedule` jsonb into concrete `medication_doses` rows for a 3-day rolling window, then
+  enqueues a matching `reminders` row for each dose it actually created. **Schema note**: nothing in
+  the PRD or `0001_schema.sql` ever defined what `schedule` jsonb should contain — this function is
+  where that had to become concrete, so it's documented in the function's own comment:
+  `{ "times": ["08:00", "20:00"] }`, compared against UTC wall-clock, the same per-elder-timezone
+  simplification `checkins-escalation-sweep` already makes for the same reason (Visakhapatnam is
+  single-timezone). Idempotent via `medication_doses`' `unique(medication_id, scheduled_at)` and
+  `upsert(..., ignoreDuplicates: true)` — a re-run only enqueues reminders for genuinely new doses.
+- `POST /functions/v1/reminders-dispatch-sweep` (`x-reminders-sweep-secret`) — the shared delivery
+  engine every other Batch 2 module enqueues into. Re-checks each due reminder's source is still valid
+  before sending (a stopped medication or cancelled appointment cancels its own pending reminder
+  instead of firing stale), resolves recipients from `recipient_scope`, and delivers.
+  **Deliberate deviation from the PRD**: the spec calls for FCM push + SMS fallback, but neither
+  exists anywhere in this codebase — no SDK, no server key, no provider account. Delivery instead
+  writes to the actual, already-working `notifications` table (the same one `family-invite` uses),
+  rather than call infrastructure that isn't there. FCM/SMS remain real, named future work.
+  **Also deviates on snooze-expiry**: the sweep does exactly what the PRD states (skip anything
+  snoozed) and doesn't invent a re-surface-after-`snoozed_until` rule the PRD never specified — flagged
+  as a real UX gap, not silently resolved by guessing.
+
+Validated: both functions and the full existing function suite type-check/lint clean under Deno
+(`deno check`/`deno lint` across all 17 functions), and all 15 existing `_shared` unit tests still
+pass. The new tables' RLS — including the clinical-administration write path, `appointments`' hybrid
+visibility, and `reminders`' per-row consent gating via `required_consent_for_source()` — is covered
+by `tests/rls_smoke_test.sql` TESTs 39-57, which caught and fixed a real bug in the first draft of
+`medication_doses_write` (see `tests/README.md`). Neither function has been invoked against the live
+project yet.
 
 ## CI/CD
 
