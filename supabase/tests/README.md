@@ -42,6 +42,33 @@ only shows bad news." The trigger closes that gap and the existing
 `wellbeing_checkins` consent grant from TEST 26 covers visibility for
 free.
 
+TESTs 39-55 cover `0010_batch2_care_logistics.sql` (PRD Part 5, Batch 2:
+Medicine Management, Medicine Refill Management, Appointment Management,
+Smart Reminder System). TEST 40 confirms the stock-decrement trigger
+fires on a dose marked taken. TESTs 44-46 are the security-critical ones:
+they caught a real bug in the first draft of `medication_doses_write`,
+where the clinical-administration branch was written as a bolt-on `AND`
+over a single general-eligibility `OR`, rather than two mutually
+exclusive branches partitioned on `marked_via`. That first draft failed
+in two different directions at once — it let a consented family member's
+existing eligibility slip through for `marked_via = 'caregiver_clinical'`
+regardless of who they were, *and* it had no eligibility branch for the
+caregiver actually assigned to the booking, so the legitimate case
+(TEST 45) failed too. Rewritten as two self-contained, mutually exclusive
+branches (elder/family/admin explicitly excluding `caregiver_clinical`;
+caregiver explicitly requiring it plus the full in-progress-and-clinical
+chain) fixed both at once. TESTs 47-50b cover `appointments`' hybrid
+visibility (creator sees their own without needing self-granted consent,
+a different linked family member needs `visit_history` consent, a
+booking-linked caregiver can see the linked appointment), the same shape
+already used by `bookings_select`. TESTs 51-55 cover `reminders`: no
+client insert path at all (service-role only, TEST 51), and the
+`required_consent_for_source()` helper correctly gating visibility per
+row by the sensitivity of what the reminder is *about*, not a single
+fixed category (TEST 53 — a family member with `medication_list` but not
+`visit_history` consent sees exactly the medication-sourced reminder,
+not the appointment-sourced one).
+
 ## Running it
 
 Prefer the real Supabase CLI (`supabase db reset`) if you have it and
@@ -56,11 +83,11 @@ psql -d setu_test -f local_auth_stub.sql
 for f in 0001_schema 0002_rls 0003_realtime 0004_erasure_requests \
          0005_caregiver_payout_accounts 0006_caregiver_documents_storage \
          0007_wellbeing_checkins_consent_category 0008_family_experience \
-         0009_checkin_timeline_trigger; do
+         0009_checkin_timeline_trigger 0010_batch2_care_logistics; do
   psql -d setu_test -v ON_ERROR_STOP=1 -f "../migrations/$f.sql"
 done
 psql -d setu_test -v ON_ERROR_STOP=1 -f ../seed.sql
-psql -d setu_test -f rls_smoke_test.sql   # no -v ON_ERROR_STOP=1 — TESTs 8, 24, 33 are supposed to fail
+psql -d setu_test -f rls_smoke_test.sql   # no -v ON_ERROR_STOP=1 — TESTs 8, 24, 33, 44, 46, 51 are supposed to fail
 ```
 
 Re-running against the same database without a fresh `createdb` will fail on

@@ -379,3 +379,191 @@ select count(*) as visible_events from elder_timeline_events
 where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' and event_type = 'checkin_completed';
 reset role;
 reset request.jwt.claim.sub;
+
+-- ===================================================================
+-- Batch 2 (docs/prd/05-prd-part5-care-logistics.html): Medicine
+-- Management, Medicine Refill Management, Appointment Management,
+-- Smart Reminder System.
+-- ===================================================================
+
+insert into elder_medications (id, elder_id, name, dosage, schedule, added_by) values
+  ('eeeeeeee-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Metformin', '500mg', '{}'::jsonb, '11111111-1111-1111-1111-111111111111');
+
+insert into medication_stock (medication_id, quantity_on_hand, unit, refill_threshold) values
+  ('eeeeeeee-1111-1111-1111-111111111111', 30, 'tablets', 5);
+
+-- A second, clinical caregiver with an in-progress booking, to exercise
+-- the marked_via = 'caregiver_clinical' write path.
+insert into auth.users (id, email) values
+  ('77777777-7777-7777-7777-777777777777', 'nurse@test.com');
+insert into profiles (id, role, phone, display_name) values
+  ('77777777-7777-7777-7777-777777777777', 'caregiver', '+917', 'Nurse Priya');
+insert into caregivers (id, region_id, user_id, caregiver_type, sub_role, trust_tier, bgv_status, police_verification_status, professional_council_reg_no)
+select '88888888-8888-8888-8888-888888888888', id, '77777777-7777-7777-7777-777777777777', 'clinical', 'nurse', 'clinical_verified', 'cleared', 'cleared', 'TN-NUR-12345'
+from regions where code = 'vizag-ap-in';
+insert into bookings (id, region_id, elder_id, requested_by, caregiver_id, service_id, required_trust_tier, status, scheduled_at)
+select '99999999-9999-9999-9999-999999999999', r.id, 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+       '22222222-2222-2222-2222-222222222222', '88888888-8888-8888-8888-888888888888',
+       sc.id, 'clinical_verified', 'in_progress', now()
+from regions r join service_catalog sc on sc.region_id = r.id and sc.code = 'home_nursing'
+where r.code = 'vizag-ap-in';
+
+\echo '=== TEST 39: elder marks their own dose taken — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+insert into medication_doses (id, medication_id, scheduled_at, taken_at, status, marked_by, marked_via)
+values ('eeeeeeee-2222-2222-2222-222222222222', 'eeeeeeee-1111-1111-1111-111111111111', now(), now(), 'taken', '11111111-1111-1111-1111-111111111111', 'elder_self');
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 40: the trigger decremented stock from 30 to 29 — expect 29 ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select quantity_on_hand from medication_stock where medication_id = 'eeeeeeee-1111-1111-1111-111111111111';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 41: a stranger cannot see the dose — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select count(*) as visible_doses from medication_doses where id = 'eeeeeeee-2222-2222-2222-222222222222';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 42: daughter without medication_list consent cannot see the dose — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select count(*) as visible_doses from medication_doses where id = 'eeeeeeee-2222-2222-2222-222222222222';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 43: elder grants medication_list consent, daughter can now see the dose — expect 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+insert into consent_grants (elder_id, family_user_id, category, granted, granted_via, granted_at)
+values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222', 'medication_list', true, 'elder_app', now());
+reset role;
+reset request.jwt.claim.sub;
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select count(*) as visible_doses from medication_doses where id = 'eeeeeeee-2222-2222-2222-222222222222';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 44: daughter (has medication_list consent, but is not the assigned caregiver) cannot mark a dose caregiver_clinical even against a real in-progress clinical booking — expect an RLS ERROR ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+insert into medication_doses (medication_id, scheduled_at, status, marked_by, marked_via, related_booking_id)
+values ('eeeeeeee-1111-1111-1111-111111111111', now(), 'taken', '22222222-2222-2222-2222-222222222222', 'caregiver_clinical', '99999999-9999-9999-9999-999999999999');
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 45: the actual assigned clinical caregiver CAN mark the dose administered — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '77777777-7777-7777-7777-777777777777';
+insert into medication_doses (id, medication_id, scheduled_at, status, marked_by, marked_via, related_booking_id, administered_note)
+values ('eeeeeeee-3333-3333-3333-333333333333', 'eeeeeeee-1111-1111-1111-111111111111', now(), 'taken', '77777777-7777-7777-7777-777777777777', 'caregiver_clinical', '99999999-9999-9999-9999-999999999999', 'Administered with breakfast.');
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 46: a non-clinical caregiver on a merely "matched" (not in-progress) non-clinical booking cannot claim caregiver_clinical — expect an RLS ERROR ==='
+set role authenticated;
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+insert into medication_doses (medication_id, scheduled_at, status, marked_by, marked_via, related_booking_id)
+values ('eeeeeeee-1111-1111-1111-111111111111', now(), 'taken', '44444444-4444-4444-4444-444444444444', 'caregiver_clinical', 'cccccccc-cccc-cccc-cccc-cccccccccccc');
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 47: daughter creates an appointment for the elder — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+insert into appointments (id, elder_id, title, location, scheduled_at, created_by)
+values ('eeeeeeee-4444-4444-4444-444444444444', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Cardiology follow-up', 'Apollo Hospital, Vizag', now() + interval '3 days', '22222222-2222-2222-2222-222222222222');
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 48: second sibling (linked family, no visit_history consent) cannot see it — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '66666666-6666-6666-6666-666666666666';
+select count(*) as visible_appointments from appointments where id = 'eeeeeeee-4444-4444-4444-444444444444';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 49: elder grants second sibling visit_history consent — now visible — expect 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+insert into consent_grants (elder_id, family_user_id, category, granted, granted_via, granted_at)
+values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '66666666-6666-6666-6666-666666666666', 'visit_history', true, 'elder_app', now());
+reset role;
+reset request.jwt.claim.sub;
+set role authenticated;
+set request.jwt.claim.sub = '66666666-6666-6666-6666-666666666666';
+select count(*) as visible_appointments from appointments where id = 'eeeeeeee-4444-4444-4444-444444444444';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 50: an appointment linked to a booking is visible to that booking''s assigned caregiver — expect 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+insert into appointments (id, elder_id, title, related_booking_id, scheduled_at, created_by)
+values ('eeeeeeee-5555-5555-5555-555555555555', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Physio session, companion booked', 'cccccccc-cccc-cccc-cccc-cccccccccccc', now() + interval '5 days', '11111111-1111-1111-1111-111111111111');
+reset role;
+reset request.jwt.claim.sub;
+set role authenticated;
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+select count(*) as visible_appointments from appointments where id = 'eeeeeeee-5555-5555-5555-555555555555';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 50b: a stranger still cannot see that same appointment — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select count(*) as visible_appointments from appointments where id = 'eeeeeeee-5555-5555-5555-555555555555';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 51: no client insert policy on reminders — a family member attempting to write one directly gets an RLS ERROR ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+insert into reminders (elder_id, source_type, source_id, remind_at, recipient_scope)
+values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'medication_dose', 'eeeeeeee-2222-2222-2222-222222222222', now() + interval '1 hour', 'both');
+reset role;
+reset request.jwt.claim.sub;
+
+-- Simulates what medications-generate-doses / the appointment recurrence
+-- step would do server-side (service role).
+insert into reminders (id, elder_id, source_type, source_id, remind_at, recipient_scope) values
+  ('eeeeeeee-6666-6666-6666-666666666666', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'medication_dose', 'eeeeeeee-2222-2222-2222-222222222222', now() + interval '1 hour', 'both'),
+  ('eeeeeeee-7777-7777-7777-777777777777', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'appointment', 'eeeeeeee-4444-4444-4444-444444444444', now() + interval '2 hours', 'both');
+
+\echo '=== TEST 52: the elder sees both reminders regardless of source type — expect 2 ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select count(*) as visible_reminders from reminders where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 53: daughter (medication_list consent only, no visit_history) sees exactly the medication-sourced reminder — expect 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select count(*) as visible_reminders from reminders where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 54: elder snoozes a reminder — expect success, status now snoozed ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+update reminders set status = 'snoozed', snoozed_until = now() + interval '1 day'
+where id = 'eeeeeeee-6666-6666-6666-666666666666';
+select status from reminders where id = 'eeeeeeee-6666-6666-6666-666666666666';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 55: a stranger cannot see any reminder and their update is a silent no-op (0 rows), not a bypass — expect 0 visible, 0 rows updated ==='
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select count(*) as visible_reminders from reminders where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+update reminders set status = 'dismissed' where id = 'eeeeeeee-7777-7777-7777-777777777777';
+reset role;
+reset request.jwt.claim.sub;
+select status from reminders where id = 'eeeeeeee-7777-7777-7777-777777777777';
