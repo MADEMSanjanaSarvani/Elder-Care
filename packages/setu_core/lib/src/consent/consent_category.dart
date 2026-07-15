@@ -9,7 +9,8 @@ enum ConsentCategory {
   healthNotes('health_notes'),
   medicationList('medication_list'),
   visitHistory('visit_history'),
-  billing('billing');
+  billing('billing'),
+  wellbeingCheckins('wellbeing_checkins');
 
   const ConsentCategory(this.wireValue);
 

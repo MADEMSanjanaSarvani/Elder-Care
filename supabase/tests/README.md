@@ -32,7 +32,15 @@ follows the same caregiver/consent shape as `elder_health_notes`, and the
 changing it (TEST 33 caught a real false-positive in an earlier draft of
 that test itself — the second of two update statements silently no-op'd
 against a value the first statement's rollback had already left
-unchanged, which looked like a bypass until traced through).
+unchanged, which looked like a bypass until traced through). TESTs 36-38
+cover `0009_checkin_timeline_trigger.sql`, added while building the
+Timeline screen on top of Batch 1's tables: `elder_timeline_events` has no
+insert policy for `authenticated` at all (service-role only), so without
+this trigger a successful check-in would never appear on the timeline —
+only the missed-check-in escalation would, which reads as "the timeline
+only shows bad news." The trigger closes that gap and the existing
+`wellbeing_checkins` consent grant from TEST 26 covers visibility for
+free.
 
 ## Running it
 
@@ -45,12 +53,19 @@ real:
 ```bash
 createdb setu_test
 psql -d setu_test -f local_auth_stub.sql
-psql -d setu_test -v ON_ERROR_STOP=1 -f ../migrations/0001_schema.sql
-psql -d setu_test -v ON_ERROR_STOP=1 -f ../migrations/0002_rls.sql
-psql -d setu_test -v ON_ERROR_STOP=1 -f ../migrations/0003_realtime.sql
+for f in 0001_schema 0002_rls 0003_realtime 0004_erasure_requests \
+         0005_caregiver_payout_accounts 0006_caregiver_documents_storage \
+         0007_wellbeing_checkins_consent_category 0008_family_experience \
+         0009_checkin_timeline_trigger; do
+  psql -d setu_test -v ON_ERROR_STOP=1 -f "../migrations/$f.sql"
+done
 psql -d setu_test -v ON_ERROR_STOP=1 -f ../seed.sql
-psql -d setu_test -f rls_smoke_test.sql   # no -v ON_ERROR_STOP=1 — TEST 8 is supposed to fail
+psql -d setu_test -f rls_smoke_test.sql   # no -v ON_ERROR_STOP=1 — TESTs 8, 24, 33 are supposed to fail
 ```
+
+Re-running against the same database without a fresh `createdb` will fail on
+duplicate-key errors from the seed/test data, not real RLS regressions —
+drop and recreate `setu_test` between runs.
 
 Requires the PostGIS extension (`apt install postgresql-16-postgis-3` or
 your platform's equivalent) — `0001_schema.sql` uses the `geography`

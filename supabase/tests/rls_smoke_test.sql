@@ -348,3 +348,34 @@ set request.jwt.claim.sub = '66666666-6666-6666-6666-666666666666';
 select count(*) as visible_links from family_links where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 reset role;
 reset request.jwt.claim.sub;
+
+-- ===================================================================
+-- 0009_checkin_timeline_trigger.sql: TEST 23's check-in should have
+-- produced a matching elder_timeline_events row automatically, since
+-- daily_checkins has no client-insert path into that table (see 0009's
+-- comment) — found while building the Timeline screen on top of this.
+-- ===================================================================
+
+\echo '=== TEST 36: TEST 23''s check-in produced a checkin_completed timeline row, visible to the elder — expect 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select count(*) as visible_events from elder_timeline_events
+where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' and event_type = 'checkin_completed';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 37: daughter, already granted wellbeing_checkins consent in TEST 26, can see it too — expect 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select count(*) as visible_events from elder_timeline_events
+where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' and event_type = 'checkin_completed';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 38: a stranger still cannot see it — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select count(*) as visible_events from elder_timeline_events
+where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' and event_type = 'checkin_completed';
+reset role;
+reset request.jwt.claim.sub;

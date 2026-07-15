@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
+import '../../checkins/presentation/checkin_button.dart';
 
 /// Three buttons, not a menu (PRD Part 3 §17). Deliberately not a smaller
 /// version of the family dashboard — this is the whole home screen for
@@ -52,6 +53,8 @@ class ElderHomeScreen extends ConsumerWidget {
                 color: SetuColors.verifiedLight,
                 onTap: () => context.push('/elder/${elder.id}/booking'),
               ),
+              const SizedBox(height: SetuSpacing.md),
+              DailyCheckInButton(elderId: elder.id),
             ],
           ),
         );

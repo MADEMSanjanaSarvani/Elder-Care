@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
+import '../../checkins/data/checkin_repository.dart';
 
 /// Timeline-first dashboard (PRD Part 3 §17). Consent management is a
 /// top-level action here, not buried in a settings submenu — hiding it
@@ -36,13 +37,51 @@ class FamilyHomeScreen extends ConsumerWidget {
                     Text(elder.displayName,
                         style: Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height: SetuSpacing.sm),
-                    Row(
+                    FutureBuilder<DateTime?>(
+                      future: CheckInRepository(ref.read(supabaseClientProvider))
+                          .lastCheckInToday(elder.id),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) return const SizedBox.shrink();
+                        final checkedIn = snapshot.data != null;
+                        return Row(
+                          children: [
+                            Icon(
+                              checkedIn
+                                  ? Icons.check_circle
+                                  : Icons.warning_amber_outlined,
+                              size: 18,
+                              color: checkedIn
+                                  ? SetuColors.verifiedLight
+                                  : SetuColors.accentLight,
+                            ),
+                            const SizedBox(width: SetuSpacing.xs),
+                            Text(checkedIn
+                                ? 'Checked in today'
+                                : 'Not checked in today'),
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: SetuSpacing.sm),
+                    Wrap(
                       children: [
                         TextButton.icon(
                           onPressed: () =>
                               context.push('/elder/${elder.id}/booking'),
                           icon: const Icon(Icons.add_circle_outline),
                           label: const Text('Book help'),
+                        ),
+                        TextButton.icon(
+                          onPressed: () =>
+                              context.push('/elder/${elder.id}/timeline'),
+                          icon: const Icon(Icons.timeline_outlined),
+                          label: const Text('Timeline'),
+                        ),
+                        TextButton.icon(
+                          onPressed: () =>
+                              context.push('/elder/${elder.id}/family'),
+                          icon: const Icon(Icons.group_outlined),
+                          label: const Text('Family'),
                         ),
                         TextButton.icon(
                           onPressed: () =>

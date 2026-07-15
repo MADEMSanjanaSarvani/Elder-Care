@@ -210,5 +210,7 @@ String _categoryLabel(ConsentCategory category) {
       return 'Full visit history';
     case ConsentCategory.billing:
       return 'Billing details';
+    case ConsentCategory.wellbeingCheckins:
+      return 'Daily check-ins';
   }
 }
