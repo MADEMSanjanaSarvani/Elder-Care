@@ -1,0 +1,543 @@
+<title>Project Setu — Elder Care Platform PRD (Part 8)</title>
+<style>
+  :root{
+    --paper:#F2F4F0; --paper-raised:#FFFFFF; --ink:#15181A; --muted:#57625C; --border:#DADFD8;
+    --accent:#B8691A; --accent-ink:#5A3610; --accent-2:#1D6C5F; --danger:#A83F2A; --danger-bg:#F7EAE4;
+    --decision-bg:#EFEAF6; --decision-ink:#4B3B78; --decision-border:#D6CCEA;
+    --get-bg:#E6EFEA; --get-ink:#1D6C5F; --post-bg:#F3EBE0; --post-ink:#8A5A1C;
+    --radius:3px;
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+  }
+  :root[data-theme="dark"]{
+    --paper:#14181A; --paper-raised:#1B211F; --ink:#E9EDE9; --muted:#9AA69E; --border:#2A312C;
+    --accent:#E0A559; --accent-ink:#F4DEB8; --accent-2:#4BB6A3; --danger:#E2705C; --danger-bg:#3A2620;
+    --decision-bg:#2A2740; --decision-ink:#D9CFEF; --decision-border:#453D66;
+    --get-bg:#1C2E27; --get-ink:#5FCBB4; --post-bg:#332A1A; --post-ink:#E0A559;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#14181A; --paper-raised:#1B211F; --ink:#E9EDE9; --muted:#9AA69E; --border:#2A312C;
+      --accent:#E0A559; --accent-ink:#F4DEB8; --accent-2:#4BB6A3; --danger:#E2705C; --danger-bg:#3A2620;
+      --decision-bg:#2A2740; --decision-ink:#D9CFEF; --decision-border:#453D66;
+      --get-bg:#1C2E27; --get-ink:#5FCBB4; --post-bg:#332A1A; --post-ink:#E0A559;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--font-body); line-height:1.6; -webkit-font-smoothing:antialiased;}
+  a{color:var(--accent-2);}
+  a:focus-visible, button:focus-visible, .tocLink:focus-visible{outline:2px solid var(--accent-2); outline-offset:2px;}
+  .shell{display:grid; grid-template-columns:260px minmax(0,1fr); max-width:1200px; margin:0 auto;}
+  @media (max-width:880px){.shell{grid-template-columns:1fr;} .toc{position:static !important; height:auto !important; border-right:none !important; border-bottom:1px solid var(--border);}}
+  .toc{position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto; padding:32px 20px 32px 28px; border-right:1px solid var(--border);}
+  .toc-kicker{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:6px;}
+  .toc-title{font-family:var(--font-display); font-size:19px; margin:0 0 2px;}
+  .toc-sub{font-size:12px; color:var(--muted); margin-bottom:18px;}
+  .toc-group{font-family:var(--font-mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:16px 0 4px;}
+  .toc nav{display:flex; flex-direction:column; gap:1px;}
+  .tocLink{font-size:12.5px; color:var(--muted); text-decoration:none; padding:5px 8px; border-radius:var(--radius); display:flex; gap:8px;}
+  .tocLink:hover{background:var(--paper-raised); color:var(--ink);}
+  .tocLink .n{font-family:var(--font-mono); color:var(--accent); font-size:10.5px; padding-top:1px;}
+  .content{padding:48px 56px 96px; min-width:0;}
+  @media (max-width:880px){.content{padding:32px 24px 72px;}}
+  .doc-header{margin-bottom:40px; border-bottom:1px solid var(--border); padding-bottom:32px;}
+  .doc-kicker{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:14px;}
+  h1.doc-title{font-family:var(--font-display); font-size:clamp(28px,4vw,40px); line-height:1.12; margin:0 0 10px; text-wrap:balance;}
+  .doc-dek{font-size:16px; color:var(--muted); max-width:70ch; margin:0 0 20px;}
+  .meta-row{display:flex; flex-wrap:wrap; gap:20px; font-size:12px; font-family:var(--font-mono); color:var(--muted);}
+  .meta-row b{color:var(--ink); font-weight:600;}
+  .progress-strip{display:flex; flex-wrap:wrap; gap:8px; margin-top:18px;}
+  .prog-chip{font-family:var(--font-mono); font-size:11px; padding:5px 10px; border-radius:2px; border:1px solid var(--border);}
+  .prog-chip.done{background:var(--get-bg); color:var(--get-ink); border-color:var(--get-ink);}
+  .prog-chip.next{background:var(--post-bg); color:var(--post-ink); border-color:var(--post-ink);}
+  section.module{margin-bottom:96px; padding-bottom:8px; max-width:78ch;}
+  section.module.wide{max-width:none;}
+  .module-eyebrow{font-family:var(--font-mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;}
+  h2.module-title{font-family:var(--font-display); font-size:28px; margin:0 0 6px; padding-top:8px; text-wrap:balance;}
+  .module-dek{font-size:15px; color:var(--muted); margin:0 0 28px;}
+  h3{font-family:var(--font-display); font-size:18px; margin:30px 0 10px; border-top:1px solid var(--border); padding-top:22px;}
+  h3:first-of-type{border-top:none; padding-top:0;}
+  h3 .sec-n{font-family:var(--font-mono); font-size:11px; color:var(--accent); margin-right:8px; font-weight:400;}
+  p{margin:0 0 14px;}
+  ul,ol{margin:0 0 14px; padding-left:20px;}
+  li{margin-bottom:5px;}
+  strong{font-weight:600;}
+  table{width:100%; border-collapse:collapse; font-size:13px; margin:6px 0 14px;}
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:14px;}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
+  th{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); background:var(--paper-raised); white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  td.muted{color:var(--muted);}
+  code{font-family:var(--font-mono); font-size:0.87em; background:var(--paper-raised); padding:1px 5px; border-radius:2px; border:1px solid var(--border);}
+  .schema-card{border:1px solid var(--border); border-radius:var(--radius); background:var(--paper-raised); margin-bottom:14px; overflow:hidden;}
+  .schema-head{padding:11px 15px; border-bottom:1px solid var(--border); display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
+  .schema-head .tbl-name{font-family:var(--font-mono); font-weight:700; font-size:13.5px;}
+  .schema-head .tbl-note{font-size:12px; color:var(--muted);}
+  .schema-head .tag{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; padding:2px 7px; border-radius:2px; background:var(--decision-bg); color:var(--decision-ink);}
+  .schema-cols{padding:9px 15px 12px;}
+  .col-row{display:grid; grid-template-columns:150px 130px 1fr; gap:10px; font-size:12px; padding:4px 0; border-bottom:1px dotted var(--border);}
+  .col-row:last-child{border-bottom:none;}
+  .col-name{font-family:var(--font-mono); color:var(--accent-ink);}
+  .col-type{font-family:var(--font-mono); color:var(--accent-2);}
+  .col-desc{color:var(--muted);}
+  .endpoint{display:flex; gap:12px; align-items:baseline; padding:8px 0; border-bottom:1px dotted var(--border); font-size:13px;}
+  .endpoint:last-child{border-bottom:none;}
+  .method{font-family:var(--font-mono); font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:2px; white-space:nowrap;}
+  .method.get{background:var(--get-bg); color:var(--get-ink);}
+  .method.post{background:var(--post-bg); color:var(--post-ink);}
+  .method.none{background:var(--paper); color:var(--muted); border:1px dashed var(--border);}
+  .path{font-family:var(--font-mono); font-size:12.5px;}
+  .callout{border-left:3px solid var(--accent-2); background:var(--paper-raised); border-radius:0 var(--radius) var(--radius) 0; padding:14px 18px; margin:0 0 14px;}
+  .callout h4{margin:0 0 5px; font-size:13.5px;}
+  .callout p{margin:0; font-size:13.5px;}
+  .risk{border-left:3px solid var(--danger); background:var(--danger-bg); border-radius:0 var(--radius) var(--radius) 0; padding:14px 18px; margin:0 0 14px;}
+  .risk h4{margin:0 0 5px; font-size:13.5px;}
+  .risk p{margin:0; font-size:13.5px;}
+  .decision{border-left:3px solid var(--decision-ink); background:var(--decision-bg); border-radius:0 var(--radius) var(--radius) 0; padding:14px 18px; margin:0 0 14px;}
+  .decision h4{margin:0 0 5px; font-size:13.5px; color:var(--decision-ink);}
+  .decision p{margin:0; font-size:13.5px; color:var(--decision-ink);}
+  .flow-step{display:flex; gap:14px; padding:9px 0; border-bottom:1px dotted var(--border);}
+  .flow-step:last-child{border-bottom:none;}
+  .flow-step .idx{font-family:var(--font-mono); color:var(--accent); font-size:11px; min-width:18px;}
+  .flow-step .body{font-size:13.5px;}
+  .flow-step .body b{display:block; margin-bottom:2px;}
+  .persona-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:0 0 16px;}
+  .persona{border:1px solid var(--border); border-radius:var(--radius); padding:10px 12px; font-size:12.5px;}
+  .persona .role{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; color:var(--accent);}
+  .persona .access{color:var(--muted); font-size:11.5px; margin-top:3px;}
+  footer.doc-footer{margin-top:80px; padding-top:20px; border-top:1px solid var(--border); font-size:12px; color:var(--muted); font-family:var(--font-mono);}
+</style>
+
+<div class="shell">
+  <aside class="toc">
+    <div class="toc-kicker">Project Setu</div>
+    <div class="toc-title">PRD — Part 8</div>
+    <div class="toc-sub">Missing Modules — Batch 5: Caregiver Ops &amp; Platform UX</div>
+    <nav>
+      <a class="tocLink" href="#overview"><span class="n">·</span>Batch overview</a>
+      <div class="toc-group">Module 17</div>
+      <a class="tocLink" href="#m17"><span class="n">17</span>Caregiver Management System</a>
+      <div class="toc-group">Module 18</div>
+      <a class="tocLink" href="#m18"><span class="n">17</span>Caregiver Performance &amp; Rating</a>
+      <div class="toc-group">Module 19</div>
+      <a class="tocLink" href="#m19"><span class="n">17</span>Accessibility Module</a>
+      <div class="toc-group">Module 20</div>
+      <a class="tocLink" href="#m20"><span class="n">17</span>Multi-language Support</a>
+      <a class="tocLink" href="#cross"><span class="n">·</span>Touches to existing modules</a>
+      <a class="tocLink" href="#next"><span class="n">→</span>Batch 6 preview</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="doc-header">
+      <div class="doc-kicker">Product Requirements Document · Architecture &amp; requirements only, no implementation code</div>
+      <h1 class="doc-title">Missing Modules, Batch 5: Caregiver Ops &amp; Platform UX</h1>
+      <p class="doc-dek">Part 8 of the Project Setu PRD, fifth of seven batches. The first two modules extend the already-implemented caregiver-verification core (trust tier, BGV, police verification — all untouched) with the operational layer around it: profile, availability, deactivation history, and a genuinely new signal — service-quality rating, kept deliberately separate from trust tier. The last two modules formalize something every prior batch has been informally assuming exists: a real accessibility system and a real multi-language system, referenced from Batch 1 onward, specified here for the first time.</p>
+      <div class="meta-row">
+        <span><b>Batch:</b> 5 of 7</span>
+        <span><b>Modules:</b> Caregiver Management System · Caregiver Performance &amp; Rating System · Accessibility Module · Multi-language Support</span>
+        <span><b>Builds on:</b> Parts 1–7, the live schema, <code>_shared/trustTier.ts</code></span>
+      </div>
+      <div class="progress-strip">
+        <span class="prog-chip done">Batches 1–4 — done (16 modules)</span>
+        <span class="prog-chip done">Batch 5 — this document</span>
+        <span class="prog-chip next">Batch 6 next — Care Plans, Managed Care, Analytics</span>
+      </div>
+    </div>
+
+    <section class="module wide" id="overview">
+      <div class="module-eyebrow">Batch overview</div>
+      <h2 class="module-title">Vetting and quality are different axes — and this batch is where that gets said out loud</h2>
+      <p><code>trust_tier</code> answers "is this caregiver credentialed and safe to dispatch" — background check, police verification, clinical council registration. It says nothing about whether families who've actually received care from them were happy with the visit. A newly-onboarded probationary caregiver can give excellent care; a long-verified clinical_verified nurse can have a bad week. Module 18 below introduces service-quality rating as a genuinely separate signal, explicitly not folded into <code>trust_tier</code> or <code>computeTrustTier()</code> — conflating the two would corrupt a vetting signal the platform depends on for safety with a satisfaction signal that's inherently softer and more subjective.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 17 — CAREGIVER MANAGEMENT SYSTEM -->
+    <!-- ============================================================ -->
+    <section class="module wide" id="m17">
+      <div class="module-eyebrow">Module 17 of 4 in this batch (17th overall)</div>
+      <h2 class="module-title">Caregiver Management System</h2>
+      <p class="module-dek">Verification (BGV, police, trust tier) already works end to end. This module is everything else a real caregiver workforce needs: a profile, an availability schedule, and an accountable deactivation trail.</p>
+
+      <h3><span class="sec-n">01</span>Problem being solved</h3>
+      <p><code>caregivers</code> today has verification fields and a bare <code>active</code> boolean — no profile a family sees beyond a name and trust tier, no availability concept at all (matching assumes every active caregiver is always available), and no record of <em>why</em> a caregiver was ever deactivated.</p>
+
+      <h3><span class="sec-n">02</span>User personas</h3>
+      <div class="persona-grid">
+        <div class="persona"><div class="role">Caregiver</div>Self-manages profile, availability, sees own onboarding checklist.<div class="access">own record</div></div>
+        <div class="persona"><div class="role">Family member</div>Sees the richer profile on the Care Team card.<div class="access">read, no consent gate needed — same visibility as trust tier today</div></div>
+        <div class="persona"><div class="role">Admin — ops_admin / verification_agent</div>Deactivates with a mandatory reason, manages onboarding checklist.<div class="access">existing scopes, extended</div></div>
+      </div>
+
+      <h3><span class="sec-n">03</span>Functional requirements</h3>
+      <ul>
+        <li>Caregiver self-service profile: bio, photo, service radius.</li>
+        <li>Availability schedule (day-of-week, start/end time) — <strong>informational for MVP, not yet enforced by <code>bookings-match</code></strong>. Wiring availability into matching eligibility would be a real, non-trivial touch to an already-implemented and tested function; this module ships the data model and the caregiver-facing UI first, and treats matching integration as a named, deferred Phase 2+ decision rather than something decided unilaterally here.</li>
+        <li>Onboarding checklist (platform orientation, safety training, app walkthrough, etc.) — admin-tracked completion, <strong>informational only, does not gate <code>trust_tier</code> or matching eligibility</strong> for the same reason: folding it into <code>computeTrustTier()</code> would touch tested, existing logic for a benefit that hasn't been shown necessary yet.</li>
+        <li>Deactivation with a mandatory reason, logged to a history table — see § Cross-cutting for the one small, necessary touch this requires to the existing admin action that performs deactivation.</li>
+      </ul>
+
+      <h3><span class="sec-n">04</span>Non-functional requirements</h3>
+      <p>Profile photo storage must not block core booking flows if unset — a caregiver with no photo yet is still fully bookable, generic avatar shown.</p>
+
+      <h3><span class="sec-n">05</span>User flow</h3>
+      <div class="flow-step"><span class="idx">1</span><div class="body"><b>Caregiver</b>Completes profile (bio, photo, service radius) and sets a weekly availability pattern.</div></div>
+      <div class="flow-step"><span class="idx">2</span><div class="body"><b>Admin</b>Tracks onboarding checklist completion alongside the existing verification queue.</div></div>
+      <div class="flow-step"><span class="idx">3</span><div class="body"><b>Family</b>Sees the enriched profile on the Care Team card once matched.</div></div>
+      <div class="flow-step"><span class="idx">4</span><div class="body"><b>Admin</b>Deactivates a caregiver with a required reason, which is logged, not just flipped silently.</div></div>
+
+      <h3><span class="sec-n">06</span>Information architecture</h3>
+      <p>Caregiver-facing: a profile screen and an availability settings screen in <code>caregiver_app</code>. Admin-facing: additive tabs on the <em>existing</em> caregiver directory admin page — profile, availability, onboarding checklist, status history — not a new standalone page.</p>
+
+      <h3><span class="sec-n">07</span>Database design</h3>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">caregiver_profile_details</span><span class="tbl-note">one row per caregiver</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">caregiver_id</span><span class="col-type">uuid fk, unique</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">bio, photo_storage_path, service_radius_km</span><span class="col-type">text / text nullable / numeric</span><span class="col-desc">photo lives in a new, separate storage bucket — different sensitivity than verification documents, see § Security</span></div>
+        </div>
+      </div>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">caregiver_availability</span><span class="tbl-note">informational for MVP — see § FR</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">caregiver_id, day_of_week, start_time, end_time</span><span class="col-type">uuid fk / int / time / time</span><span class="col-desc">multiple rows per caregiver</span></div>
+        </div>
+      </div>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">caregiver_onboarding_checklist</span><span class="tbl-note">tracked, not enforced</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">caregiver_id, item, completed</span><span class="col-type">uuid fk / text / boolean</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">completed_by, completed_at</span><span class="col-type">uuid fk / timestamptz, both nullable</span><span class="col-desc">—</span></div>
+        </div>
+      </div>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">caregiver_status_history</span><span class="tbl-note">append-only, why <code>active</code> ever changed</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">caregiver_id, previous_active, new_active</span><span class="col-type">uuid fk / boolean / boolean</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">reason, changed_by, changed_at</span><span class="col-type">text / uuid fk / timestamptz</span><span class="col-desc">—</span></div>
+        </div>
+      </div>
+      <p>RLS: <code>caregiver_profile_details</code>/<code>caregiver_availability</code> — caregiver writes own, family/elder can read (same open visibility as the caregiver's existing trust tier — no consent gate, this isn't elder data), admin full access. <code>caregiver_onboarding_checklist</code> — caregiver reads own (transparency into what's left), only admin writes. <code>caregiver_status_history</code> — admin-only, in both directions; whether a caregiver should ever see their own deactivation reason is a real, unresolved fairness question flagged here rather than decided unilaterally.</p>
+
+      <h3><span class="sec-n">08</span>API design</h3>
+      <p>No new Edge Function. Profile, availability, and checklist reads/writes are plain RLS-guarded operations. The status-history write is one additive insert added to the existing admin deactivation action — see § Cross-cutting.</p>
+
+      <h3><span class="sec-n">09</span>Security design</h3>
+      <div class="callout"><h4>Profile photos get their own storage bucket, deliberately separate from verification documents</h4><p>A profile photo is shown to any family matched to this caregiver; a government ID or police-verification document is admin-only. Sharing one bucket would risk one RLS mistake exposing the more sensitive class. A new <code>caregiver-profile-photos</code> bucket, following the same private-bucket-plus-signed-URL pattern as the existing verification-document storage design, keeps the two cleanly separated.</p></div>
+
+      <h3><span class="sec-n">10</span>AI architecture</h3>
+      <p>Not applicable.</p>
+
+      <h3><span class="sec-n">11</span>Accessibility requirements</h3>
+      <p>Caregiver-facing screens follow the same accessibility baseline as the rest of <code>caregiver_app</code> — see Module 19.</p>
+
+      <h3><span class="sec-n">12</span>Notification requirements</h3>
+      <p>Deactivation notifies the affected caregiver (never a silent account change) via the existing notification infrastructure.</p>
+
+      <h3><span class="sec-n">13</span>Edge cases</h3>
+      <ul>
+        <li>Caregiver sets availability that's never actually checked by matching (MVP gap, stated plainly rather than implied to work) — a real ops risk if staff assume it's enforced when it isn't; worth a visible "not yet used for matching" label in the UI itself, not just this document.</li>
+        <li>Caregiver removes their profile photo → generic avatar fallback, no blocking.</li>
+        <li>Onboarding checklist incomplete but caregiver already passed BGV/police verification → they remain bookable (checklist doesn't gate eligibility, per § FR) — a deliberate, named decision, not an oversight.</li>
+      </ul>
+
+      <h3><span class="sec-n">14</span>Admin dashboard requirements</h3>
+      <p>Additive tabs on the existing caregiver directory page: profile view, availability view, onboarding checklist management, status history. The existing verification queue and its scope (<code>verification_agent</code>) are unchanged.</p>
+
+      <h3><span class="sec-n">15</span>Flutter project structure</h3>
+      <p><code>apps/caregiver_app/lib/features/profile/</code> — profile edit, availability settings, onboarding checklist view.</p>
+
+      <h3><span class="sec-n">16</span>Supabase requirements</h3>
+      <p>Four new tables with RLS, one new storage bucket with its own RLS policies (mirroring the existing verification-document storage pattern). No new Edge Function. One small, necessary addition to the existing admin deactivation action — see § Cross-cutting.</p>
+
+      <h3><span class="sec-n">17</span>Future scalability</h3>
+      <p>Availability and onboarding-checklist data existing now, even unenforced, means the Phase 2+ decision to wire either into matching eligibility is a query change against data that already exists — not a fresh data-modeling exercise done under time pressure later.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 18 — CAREGIVER PERFORMANCE & RATING SYSTEM -->
+    <!-- ============================================================ -->
+    <section class="module wide" id="m18">
+      <div class="module-eyebrow">Module 18 of 4 in this batch (18th overall)</div>
+      <h2 class="module-title">Caregiver Performance &amp; Rating System</h2>
+      <p class="module-dek">A service-quality signal, deliberately kept separate from <code>trust_tier</code>. See § Overview for why conflating the two would be a mistake.</p>
+
+      <h3><span class="sec-n">01</span>Problem being solved</h3>
+      <p>Families have no way to give feedback after a visit, and admin has no service-quality signal at all beyond credential status — which measures something different (see § Overview).</p>
+
+      <h3><span class="sec-n">02</span>User personas</h3>
+      <div class="persona-grid">
+        <div class="persona"><div class="role">Family member</div>Rates after a completed booking they requested.<div class="access">write own rating</div></div>
+        <div class="persona"><div class="role">Elder</div>Not the primary rater for MVP — family typically manages this.<div class="access">none (MVP)</div></div>
+        <div class="persona"><div class="role">Caregiver</div>Sees their own aggregate and review text, never the reviewer's identity.<div class="access">own, anonymized</div></div>
+        <div class="persona"><div class="role">Admin</div>Reviews low ratings, sees full detail including rater identity.<div class="access">full, ops_admin</div></div>
+      </div>
+
+      <h3><span class="sec-n">03</span>Functional requirements</h3>
+      <ul>
+        <li>Post-visit rating prompt (1–5 stars, optional short review) after a booking reaches <code>completed</code>.</li>
+        <li>One rating per booking.</li>
+        <li>Ratings ≤2 stars auto-flag for admin review — a low-friction, always-on quality signal rather than relying on someone to notice.</li>
+        <li>Caregiver sees their own aggregate and individual review text, <strong>never who wrote a given review</strong> — protects a family from any retaliation concern and is enforced at the database level, not left to client code discipline (see § Database).</li>
+      </ul>
+
+      <h3><span class="sec-n">04</span>Non-functional requirements</h3>
+      <p>Aggregate rating computation must stay fast as ratings accumulate — a maintained summary table, not a live aggregate query on every profile view (see § Database).</p>
+
+      <h3><span class="sec-n">05</span>User flow</h3>
+      <div class="flow-step"><span class="idx">1</span><div class="body"><b>Family</b>Booking completes; a rating prompt appears (skippable, never blocking).</div></div>
+      <div class="flow-step"><span class="idx">2</span><div class="body"><b>System</b>Low ratings auto-flag; a trigger updates the caregiver's rolling summary.</div></div>
+      <div class="flow-step"><span class="idx">3</span><div class="body"><b>Caregiver</b>Sees their aggregate and review text, anonymized.</div></div>
+      <div class="flow-step"><span class="idx">4</span><div class="body"><b>Admin</b>Reviews flagged low ratings, with full detail, as part of ongoing quality oversight.</div></div>
+
+      <h3><span class="sec-n">06</span>Information architecture</h3>
+      <p>Rating prompt on booking completion (family app); aggregate + review list on the caregiver's own profile screen (caregiver app); a low-rating review queue as an additive tab on the existing caregiver directory admin page.</p>
+
+      <h3><span class="sec-n">07</span>Database design</h3>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">caregiver_ratings</span><span class="tbl-note">one per booking</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">booking_id</span><span class="col-type">uuid fk, unique</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">caregiver_id, rated_by</span><span class="col-type">uuid fks</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">stars, review_text</span><span class="col-type">int (1–5) / text, nullable</span><span class="col-desc">review subject to the standard never-unguarded-AI rule if ever summarized</span></div>
+          <div class="col-row"><span class="col-name">flagged_for_review, admin_reviewed</span><span class="col-type">boolean</span><span class="col-desc"><code>flagged_for_review</code> auto-set true when <code>stars &lt;= 2</code></span></div>
+        </div>
+      </div>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">caregiver_rating_summary</span><span class="tbl-note">maintained by trigger, not a live aggregate</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">caregiver_id</span><span class="col-type">uuid pk</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">average_stars, rating_count, updated_at</span><span class="col-type">numeric / int / timestamptz</span><span class="col-desc">recomputed by an <code>AFTER INSERT</code> trigger on <code>caregiver_ratings</code> — same cross-cutting-invariant-belongs-in-a-trigger pattern as the stock-decrement trigger (Batch 2) and the must-deliver trigger (Batch 3)</span></div>
+        </div>
+      </div>
+      <div class="decision">
+        <h4>Anonymity toward the caregiver is enforced by a database view, not client-side omission</h4>
+        <p>RLS grants row access; it does not hide individual columns from an otherwise-visible row. The caregiver-facing read path uses a dedicated view, <code>caregiver_ratings_anonymized</code>, that selects every column except <code>rated_by</code> — so the reviewer's identity is structurally absent from what a caregiver's client can ever receive, not just conventionally hidden by an app that could have a bug.</p>
+      </div>
+      <p>RLS on <code>caregiver_ratings</code>: insert requires <code>rated_by = auth.uid()</code> and that the caller requested the referenced booking (reusing the existing booking-visibility shape); admin full select; caregiver select is routed through the anonymized view above, not the base table directly.</p>
+
+      <h3><span class="sec-n">08</span>API design</h3>
+      <p>No new Edge Function. Rating submission is a plain RLS-guarded insert; the summary update is trigger-driven, not application code.</p>
+
+      <h3><span class="sec-n">09</span>Security design</h3>
+      <p>This module's access model is <em>not</em> the elder-consent (<code>has_consent()</code>) system — a rating is the caregiver's data, gated by who's allowed to rate (the requesting family member) and who's allowed to see what (admin fully, caregiver anonymized), a conceptually different actor and a different access model, named explicitly so the two aren't confused.</p>
+
+      <h3><span class="sec-n">10</span>AI architecture</h3>
+      <p>Not required. <code>review_text</code> is subject to the standing never-unguarded-AI rule if any future module summarizes it.</p>
+
+      <h3><span class="sec-n">11</span>Accessibility requirements</h3>
+      <p>Star rating input must have a non-visual equivalent (e.g. a labeled 1–5 selector, not color/shape-only stars) for screen-reader users.</p>
+
+      <h3><span class="sec-n">12</span>Notification requirements</h3>
+      <p>None new — the rating prompt appears in-flow on booking completion, not as a separate push.</p>
+
+      <h3><span class="sec-n">13</span>Edge cases</h3>
+      <ul>
+        <li>Rating attempted twice for the same booking → blocked by <code>unique(booking_id)</code>.</li>
+        <li>Family declines to rate → no penalty anywhere in the system; rating is always optional.</li>
+        <li>Caregiver disputes an unfair low rating → <code>flagged_for_review</code>/<code>admin_reviewed</code> support an admin-mediated review; a fuller appeal workflow is not built for MVP, named as a gap rather than solved.</li>
+      </ul>
+
+      <h3><span class="sec-n">14</span>Admin dashboard requirements</h3>
+      <p>A low-rating review queue, additive to the existing caregiver directory page, in the same spirit as the existing verification queue.</p>
+
+      <h3><span class="sec-n">15</span>Flutter project structure</h3>
+      <p><code>apps/family_elder_app/lib/features/ratings/</code> — rating prompt. <code>apps/caregiver_app/lib/features/ratings/</code> — aggregate + anonymized review list.</p>
+
+      <h3><span class="sec-n">16</span>Supabase requirements</h3>
+      <p>Two new tables, one new view, one new trigger. No new Edge Function, no new consent category (not consent-model data at all, per § Security).</p>
+
+      <h3><span class="sec-n">17</span>Future scalability</h3>
+      <p>The summary-table-plus-trigger design keeps aggregate reads O(1) regardless of how many ratings a long-tenured caregiver accumulates.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 19 — ACCESSIBILITY MODULE -->
+    <!-- ============================================================ -->
+    <section class="module wide" id="m19">
+      <div class="module-eyebrow">Module 19 of 4 in this batch (19th overall)</div>
+      <h2 class="module-title">Accessibility Module</h2>
+      <p class="module-dek">Every module from Batch 1 onward has assumed this system exists. It's specified here for the first time, and the earlier assumptions are named as exactly that — assumptions, now made real.</p>
+
+      <h3><span class="sec-n">01</span>Problem being solved</h3>
+      <p>"WCAG 2.1 AA baseline" and "elder-mode large touch targets" have been referenced in nearly every module's Accessibility Requirements section so far, pointing at a system that didn't yet exist as anything concrete — this module is that system.</p>
+
+      <h3><span class="sec-n">02</span>User personas</h3>
+      <div class="persona-grid">
+        <div class="persona"><div class="role">Elder</div>Primary beneficiary — simple mode on by default.<div class="access">own + family-editable</div></div>
+        <div class="persona"><div class="role">Family member</div>Can configure on the elder's behalf; has their own, separate preferences too.<div class="access">own + linked elder's</div></div>
+        <div class="persona"><div class="role">Caregiver</div>Same underlying preference system, own record.<div class="access">own</div></div>
+        <div class="persona"><div class="role">Admin</div>None new.<div class="access">none</div></div>
+      </div>
+
+      <h3><span class="sec-n">03</span>Functional requirements</h3>
+      <ul>
+        <li>App-wide text scale: a small set of presets (default / large / extra large), not a free slider — simpler choice architecture for low digital literacy than infinite fine control.</li>
+        <li>High-contrast theme toggle.</li>
+        <li>"Simple mode" for elder-mode home — formalizes the existing three/four-action elder home screen (Part 3, extended by Batch 1's check-in button) as a configurable system property rather than a one-off screen design.</li>
+        <li><strong>Elder role defaults to simple mode + large text automatically</strong>, with no settings screen required to become accessible on first use.</li>
+        <li>A linked family member can configure these settings on the elder's behalf — many elders will never open a settings screen themselves, mirroring the existing pattern of family acting for the elder on medications and check-ins.</li>
+      </ul>
+
+      <h3><span class="sec-n">04</span>Non-functional requirements</h3>
+      <div class="decision">
+        <h4>A retroactive audit obligation, named honestly</h4>
+        <p>Every "accessibility requirements" section written in Batches 1–4 assumed this system's existence. Those screens were specified, not built — but once this module's concrete settings exist, revisiting each one to actually wire them in is real follow-up work this document creates, not a change to what was already written.</p>
+      </div>
+
+      <h3><span class="sec-n">05</span>User flow</h3>
+      <div class="flow-step"><span class="idx">1</span><div class="body"><b>Elder, first use</b>Simple mode and large text are already on — no configuration required.</div></div>
+      <div class="flow-step"><span class="idx">2</span><div class="body"><b>Family</b>Can adjust these on the elder's behalf from their own app.</div></div>
+      <div class="flow-step"><span class="idx">3</span><div class="body"><b>Any user</b>Can independently set their own text scale / contrast preference.</div></div>
+
+      <h3><span class="sec-n">06</span>Information architecture</h3>
+      <p>A single accessibility settings screen, present in both consumer apps, reachable from the elder's profile (editable by the elder or a linked family member) and from each user's own settings.</p>
+
+      <h3><span class="sec-n">07</span>Database design</h3>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">accessibility_preferences</span><span class="tbl-note">one row per user</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">user_id</span><span class="col-type">uuid fk, unique</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">text_scale</span><span class="col-type">text</span><span class="col-desc">default / large / extra_large</span></div>
+          <div class="col-row"><span class="col-name">high_contrast, simple_mode</span><span class="col-type">boolean</span><span class="col-desc"><code>simple_mode</code> defaults true for the <code>elder</code> role specifically</span></div>
+        </div>
+      </div>
+      <p>RLS: <code>user_id = auth.uid()</code>, plus <code>is_linked_family(elder_id)</code> for write access when the target user is an elder — reusing the existing helper function, not a new access primitive.</p>
+
+      <h3><span class="sec-n">08</span>API design</h3>
+      <p>No new Edge Function — plain RLS-guarded read/write, applied client-side as a theme/layout setting.</p>
+
+      <h3><span class="sec-n">09</span>Security design</h3>
+      <p>No new sensitivity — a user's own display preferences carry no elder-health-data weight.</p>
+
+      <h3><span class="sec-n">10</span>AI architecture</h3>
+      <p>Not applicable.</p>
+
+      <h3><span class="sec-n">11</span>Accessibility requirements</h3>
+      <p>This module <em>is</em> the accessibility requirements baseline every other module in this plan points back to — see § Overview.</p>
+
+      <h3><span class="sec-n">12</span>Notification requirements</h3>
+      <p>None.</p>
+
+      <h3><span class="sec-n">13</span>Edge cases</h3>
+      <ul>
+        <li>Family sets a preference the elder later wants to override themselves → the elder's own edit always takes precedence in the moment; no lock preventing an elder from changing their own settings.</li>
+        <li>New elder account, no preference row yet → defaults apply from role alone, no blocking first-run wizard required.</li>
+      </ul>
+
+      <h3><span class="sec-n">14</span>Admin dashboard requirements</h3>
+      <p>None.</p>
+
+      <h3><span class="sec-n">15</span>Flutter project structure</h3>
+      <p><code>packages/setu_core/design/</code> extended with the text-scale/contrast token system — genuinely shared, not per-app, since both consumer apps must respect the same preferences.</p>
+
+      <h3><span class="sec-n">16</span>Supabase requirements</h3>
+      <p>One new table with RLS reusing the existing <code>is_linked_family()</code> helper. No new Edge Function, no new consent category.</p>
+
+      <h3><span class="sec-n">17</span>Future scalability</h3>
+      <p>A token-based design system (rather than screen-by-screen hardcoded sizing) means future modules inherit accessibility compliance by using the shared tokens, rather than needing their own audit each time.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 20 — MULTI-LANGUAGE SUPPORT -->
+    <!-- ============================================================ -->
+    <section class="module wide" id="m20">
+      <div class="module-eyebrow">Module 20 of 4 in this batch (20th overall)</div>
+      <h2 class="module-title">Multi-language Support</h2>
+      <p class="module-dek">The data model (<code>preferred_language</code>, <code>primary_language</code>) and the Flutter l10n scaffolding already exist — this module is what completes and formalizes coverage, not what invents the system from nothing.</p>
+
+      <h3><span class="sec-n">01</span>Problem being solved</h3>
+      <p><code>profiles.preferred_language</code> and <code>elder_profiles.primary_language</code> already drive AI and (per PRD Part 2) UI locale, and <code>ai-translate</code> already exists. What's missing: an in-app language switcher, honest coverage tracking (only English/Hindi/Telugu are drafted today, per the existing project README, and unreviewed by native speakers), and a graceful fallback so an incomplete language never shows a raw translation key mid-sentence.</p>
+
+      <h3><span class="sec-n">02</span>User personas</h3>
+      <div class="persona-grid">
+        <div class="persona"><div class="role">Elder</div>Selects/uses their primary language throughout.<div class="access">own preference</div></div>
+        <div class="persona"><div class="role">Family member</div>Own preference, independent of the elder's.<div class="access">own preference</div></div>
+        <div class="persona"><div class="role">Caregiver</div>Own preference.<div class="access">own preference</div></div>
+        <div class="persona"><div class="role">Admin / translator</div>Reviews machine-drafted strings before they ship as final.<div class="access">new, narrow role</div></div>
+      </div>
+
+      <h3><span class="sec-n">03</span>Functional requirements</h3>
+      <ul>
+        <li>In-app language switcher in both consumer apps, backed by the existing <code>preferred_language</code> field.</li>
+        <li>Missing translation falls back to English gracefully — never a raw key like <code>booking.confirm_cta</code> shown to a user.</li>
+        <li>AI-drafted translations for new UI strings, reusing the existing <code>ai-translate</code> function or an equivalent approach, <strong>always marked "machine-drafted, needs native-speaker review" and never shipped as final without human review</strong> — a real quality and trust requirement for a platform serving elderly users in their own language, where a wrong or awkward translation is worse than English shown honestly.</li>
+      </ul>
+
+      <h3><span class="sec-n">04</span>Non-functional requirements</h3>
+      <p>Switching language must not require an app restart or lose in-progress state.</p>
+
+      <h3><span class="sec-n">05</span>User flow</h3>
+      <div class="flow-step"><span class="idx">1</span><div class="body"><b>User</b>Opens language settings, picks from the supported list.</div></div>
+      <div class="flow-step"><span class="idx">2</span><div class="body"><b>App</b>Re-renders in the chosen language immediately; any missing string falls back to English silently, never a broken key.</div></div>
+      <div class="flow-step"><span class="idx">3</span><div class="body"><b>Translator/admin</b>Reviews machine-drafted strings for a given language, marking each human-reviewed before it's considered complete.</div></div>
+
+      <h3><span class="sec-n">06</span>Information architecture</h3>
+      <p>A language settings screen in both consumer apps. An optional coverage-visibility view for ops (see § Database).</p>
+
+      <h3><span class="sec-n">07</span>Database design</h3>
+      <div class="decision">
+        <h4>A coverage-tracking table is optional, and honestly, may be the wrong tool</h4>
+        <p>A <code>translation_coverage(language_code, string_key, status)</code> table is possible, but every UI string × 10 languages is a lot of bespoke rows for something a third-party localization platform (Lokalise, Phrase, or similar) already does well. Flagged as optional in-platform tooling, not a requirement — the simpler path of managing coverage in Flutter's own ARB files plus an external tool is equally valid and likely less to maintain.</p>
+      </div>
+      <p>No required schema changes — <code>preferred_language</code>/<code>primary_language</code> already exist and already do their job.</p>
+
+      <h3><span class="sec-n">08</span>API design</h3>
+      <p>No new Edge Function required for the switcher itself. Generating machine-draft translations for new strings can reuse the existing <code>ai-translate</code> function as a translator's tool, not a new AI surface.</p>
+
+      <h3><span class="sec-n">09</span>Security design</h3>
+      <p>No new sensitivity — language preference is not elder health data.</p>
+
+      <h3><span class="sec-n">10</span>AI architecture</h3>
+      <p>Reuses the existing <code>ai-translate</code> guardrail path exactly — no new AI architecture introduced by this module.</p>
+
+      <h3><span class="sec-n">11</span>Accessibility requirements</h3>
+      <p>Directly complements Module 19 — a family member managing an elder's accessibility settings should be able to set language at the same time, in the same settings surface, not a separate disconnected flow.</p>
+
+      <h3><span class="sec-n">12</span>Notification requirements</h3>
+      <p>Push/SMS notification content should respect the recipient's <code>preferred_language</code> where a translation exists — an application-level requirement on every module that sends a notification, not new infrastructure.</p>
+
+      <h3><span class="sec-n">13</span>Edge cases</h3>
+      <ul>
+        <li>Elder changes primary language after AI content was already generated in the old one → historical content is not retroactively re-translated; only new content uses the updated language.</li>
+        <li>A language with zero human-reviewed strings → the app functions fully in English fallback rather than being half-broken in a thin, unreviewed translation.</li>
+      </ul>
+
+      <h3><span class="sec-n">14</span>Admin dashboard requirements</h3>
+      <p>A coverage dashboard only if the optional table above is actually built; otherwise none.</p>
+
+      <h3><span class="sec-n">15</span>Flutter project structure</h3>
+      <p>Standard Flutter l10n (ARB files), already scaffolded per the existing project structure — this module's job is completing coverage and adding the switcher UI and fallback handling, not building l10n tooling from nothing.</p>
+
+      <h3><span class="sec-n">16</span>Supabase requirements</h3>
+      <p>None required. The optional coverage table, if built, is the only new schema surface.</p>
+
+      <h3><span class="sec-n">17</span>Future scalability</h3>
+      <p>Reusing <code>ai-translate</code> for draft generation means adding a new supported language is a translation-review workload, not a new engineering integration.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="module wide" id="cross">
+      <div class="module-eyebrow">Cross-cutting</div>
+      <h2 class="module-title">Every touch to an existing, already-implemented module</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Existing module</th><th>What's added</th><th>Why it's necessary</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Admin caregiver-directory deactivation action</strong> (Server Action)</td><td class="muted">One additive required parameter (reason text) and one additive insert into the new <code>caregiver_status_history</code> table</td><td class="muted">There is no way to build accountable deactivation history without touching the one code path that actually performs a deactivation. <code>caregivers.active</code> itself, and everything that already reads it (RLS, matching), is completely unchanged.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Notably absent from this table: <code>bookings-match</code> is untouched in this batch. Both places this batch could plausibly have wired new signals into matching — caregiver availability and service-quality rating — were deliberately left as informational/tracked-only for MVP, named explicitly in Modules 17 and 18 as deferred integration points rather than decided unilaterally here.</p>
+    </section>
+
+    <section class="module" id="next">
+      <div class="module-eyebrow">Next</div>
+      <h2 class="module-title">Batch 6 preview</h2>
+      <p>Care Plans &amp; Subscription Management, Managed Elder Care Services, and Care Analytics Dashboard — the business/ops layer. Care Analytics in particular will consolidate several "feeds into analytics, not built here" cross-references from Batches 4–5 (suggestion accuracy, sweep-job health) into one real specification.</p>
+    </section>
+
+    <footer class="doc-footer">Part 8 of the Project Setu PRD · Batch 5 of 7 covering 25 missing modules · builds on Parts 1–7 and the live schema</footer>
+  </main>
+</div>
