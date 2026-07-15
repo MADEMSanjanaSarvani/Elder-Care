@@ -95,6 +95,50 @@ event) that 0010 never actually wired up, since neither was in the
 Database Design schema cards. Caught while building the medications
 screen's "discontinue" action against the real backend, not a hypothetical.
 
+TESTs 61-81 cover `0013_batch3_visits_and_records.sql` (PRD Part 6, Batch
+3: Family Notification Center, Companion Visits, Hospital Companion
+Services, Health Records Management). TESTs 61-62 confirm the
+must-deliver notification-type trigger blocks disabling `sos_triggered`
+while allowing an ordinary type to be disabled. TESTs 66-69 cover
+`visit_activity_logs`: the assigned in-progress caregiver can write it,
+an unassigned caregiver can't, and — a real detail worth stating — the
+family member who *requested* the booking still can't read the log
+without `visit_history` consent, since (unlike `bookings_select`)
+this table's RLS was written with no requester exemption at all. TESTs
+70-76 cover Hospital Companion Services, and caught a real bug in the
+first draft of `hospital_stay_bookings_select`: its cross-caregiver read
+clause queried `hospital_stay_bookings` from inside that same table's own
+RLS policy, which Postgres rejects outright with "infinite recursion
+detected in policy" — not a subtle logic bug, a hard error on every query
+against the table. Fixed the same way every other cross-table RLS check
+in this schema is fixed: a `security definer` helper function
+(`is_caregiver_on_hospital_stay()`), which runs under its owner's
+privileges and so doesn't re-trigger RLS on the table it reads inside
+itself. TEST 72 confirms the intended behavior once fixed (a caregiver on
+one shift can read another shift's handoff note within the same stay);
+TEST 74 confirms the write side stays narrower — that same caregiver
+cannot *write* a note for a shift that isn't their own, a silent 0-row
+no-op, not a bypass. TESTs 77-81 cover the two-tier health profile split:
+TEST 78 confirms a caregiver on an in-progress booking reads
+`elder_health_profile` with no consent grant needed, TEST 79 confirms a
+totally uninvolved caregiver can't, TEST 80 confirms *no* caregiver, ever,
+reads `elder_administrative_profile`, and TEST 81 confirms the dispatched
+SOS responder gets the same emergency-info visibility with no booking at
+all — mirroring the real, narrower `sos_events` precedent (visibility
+only for the specifically dispatched `responder_caregiver_id`) rather
+than the PRD's looser text implying any caregiver during an active SOS.
+
+Also worth stating: this migration does **not** implement column-level
+encryption for `emergency_medical_notes`/`insurance_policy_number`, even
+though the PRD claims it should reuse "an already-decided pattern." No
+such pattern exists anywhere in this codebase — `elder_health_notes.note`
+has always been plain text, RLS-protected only. Real encryption needs
+Supabase Vault/pgsodium against the live project (not available in this
+local Postgres+PostGIS harness to even test), so building a naive
+client-visible-key scheme now would be worse than the honest gap: it
+would look like protection without providing any. Flagged in the
+migration's own comment as named future work, not silently dropped.
+
 ## Running it
 
 Prefer the real Supabase CLI (`supabase db reset`) if you have it and
@@ -110,11 +154,12 @@ for f in 0001_schema 0002_rls 0003_realtime 0004_erasure_requests \
          0005_caregiver_payout_accounts 0006_caregiver_documents_storage \
          0007_wellbeing_checkins_consent_category 0008_family_experience \
          0009_checkin_timeline_trigger 0010_batch2_care_logistics \
-         0011_appointment_reminder_trigger 0012_medication_discontinue_trigger; do
+         0011_appointment_reminder_trigger 0012_medication_discontinue_trigger \
+         0013_batch3_visits_and_records; do
   psql -d setu_test -v ON_ERROR_STOP=1 -f "../migrations/$f.sql"
 done
 psql -d setu_test -v ON_ERROR_STOP=1 -f ../seed.sql
-psql -d setu_test -f rls_smoke_test.sql   # no -v ON_ERROR_STOP=1 — TESTs 8, 24, 33, 44, 46, 51 are supposed to fail
+psql -d setu_test -f rls_smoke_test.sql   # no -v ON_ERROR_STOP=1 — TESTs 8, 24, 33, 44, 46, 51, 61, 67 are supposed to fail
 ```
 
 Re-running against the same database without a fresh `createdb` will fail on

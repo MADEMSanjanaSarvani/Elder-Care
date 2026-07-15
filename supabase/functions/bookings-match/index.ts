@@ -47,10 +47,27 @@ Deno.serve(async (req) => {
       .eq("active", true);
     if (candidateErr) return errorResponse(candidateErr.message, 500);
 
-    const eligible = (candidates ?? []).find((c) =>
+    const eligibleCandidates = (candidates ?? []).filter((c) =>
       meetsRequiredTier(c.trust_tier as TrustTier, booking.required_trust_tier as TrustTier)
     );
-    if (!eligible) return errorResponse("No eligible caregiver available at this time", 409);
+    if (eligibleCandidates.length === 0) return errorResponse("No eligible caregiver available at this time", 409);
+
+    // PRD Part 6, Batch 3, Module 10 (Companion Visits) — the one
+    // existing-Edge-Function touch across Batches 1-3, scoped exactly as
+    // narrowly as that document states: this only reorders which
+    // *already-eligible* candidate is picked. It cannot make an
+    // ineligible caregiver eligible, and falls back to the untouched
+    // first-eligible selection whenever no preference is set or the
+    // preferred caregiver isn't in the eligible set this time.
+    const { data: preference } = await admin
+      .from("companion_visit_preferences")
+      .select("preferred_caregiver_id")
+      .eq("elder_id", booking.elder_id)
+      .maybeSingle();
+    const preferredMatch = preference?.preferred_caregiver_id
+      ? eligibleCandidates.find((c) => c.id === preference.preferred_caregiver_id)
+      : undefined;
+    const eligible = preferredMatch ?? eligibleCandidates[0];
 
     const otpStart = generateOtp();
     const otpEnd = generateOtp();

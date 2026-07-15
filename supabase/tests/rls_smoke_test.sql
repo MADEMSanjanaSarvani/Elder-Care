@@ -628,3 +628,201 @@ select count(*) as stopped_events from elder_timeline_events
 where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' and event_type = 'medication_stopped';
 reset role;
 reset request.jwt.claim.sub;
+
+-- ===================================================================
+-- Batch 3 (docs/prd/06-prd-part6-visits-and-records.html): Family
+-- Notification Center, Companion Visits, Hospital Companion Services,
+-- Health Records Management.
+-- ===================================================================
+
+\echo '=== TEST 61: daughter cannot disable a must-deliver notification type — expect an RLS/trigger ERROR ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+insert into notification_preferences (user_id, type, channel, enabled)
+values ('22222222-2222-2222-2222-222222222222', 'sos_triggered', 'push', false);
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 62: daughter CAN disable an ordinary notification type — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+insert into notification_preferences (user_id, type, channel, enabled)
+values ('22222222-2222-2222-2222-222222222222', 'family_invite_sent', 'in_app', false);
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 63: a stranger cannot see daughter''s notification preferences — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select count(*) as visible_prefs from notification_preferences where user_id = '22222222-2222-2222-2222-222222222222';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 64: elder sets a companion visit preference — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+insert into companion_visit_preferences (elder_id, preferred_caregiver_id, interests)
+values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '["walking", "cards"]'::jsonb);
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 65: a stranger cannot see the elder''s companion visit preference — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select count(*) as visible_prefs from companion_visit_preferences where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+reset role;
+reset request.jwt.claim.sub;
+
+insert into bookings (id, region_id, elder_id, requested_by, caregiver_id, service_id, required_trust_tier, status, scheduled_at)
+select 'cccccccc-1111-1111-1111-111111111111', r.id, 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+       '22222222-2222-2222-2222-222222222222', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+       sc.id, 'standard', 'in_progress', now()
+from regions r join service_catalog sc on sc.region_id = r.id and sc.code = 'companionship_visit'
+where r.code = 'vizag-ap-in';
+
+insert into bookings (id, region_id, elder_id, requested_by, caregiver_id, service_id, required_trust_tier, status, scheduled_at)
+select 'cccccccc-2222-2222-2222-222222222222', r.id, 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+       '22222222-2222-2222-2222-222222222222', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+       sc.id, 'standard', 'in_progress', now()
+from regions r join service_catalog sc on sc.region_id = r.id and sc.code = 'hospital_companion'
+where r.code = 'vizag-ap-in';
+
+\echo '=== TEST 66: the caregiver assigned to an in-progress companion visit can log its activity — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+insert into visit_activity_logs (booking_id, activities, caregiver_observed_mood)
+values ('cccccccc-1111-1111-1111-111111111111', '["walked", "read_together"]'::jsonb, 'content');
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 67: a caregiver NOT assigned to that booking cannot log its activity — expect an RLS ERROR ==='
+set role authenticated;
+set request.jwt.claim.sub = '77777777-7777-7777-7777-777777777777';
+insert into visit_activity_logs (booking_id, activities)
+values ('cccccccc-2222-2222-2222-222222222222', '["played_cards"]'::jsonb);
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 68: daughter, without visit_history consent yet, cannot see the activity log even though she requested the booking — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select count(*) as visible_logs from visit_activity_logs where booking_id = 'cccccccc-1111-1111-1111-111111111111';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 69: elder grants daughter visit_history consent — she can now see it — expect 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+insert into consent_grants (elder_id, family_user_id, category, granted, granted_via, granted_at)
+values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222', 'visit_history', true, 'elder_app', now());
+reset role;
+reset request.jwt.claim.sub;
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select count(*) as visible_logs from visit_activity_logs where booking_id = 'cccccccc-1111-1111-1111-111111111111';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 70: daughter creates a hospital stay for the elder — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+insert into hospital_stays (id, elder_id, hospital_name, admission_at, created_by)
+values ('11112222-1111-2222-1111-222211112222', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Apollo Hospital', now(), '22222222-2222-2222-2222-222222222222');
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 71: both shifts are linked to the stay — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+insert into hospital_stay_bookings (hospital_stay_id, booking_id, shift_note) values
+  ('11112222-1111-2222-1111-222211112222', '99999999-9999-9999-9999-999999999999', null),
+  ('11112222-1111-2222-1111-222211112222', 'cccccccc-2222-2222-2222-222222222222', 'Patient resting, vitals stable.');
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 72: the clinical caregiver (on a DIFFERENT shift in the same stay) can read the other shift''s handoff note — expect 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = '77777777-7777-7777-7777-777777777777';
+select count(*) as visible_notes from hospital_stay_bookings
+where hospital_stay_id = '11112222-1111-2222-1111-222211112222' and booking_id = 'cccccccc-2222-2222-2222-222222222222';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 73: that same caregiver CAN write a handoff note for their own shift — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '77777777-7777-7777-7777-777777777777';
+update hospital_stay_bookings set shift_note = 'Nurse handoff: medication given at 14:00.'
+where hospital_stay_id = '11112222-1111-2222-1111-222211112222' and booking_id = '99999999-9999-9999-9999-999999999999';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 74: but CANNOT write a handoff note for the other caregiver''s shift — expect an RLS no-op, 0 rows updated ==='
+set role authenticated;
+set request.jwt.claim.sub = '77777777-7777-7777-7777-777777777777';
+update hospital_stay_bookings set shift_note = 'overwritten'
+where hospital_stay_id = '11112222-1111-2222-1111-222211112222' and booking_id = 'cccccccc-2222-2222-2222-222222222222';
+reset role;
+reset request.jwt.claim.sub;
+select shift_note from hospital_stay_bookings
+where hospital_stay_id = '11112222-1111-2222-1111-222211112222' and booking_id = 'cccccccc-2222-2222-2222-222222222222';
+
+\echo '=== TEST 75: a stranger cannot see any shift note in the stay — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select count(*) as visible_notes from hospital_stay_bookings where hospital_stay_id = '11112222-1111-2222-1111-222211112222';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 76: second sibling (visit_history consent from TEST 49) can see the hospital stay itself — expect 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = '66666666-6666-6666-6666-666666666666';
+select count(*) as visible_stays from hospital_stays where id = '11112222-1111-2222-1111-222211112222';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 77: elder sets their own health profile — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+insert into elder_health_profile (elder_id, blood_type, allergies, emergency_medical_notes, updated_by)
+values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'O+', '["penicillin"]'::jsonb, 'No DNR on file.', '11111111-1111-1111-1111-111111111111');
+insert into elder_administrative_profile (elder_id, primary_physician_name, insurance_policy_number, updated_by)
+values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Dr. Rao', 'POLICY-12345', '11111111-1111-1111-1111-111111111111');
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 78: the caregiver on an in-progress booking can read the health profile without any consent grant — expect 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = '77777777-7777-7777-7777-777777777777';
+select count(*) as visible_profiles from elder_health_profile where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+reset role;
+reset request.jwt.claim.sub;
+
+insert into auth.users (id, email) values ('dddddddd-1111-1111-1111-111111111111', 'uninvolved-caregiver@test.com');
+insert into profiles (id, role, phone, display_name) values ('dddddddd-1111-1111-1111-111111111111', 'caregiver', '+918', 'Uninvolved Caregiver');
+insert into caregivers (id, region_id, user_id, caregiver_type, sub_role, trust_tier, bgv_status, police_verification_status)
+select 'dddddddd-2222-2222-2222-222222222222', id, 'dddddddd-1111-1111-1111-111111111111', 'non_clinical', 'companion', 'standard', 'cleared', 'cleared'
+from regions where code = 'vizag-ap-in';
+
+\echo '=== TEST 79: a totally uninvolved caregiver (no booking, no SOS response) cannot read the health profile — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = 'dddddddd-1111-1111-1111-111111111111';
+select count(*) as visible_profiles from elder_health_profile where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 80: even the in-progress-booking caregiver can NEVER read the administrative profile — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '77777777-7777-7777-7777-777777777777';
+select count(*) as visible_admin_profiles from elder_administrative_profile where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+reset role;
+reset request.jwt.claim.sub;
+
+insert into sos_events (id, elder_id, triggered_by, status, responder_caregiver_id)
+values ('11119999-1111-9999-1111-999911119999', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '11111111-1111-1111-1111-111111111111', 'responder_dispatched', 'dddddddd-2222-2222-2222-222222222222');
+
+\echo '=== TEST 81: the dispatched SOS responder can now read the health profile too, with no booking at all — expect 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = 'dddddddd-1111-1111-1111-111111111111';
+select count(*) as visible_profiles from elder_health_profile where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+reset role;
+reset request.jwt.claim.sub;
