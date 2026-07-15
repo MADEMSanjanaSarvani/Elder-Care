@@ -1,0 +1,459 @@
+<title>Project Setu — Elder Care Platform PRD (Part 9)</title>
+<style>
+  :root{
+    --paper:#F2F4F0; --paper-raised:#FFFFFF; --ink:#15181A; --muted:#57625C; --border:#DADFD8;
+    --accent:#B8691A; --accent-ink:#5A3610; --accent-2:#1D6C5F; --danger:#A83F2A; --danger-bg:#F7EAE4;
+    --decision-bg:#EFEAF6; --decision-ink:#4B3B78; --decision-border:#D6CCEA;
+    --get-bg:#E6EFEA; --get-ink:#1D6C5F; --post-bg:#F3EBE0; --post-ink:#8A5A1C;
+    --radius:3px;
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+  }
+  :root[data-theme="dark"]{
+    --paper:#14181A; --paper-raised:#1B211F; --ink:#E9EDE9; --muted:#9AA69E; --border:#2A312C;
+    --accent:#E0A559; --accent-ink:#F4DEB8; --accent-2:#4BB6A3; --danger:#E2705C; --danger-bg:#3A2620;
+    --decision-bg:#2A2740; --decision-ink:#D9CFEF; --decision-border:#453D66;
+    --get-bg:#1C2E27; --get-ink:#5FCBB4; --post-bg:#332A1A; --post-ink:#E0A559;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#14181A; --paper-raised:#1B211F; --ink:#E9EDE9; --muted:#9AA69E; --border:#2A312C;
+      --accent:#E0A559; --accent-ink:#F4DEB8; --accent-2:#4BB6A3; --danger:#E2705C; --danger-bg:#3A2620;
+      --decision-bg:#2A2740; --decision-ink:#D9CFEF; --decision-border:#453D66;
+      --get-bg:#1C2E27; --get-ink:#5FCBB4; --post-bg:#332A1A; --post-ink:#E0A559;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--font-body); line-height:1.6; -webkit-font-smoothing:antialiased;}
+  a{color:var(--accent-2);}
+  a:focus-visible, button:focus-visible, .tocLink:focus-visible{outline:2px solid var(--accent-2); outline-offset:2px;}
+  .shell{display:grid; grid-template-columns:260px minmax(0,1fr); max-width:1200px; margin:0 auto;}
+  @media (max-width:880px){.shell{grid-template-columns:1fr;} .toc{position:static !important; height:auto !important; border-right:none !important; border-bottom:1px solid var(--border);}}
+  .toc{position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto; padding:32px 20px 32px 28px; border-right:1px solid var(--border);}
+  .toc-kicker{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:6px;}
+  .toc-title{font-family:var(--font-display); font-size:19px; margin:0 0 2px;}
+  .toc-sub{font-size:12px; color:var(--muted); margin-bottom:18px;}
+  .toc-group{font-family:var(--font-mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:16px 0 4px;}
+  .toc nav{display:flex; flex-direction:column; gap:1px;}
+  .tocLink{font-size:12.5px; color:var(--muted); text-decoration:none; padding:5px 8px; border-radius:var(--radius); display:flex; gap:8px;}
+  .tocLink:hover{background:var(--paper-raised); color:var(--ink);}
+  .tocLink .n{font-family:var(--font-mono); color:var(--accent); font-size:10.5px; padding-top:1px;}
+  .content{padding:48px 56px 96px; min-width:0;}
+  @media (max-width:880px){.content{padding:32px 24px 72px;}}
+  .doc-header{margin-bottom:40px; border-bottom:1px solid var(--border); padding-bottom:32px;}
+  .doc-kicker{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:14px;}
+  h1.doc-title{font-family:var(--font-display); font-size:clamp(28px,4vw,40px); line-height:1.12; margin:0 0 10px; text-wrap:balance;}
+  .doc-dek{font-size:16px; color:var(--muted); max-width:70ch; margin:0 0 20px;}
+  .meta-row{display:flex; flex-wrap:wrap; gap:20px; font-size:12px; font-family:var(--font-mono); color:var(--muted);}
+  .meta-row b{color:var(--ink); font-weight:600;}
+  .progress-strip{display:flex; flex-wrap:wrap; gap:8px; margin-top:18px;}
+  .prog-chip{font-family:var(--font-mono); font-size:11px; padding:5px 10px; border-radius:2px; border:1px solid var(--border);}
+  .prog-chip.done{background:var(--get-bg); color:var(--get-ink); border-color:var(--get-ink);}
+  .prog-chip.next{background:var(--post-bg); color:var(--post-ink); border-color:var(--post-ink);}
+  section.module{margin-bottom:96px; padding-bottom:8px; max-width:78ch;}
+  section.module.wide{max-width:none;}
+  .module-eyebrow{font-family:var(--font-mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;}
+  h2.module-title{font-family:var(--font-display); font-size:28px; margin:0 0 6px; padding-top:8px; text-wrap:balance;}
+  .module-dek{font-size:15px; color:var(--muted); margin:0 0 28px;}
+  h3{font-family:var(--font-display); font-size:18px; margin:30px 0 10px; border-top:1px solid var(--border); padding-top:22px;}
+  h3:first-of-type{border-top:none; padding-top:0;}
+  h3 .sec-n{font-family:var(--font-mono); font-size:11px; color:var(--accent); margin-right:8px; font-weight:400;}
+  p{margin:0 0 14px;}
+  ul,ol{margin:0 0 14px; padding-left:20px;}
+  li{margin-bottom:5px;}
+  strong{font-weight:600;}
+  table{width:100%; border-collapse:collapse; font-size:13px; margin:6px 0 14px;}
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:14px;}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top;}
+  th{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); background:var(--paper-raised); white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  td.muted{color:var(--muted);}
+  code{font-family:var(--font-mono); font-size:0.87em; background:var(--paper-raised); padding:1px 5px; border-radius:2px; border:1px solid var(--border);}
+  .schema-card{border:1px solid var(--border); border-radius:var(--radius); background:var(--paper-raised); margin-bottom:14px; overflow:hidden;}
+  .schema-head{padding:11px 15px; border-bottom:1px solid var(--border); display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
+  .schema-head .tbl-name{font-family:var(--font-mono); font-weight:700; font-size:13.5px;}
+  .schema-head .tbl-note{font-size:12px; color:var(--muted);}
+  .schema-head .tag{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; padding:2px 7px; border-radius:2px; background:var(--decision-bg); color:var(--decision-ink);}
+  .schema-cols{padding:9px 15px 12px;}
+  .col-row{display:grid; grid-template-columns:150px 130px 1fr; gap:10px; font-size:12px; padding:4px 0; border-bottom:1px dotted var(--border);}
+  .col-row:last-child{border-bottom:none;}
+  .col-name{font-family:var(--font-mono); color:var(--accent-ink);}
+  .col-type{font-family:var(--font-mono); color:var(--accent-2);}
+  .col-desc{color:var(--muted);}
+  .endpoint{display:flex; gap:12px; align-items:baseline; padding:8px 0; border-bottom:1px dotted var(--border); font-size:13px;}
+  .endpoint:last-child{border-bottom:none;}
+  .method{font-family:var(--font-mono); font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:2px; white-space:nowrap;}
+  .method.get{background:var(--get-bg); color:var(--get-ink);}
+  .method.post{background:var(--post-bg); color:var(--post-ink);}
+  .method.none{background:var(--paper); color:var(--muted); border:1px dashed var(--border);}
+  .path{font-family:var(--font-mono); font-size:12.5px;}
+  .callout{border-left:3px solid var(--accent-2); background:var(--paper-raised); border-radius:0 var(--radius) var(--radius) 0; padding:14px 18px; margin:0 0 14px;}
+  .callout h4{margin:0 0 5px; font-size:13.5px;}
+  .callout p{margin:0; font-size:13.5px;}
+  .risk{border-left:3px solid var(--danger); background:var(--danger-bg); border-radius:0 var(--radius) var(--radius) 0; padding:14px 18px; margin:0 0 14px;}
+  .risk h4{margin:0 0 5px; font-size:13.5px;}
+  .risk p{margin:0; font-size:13.5px;}
+  .decision{border-left:3px solid var(--decision-ink); background:var(--decision-bg); border-radius:0 var(--radius) var(--radius) 0; padding:14px 18px; margin:0 0 14px;}
+  .decision h4{margin:0 0 5px; font-size:13.5px; color:var(--decision-ink);}
+  .decision p{margin:0; font-size:13.5px; color:var(--decision-ink);}
+  .flow-step{display:flex; gap:14px; padding:9px 0; border-bottom:1px dotted var(--border);}
+  .flow-step:last-child{border-bottom:none;}
+  .flow-step .idx{font-family:var(--font-mono); color:var(--accent); font-size:11px; min-width:18px;}
+  .flow-step .body{font-size:13.5px;}
+  .flow-step .body b{display:block; margin-bottom:2px;}
+  .persona-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:0 0 16px;}
+  .persona{border:1px solid var(--border); border-radius:var(--radius); padding:10px 12px; font-size:12.5px;}
+  .persona .role{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; color:var(--accent);}
+  .persona .access{color:var(--muted); font-size:11.5px; margin-top:3px;}
+  footer.doc-footer{margin-top:80px; padding-top:20px; border-top:1px solid var(--border); font-size:12px; color:var(--muted); font-family:var(--font-mono);}
+</style>
+
+<div class="shell">
+  <aside class="toc">
+    <div class="toc-kicker">Project Setu</div>
+    <div class="toc-title">PRD — Part 9</div>
+    <div class="toc-sub">Missing Modules — Batch 6: Business Layer</div>
+    <nav>
+      <a class="tocLink" href="#overview"><span class="n">·</span>Batch overview</a>
+      <div class="toc-group">Module 21</div>
+      <a class="tocLink" href="#m21"><span class="n">17</span>Care Plans &amp; Subscriptions</a>
+      <div class="toc-group">Module 22</div>
+      <a class="tocLink" href="#m22"><span class="n">17</span>Managed Elder Care Services</a>
+      <div class="toc-group">Module 23</div>
+      <a class="tocLink" href="#m23"><span class="n">17</span>Care Analytics Dashboard</a>
+      <a class="tocLink" href="#cross"><span class="n">·</span>Touches to existing modules</a>
+      <a class="tocLink" href="#next"><span class="n">→</span>Batch 7 preview</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="doc-header">
+      <div class="doc-kicker">Product Requirements Document · Architecture &amp; requirements only, no implementation code</div>
+      <h1 class="doc-title">Missing Modules, Batch 6: Business Layer</h1>
+      <p class="doc-dek">Part 9 of the Project Setu PRD, sixth of seven batches, and the one with the most direct pressure to touch the payments module — a subscription is inherently a billing concept. It doesn't. Care Plans introduces recurring charges through a table and an Edge Function entirely separate from the existing <code>payments</code>/<code>payments-create-order</code>/<code>payments-webhook</code> path, which stays untouched. Managed Elder Care Services needs one real, narrow authorization change to <code>bookings-create</code>; Care Analytics Dashboard needs none at all — it only reads.</p>
+      <div class="meta-row">
+        <span><b>Batch:</b> 6 of 7</span>
+        <span><b>Modules:</b> Care Plans &amp; Subscription Management · Managed Elder Care Services · Care Analytics Dashboard</span>
+        <span><b>Builds on:</b> Parts 1–8, <code>service_catalog</code>, <code>bookings-create</code>, the existing <code>payments</code> table (read-only reference, not modified)</span>
+      </div>
+      <div class="progress-strip">
+        <span class="prog-chip done">Batches 1–5 — done (20 modules)</span>
+        <span class="prog-chip done">Batch 6 — this document</span>
+        <span class="prog-chip next">Batch 7 next — Consent &amp; Privacy, Enhanced Emergency</span>
+      </div>
+    </div>
+
+    <section class="module wide" id="overview">
+      <div class="module-eyebrow">Batch overview</div>
+      <h2 class="module-title">Why subscription billing gets its own table, not a change to <code>payments</code></h2>
+      <p><code>payments</code> today has one clean meaning: a family paid for one specific booking, merchant-of-record, via Razorpay Orders. A subscription fee isn't tied to a single booking — it's a recurring charge for an allocation of future visits, likely via a different Razorpay product (Subscriptions, not Orders) with its own status lifecycle. Bending <code>payments</code> to also mean "sometimes a recurring fee, sometimes a per-visit charge" would blur a table every existing report, reconciliation query, and refund flow already depends on having one meaning. A new, parallel <code>care_plan_charges</code> table keeps that boundary clean — this is the batch's one deliberate architectural stance, stated once here rather than re-argued in Module 21's own section.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 21 — CARE PLANS & SUBSCRIPTION MANAGEMENT -->
+    <!-- ============================================================ -->
+    <section class="module wide" id="m21">
+      <div class="module-eyebrow">Module 21 of 3 in this batch (21st overall)</div>
+      <h2 class="module-title">Care Plans &amp; Subscription Management</h2>
+      <p class="module-dek">A recurring bundle of visits at a monthly price — orchestrating the existing, unmodified booking flow on a schedule, with its own billing path entirely separate from per-booking payments.</p>
+
+      <h3><span class="sec-n">01</span>Problem being solved</h3>
+      <p>Every booking today is pay-per-visit. Families managing ongoing care want predictability — "3 companion visits a week plus a monthly nursing check" at one monthly price — rather than booking and paying for each visit individually.</p>
+
+      <h3><span class="sec-n">02</span>User personas</h3>
+      <div class="persona-grid">
+        <div class="persona"><div class="role">Family member</div>Subscribes an elder to a plan, manages pause/cancel.<div class="access">full, own elder</div></div>
+        <div class="persona"><div class="role">Elder</div>Same visibility as family.<div class="access">full, own record</div></div>
+        <div class="persona"><div class="role">Admin — super_admin</div>Manages the care-plan catalog, mirroring service catalog management.<div class="access">catalog CRUD</div></div>
+        <div class="persona"><div class="role">Admin — finance_ops</div>Failed-charge queue, subscription billing oversight.<div class="access">billing visibility</div></div>
+      </div>
+
+      <h3><span class="sec-n">03</span>Functional requirements</h3>
+      <ul>
+        <li>A per-region care-plan catalog (name, description, monthly price) each with allocations — a set number of visits of a given <code>service_catalog</code> service per week or month.</li>
+        <li>Family subscribes an elder to a plan; a scheduled job auto-generates that period's booking drafts against the allocation, calling the <strong>existing, unmodified</strong> <code>bookings-create</code> function — a legitimate, additive <em>use</em> of that function on a schedule rather than by a user tapping "book," not a change to it.</li>
+        <li>The monthly subscription fee covers allocated visits; anything beyond the allocation is billed per-visit through the existing, unmodified payment flow — a clear, statable hybrid rather than an ambiguous "sometimes included" model.</li>
+        <li>Pause (e.g. elder hospitalized — cross-references Hospital Companion Services, Batch 3) and cancel.</li>
+        <li>A failed subscription charge pauses future auto-generation until resolved — the plan never keeps committing the family to unpaid visits.</li>
+      </ul>
+
+      <h3><span class="sec-n">04</span>Non-functional requirements</h3>
+      <p>Visit-generation and billing are both scheduled batch jobs, not request-time operations — neither should ever block a family's live interaction with the app.</p>
+
+      <h3><span class="sec-n">05</span>User flow</h3>
+      <div class="flow-step"><span class="idx">1</span><div class="body"><b>Family</b>Browses the care-plan catalog, subscribes an elder to one.</div></div>
+      <div class="flow-step"><span class="idx">2</span><div class="body"><b>Weekly</b>A scheduled job generates that period's booking drafts via the existing <code>bookings-create</code>, which then proceeds through the completely unmodified match → OTP flow.</div></div>
+      <div class="flow-step"><span class="idx">3</span><div class="body"><b>Monthly</b>A separate scheduled job charges the subscription fee.</div></div>
+      <div class="flow-step"><span class="idx">4</span><div class="body"><b>Family</b>Can pause or cancel at any time; already-generated bookings for the current period are never silently reversed.</div></div>
+
+      <h3><span class="sec-n">06</span>Information architecture</h3>
+      <p>A care-plan catalog/browse screen, a subscription management screen (pause/cancel, view allocation usage), reachable from the Family Dashboard (Batch 1).</p>
+
+      <h3><span class="sec-n">07</span>Database design</h3>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">care_plans</span><span class="tbl-note">per-region catalog, same shape as <code>service_catalog</code></span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">region_id, code, name, description</span><span class="col-type">uuid fk / text ×3</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">monthly_price, currency, active</span><span class="col-type">numeric / text / boolean</span><span class="col-desc">—</span></div>
+        </div>
+      </div>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">care_plan_allocations</span><span class="tbl-note">what a plan includes</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">care_plan_id, service_id</span><span class="col-type">uuid fks</span><span class="col-desc">service_id → existing <code>service_catalog</code></span></div>
+          <div class="col-row"><span class="col-name">visits_per_period, period</span><span class="col-type">int / text</span><span class="col-desc">period: week / month</span></div>
+        </div>
+      </div>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">elder_care_plan_subscriptions</span><span class="tbl-note">one elder's active/paused/cancelled plan</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">elder_id, care_plan_id</span><span class="col-type">uuid fks</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">status, started_at, paused_until, cancelled_at</span><span class="col-type">enum / timestamptz / date nullable / timestamptz nullable</span><span class="col-desc">active / paused / cancelled</span></div>
+          <div class="col-row"><span class="col-name">subscribed_by</span><span class="col-type">uuid fk</span><span class="col-desc">—</span></div>
+        </div>
+      </div>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">care_plan_charges</span><span class="tbl-note">deliberately separate from <code>payments</code> — see § Overview</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">subscription_id</span><span class="col-type">uuid fk</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">amount, currency, period_start, period_end</span><span class="col-type">numeric / text / date ×2</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">provider, provider_ref, status, charged_at</span><span class="col-type">text / text nullable / enum / timestamptz nullable</span><span class="col-desc">status: pending / captured / failed</span></div>
+        </div>
+      </div>
+      <p>RLS on all four: <code>care_plans</code>/<code>care_plan_allocations</code> world-readable to authenticated (same as <code>service_catalog</code>), <code>super_admin</code>-writable. <code>elder_care_plan_subscriptions</code>/<code>care_plan_charges</code>: <code>is_elder_self</code>, <code>is_linked_family</code>, <code>is_admin</code>/<code>finance_ops</code>.</p>
+
+      <h3><span class="sec-n">08</span>API design</h3>
+      <div class="table-wrap">
+        <table><tbody>
+          <tr><td style="width:1%"><div class="endpoint"><span class="method post">POST</span><span class="path">/care-plans/generate-visits</span></div></td><td class="muted">New scheduled Edge Function (weekly, n8n-triggered). For each active subscription's allocation, invokes the existing <code>bookings-create</code> function to generate that period's booking drafts — reuse, not reimplementation, of its validation logic.</td></tr>
+          <tr><td style="width:1%"><div class="endpoint"><span class="method post">POST</span><span class="path">/care-plans/billing-run</span></div></td><td class="muted">New scheduled Edge Function (monthly). Charges each active subscription via Razorpay's Subscriptions/recurring-charge product — a different Razorpay API surface than the Orders API <code>payments-create-order</code> already uses — and writes to <code>care_plan_charges</code>, never <code>payments</code>.</td></tr>
+        </tbody></table>
+      </div>
+
+      <h3><span class="sec-n">09</span>Security design</h3>
+      <div class="risk"><h4>Razorpay Subscriptions needs its own credentials</h4><p>A new secret, Edge-Function-owned, following the existing "secrets never reach the client" rule — not assumed to be the same key as the Orders API without confirming with Razorpay's actual product boundaries.</p></div>
+
+      <h3><span class="sec-n">10</span>AI architecture</h3>
+      <p>Not applicable.</p>
+
+      <h3><span class="sec-n">11</span>Accessibility requirements</h3>
+      <p>Same baseline as the rest of the family-facing surface; plan comparison should favor plain-language allocation descriptions ("2 visits a week") over abstract pricing tables.</p>
+
+      <h3><span class="sec-n">12</span>Notification requirements</h3>
+      <p>Charge success/failure, upcoming charge reminder, and pause/cancel confirmations, via the existing notification infrastructure (Batch 3) as new <code>notification_types</code> entries.</p>
+
+      <h3><span class="sec-n">13</span>Edge cases</h3>
+      <ul>
+        <li>Subscription charge fails → auto-generation pauses until resolved; the family is never left owing for visits the plan kept creating anyway. Full dunning/retry policy is a finance-ops design decision flagged here, not resolved by this spec.</li>
+        <li>Family cancels mid-period → already-generated bookings for that period are <strong>not</strong> auto-cancelled, the same decoupling principle already used for appointments (Batch 2) and hospital stays (Batch 3): an existing booking is a real commitment, not silently reversed by an unrelated status change elsewhere.</li>
+        <li>Elder covered by both a care plan allocation and a one-off manual booking of the same service in the same week → both simply coexist; the plan doesn't cap or block manual bookings.</li>
+      </ul>
+
+      <h3><span class="sec-n">14</span>Admin dashboard requirements</h3>
+      <p>Care-plan catalog management (<code>super_admin</code>), mirroring the existing service-catalog admin page. A failed-charge queue (<code>finance_ops</code>), in the same spirit as the existing payout reconciliation page.</p>
+
+      <h3><span class="sec-n">15</span>Flutter project structure</h3>
+      <p><code>apps/family_elder_app/lib/features/care_plans/</code> — catalog browse, subscription management.</p>
+
+      <h3><span class="sec-n">16</span>Supabase requirements</h3>
+      <p>Four new tables with RLS. Two new scheduled Edge Functions. No changes to <code>payments</code>, <code>payments-create-order</code>, or <code>payments-webhook</code> — confirmed explicitly, see § Cross-cutting.</p>
+
+      <h3><span class="sec-n">17</span>Future scalability</h3>
+      <p>Plans are per-region from day one, following the same seam every other catalog-shaped table in this schema already uses — a Phase 2+ city with different pricing or allocation norms is a new row, not a schema change.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 22 — MANAGED ELDER CARE SERVICES -->
+    <!-- ============================================================ -->
+    <section class="module wide" id="m22">
+      <div class="module-eyebrow">Module 22 of 3 in this batch (22nd overall)</div>
+      <h2 class="module-title">Managed Elder Care Services</h2>
+      <p class="module-dek">A concierge tier: a human care coordinator who can act on a family's behalf within defined operational boundaries — scheduling authority, never automatic health-data access.</p>
+
+      <h3><span class="sec-n">01</span>Problem being solved</h3>
+      <p>Some families want less self-service and more concierge support — a dedicated coordinator who proactively manages bookings, appointments, and care-plan allocations rather than the family doing it all themselves.</p>
+
+      <h3><span class="sec-n">02</span>User personas</h3>
+      <div class="persona-grid">
+        <div class="persona"><div class="role">Family member</div>Retains full visibility and override; the coordinator supplements, never replaces, their access.<div class="access">unchanged, full</div></div>
+        <div class="persona"><div class="role">Elder</div>Unchanged — a coordinator's operational authority never overrides the elder's own consent sovereignty.<div class="access">unchanged, full</div></div>
+        <div class="persona"><div class="role">Care coordinator</div>New admin-scoped role, assigned to specific elders.<div class="access">operational, not data-access — see § Security</div></div>
+        <div class="persona"><div class="role">Admin — super_admin</div>Manages coordinator assignments.<div class="access">assignment CRUD</div></div>
+      </div>
+
+      <h3><span class="sec-n">03</span>Functional requirements</h3>
+      <ul>
+        <li>Coordinator-to-elder assignment (many elders per coordinator, one active coordinator per elder for MVP).</li>
+        <li>A coordinator can create bookings and adjust care-plan allocations on the assigned elder's behalf.</li>
+        <li><strong>A coordinator's authority is operational (scheduling), not automatically an authority over health data.</strong> Reading <code>elder_health_notes</code>, <code>elder_medications</code>, or anything else consent-gated still requires the same <code>has_consent()</code> check as any other party — coordinator status grants none of that by itself. This boundary is the single most important design decision in this module.</li>
+        <li>Every coordinator action on an elder's behalf is logged to <code>elder_timeline_events</code> (Batch 1) — the same transparency mechanism already built for everything else, not a new logging system.</li>
+      </ul>
+
+      <h3><span class="sec-n">04</span>Non-functional requirements</h3>
+      <p>Coordinator assignment/removal must never retroactively affect bookings or care-plan state already in place — only future actions are affected.</p>
+
+      <h3><span class="sec-n">05</span>User flow</h3>
+      <div class="flow-step"><span class="idx">1</span><div class="body"><b>Admin</b>Assigns a coordinator to an elder (a paid concierge-tier arrangement, business process outside this spec).</div></div>
+      <div class="flow-step"><span class="idx">2</span><div class="body"><b>Coordinator</b>Books visits, adjusts care-plan allocations, on the elder's behalf — logged to the elder's timeline.</div></div>
+      <div class="flow-step"><span class="idx">3</span><div class="body"><b>Family</b>Can still self-serve any of these actions at any time; the coordinator is additive, not exclusive.</div></div>
+      <div class="flow-step"><span class="idx">4</span><div class="body"><b>Coordinator attempts to read health data</b>Still blocked by <code>has_consent()</code> exactly like anyone else without a grant.</div></div>
+
+      <h3><span class="sec-n">06</span>Information architecture</h3>
+      <p>An admin dashboard extension: a "My Assigned Elders" view for the <code>care_coordinator</code> scope, reusing the family app's booking/care-plan screens' underlying data model rather than building a parallel UI paradigm.</p>
+
+      <h3><span class="sec-n">07</span>Database design</h3>
+      <div class="schema-card">
+        <div class="schema-head"><span class="tbl-name">care_coordinator_assignments</span><span class="tbl-note">one active coordinator per elder</span><span class="tag">new</span></div>
+        <div class="schema-cols">
+          <div class="col-row"><span class="col-name">elder_id</span><span class="col-type">uuid fk, unique</span><span class="col-desc">—</span></div>
+          <div class="col-row"><span class="col-name">coordinator_profile_id, assigned_at, active</span><span class="col-type">uuid fk / timestamptz / boolean</span><span class="col-desc">—</span></div>
+        </div>
+      </div>
+      <p>RLS: coordinator can select their own assignments; <code>super_admin</code> full access.</p>
+
+      <h3><span class="sec-n">08</span>API design</h3>
+      <p>No new Edge Function required beyond the one authorization touch below — assignment CRUD is a plain admin-scoped RLS-guarded operation.</p>
+
+      <h3><span class="sec-n">09</span>Security design</h3>
+      <div class="risk">
+        <h4>The one necessary touch to an existing Edge Function in this batch</h4>
+        <p><code>bookings-create</code>'s existing manual authorization check (<code>isElderSelf || isLinkedFamily</code>) needs one additive clause: <code>|| (has_admin_scope('care_coordinator') && assigned to this elder)</code>. This is the same pattern already used for the <code>bookings-match</code> preferred-caregiver tiebreak (Batch 3) — an additive <code>OR</code> condition to an existing check, not a rewrite of it, and it changes nothing about who's eligible to be booked, only who's allowed to initiate the booking request.</p>
+      </div>
+      <div class="callout"><h4>New <code>admin_scope</code> enum value: <code>care_coordinator</code></h4><p>An additive value on the existing <code>admin_scope</code> enum (PRD Part 2 §16), following the same enum-extension pattern already used for <code>ai_interaction_type</code> (Batch 4) and <code>consent_category</code> (Batch 1).</p></div>
+      <div class="decision"><h4>Operational authority is not data-access authority — restated as the module's core boundary</h4><p>Named three times across this module because it's the one place a future implementer could accidentally grant a coordinator sweeping access "for convenience." They don't get it; they get exactly what <code>bookings-create</code>'s existing authorization now additionally permits, and nothing else.</p></div>
+
+      <h3><span class="sec-n">10</span>AI architecture</h3>
+      <p>Not applicable.</p>
+
+      <h3><span class="sec-n">11</span>Accessibility requirements</h3>
+      <p>Not applicable — internal admin-facing role.</p>
+
+      <h3><span class="sec-n">12</span>Notification requirements</h3>
+      <p>Family is notified when a coordinator is assigned or removed, and when a coordinator takes a booking action on their behalf — transparency, not a silent background process.</p>
+
+      <h3><span class="sec-n">13</span>Edge cases</h3>
+      <ul>
+        <li>Coordinator removed mid-active-booking → the booking itself is entirely unaffected; only future coordinator actions cease.</li>
+        <li>Family and coordinator both act on the same elder simultaneously → no conflict, both are just independent requesters under the existing booking model.</li>
+        <li>Coordinator attempts an action outside their assigned elders → blocked by the same RLS/authorization check, no special-casing needed beyond the assignment lookup itself.</li>
+      </ul>
+
+      <h3><span class="sec-n">14</span>Admin dashboard requirements</h3>
+      <p>Coordinator assignment management (<code>super_admin</code>) and the coordinator's own "My Assigned Elders" working view, both additive to the existing admin dashboard.</p>
+
+      <h3><span class="sec-n">15</span>Flutter project structure</h3>
+      <p>Not applicable — this module is admin-dashboard (Next.js), not a Flutter surface.</p>
+
+      <h3><span class="sec-n">16</span>Supabase requirements</h3>
+      <p>One new table (<code>care_coordinator_assignments</code>) with RLS. One additive <code>admin_scope</code> enum value. One additive authorization clause in the existing <code>bookings-create</code> function — the batch's one genuine existing-module touch, scoped as narrowly as the equivalent change in Batch 3.</p>
+
+      <h3><span class="sec-n">17</span>Future scalability</h3>
+      <p>One-coordinator-per-elder is an MVP simplification; a future team-based coordination model (multiple coordinators sharing a caseload) is a plausible Phase 2+ extension to the assignment table's cardinality, not a redesign.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODULE 23 — CARE ANALYTICS DASHBOARD -->
+    <!-- ============================================================ -->
+    <section class="module wide" id="m23">
+      <div class="module-eyebrow">Module 23 of 3 in this batch (23rd overall)</div>
+      <h2 class="module-title">Care Analytics Dashboard</h2>
+      <p class="module-dek">Internal ops reporting, and the place several earlier "feeds into analytics, not built here" cross-references finally land: suggestion accuracy (Batch 4), rating trends (Batch 5), scheduled-job health (Batches 2–3).</p>
+
+      <h3><span class="sec-n">01</span>Problem being solved</h3>
+      <p>Ops has no aggregate view of how the platform is actually performing — booking volume trends, completion/cancellation rates, caregiver utilization, region-level breakdowns — and several modules in this plan deferred their own analytics needs here rather than building bespoke reporting each time.</p>
+
+      <h3><span class="sec-n">02</span>User personas</h3>
+      <div class="persona-grid">
+        <div class="persona"><div class="role">Admin — ops_admin</div>Full operational dashboards.<div class="access">read-only, aggregate</div></div>
+        <div class="persona"><div class="role">Admin — finance_ops</div>Financial subset only.<div class="access">read-only, scoped</div></div>
+        <div class="persona"><div class="role">Admin — super_admin</div>Everything.<div class="access">read-only, full</div></div>
+        <div class="persona"><div class="role">Family, elder, caregiver</div>No access — this is a purely internal tool.<div class="access">none</div></div>
+      </div>
+
+      <h3><span class="sec-n">03</span>Functional requirements</h3>
+      <ul>
+        <li>Booking volume over time, completion/cancellation rates, region-level breakdowns (using the existing <code>region_id</code> seam everywhere).</li>
+        <li>Caregiver utilization (bookings per active caregiver).</li>
+        <li>Rating trends (Batch 5), consolidated here rather than as a standalone page on the caregiver directory.</li>
+        <li>AI suggestion accuracy/dismissal rates (Batch 4).</li>
+        <li>Scheduled-job health (reminders, check-in sweeps, payouts, care-plan billing) — the single consolidated page floated as an idea in Batches 2, 3, and 6, built for real here.</li>
+        <li><strong>Aggregate and statistical only — no PII, no health content, ever</strong>, matching the existing PostHog principle (PRD Part 2 §15: "anonymized/categorical properties only").</li>
+      </ul>
+
+      <h3><span class="sec-n">04</span>Non-functional requirements</h3>
+      <p>Dashboard queries must not compete with live transactional load — see § Database for the materialized-view approach.</p>
+
+      <h3><span class="sec-n">05</span>User flow</h3>
+      <div class="flow-step"><span class="idx">1</span><div class="body"><b>Ops admin</b>Opens the Analytics page, sees operational trends with a visible "last updated" timestamp.</div></div>
+      <div class="flow-step"><span class="idx">2</span><div class="body"><b>Finance ops</b>Sees the financial subset only.</div></div>
+
+      <h3><span class="sec-n">06</span>Information architecture</h3>
+      <p>A new Analytics section in the admin dashboard, scope-gated per the table above — this module <em>is</em> primarily an admin dashboard addition.</p>
+
+      <h3><span class="sec-n">07</span>Database design</h3>
+      <div class="decision">
+        <h4>Materialized views, refreshed on a schedule — not live aggregate queries</h4>
+        <p>Running aggregate queries against live transactional tables on every dashboard load would compete with real traffic. Materialized views (<code>mv_booking_volume_daily</code>, <code>mv_caregiver_utilization</code>, <code>mv_rating_trends</code>, and similar), refreshed periodically, keep dashboard reads cheap and keep the underlying tables' performance unaffected by how often ops checks the dashboard. The refresh mechanism itself (a Postgres-native scheduled refresh vs. an external cron trigger) is an implementation choice, not specified further here.</p>
+      </div>
+      <p>RLS/access on the views restricted to the relevant admin scopes per § Personas.</p>
+
+      <h3><span class="sec-n">08</span>API design</h3>
+      <p>No new Edge Function for reads — the admin dashboard queries the materialized views directly via its existing request-scoped Supabase client, same pattern as every other admin page. The periodic refresh is the only new scheduled operation this module needs.</p>
+
+      <h3><span class="sec-n">09</span>Security design</h3>
+      <div class="callout"><h4>Distinct from PostHog, on purpose</h4><p>PostHog (PRD Part 2 §15) already tracks <em>product</em> analytics — how families use the app. This module is <em>care-operation</em> analytics — how the operation is performing. Naming the distinction here prevents the two from later being conflated as the same system serving two audiences with very different access needs.</p></div>
+
+      <h3><span class="sec-n">10</span>AI architecture</h3>
+      <p>Not applicable — this module consumes AI Recommendation Engine's (Batch 4) suggestion-outcome data as an input metric; it generates no AI content itself.</p>
+
+      <h3><span class="sec-n">11</span>Accessibility requirements</h3>
+      <p>Standard admin-dashboard accessibility (this is a desktop ops tool, not an elder-facing surface — see PRD Part 2 §10 on why the admin dashboard is web, not Flutter).</p>
+
+      <h3><span class="sec-n">12</span>Notification requirements</h3>
+      <p>None — a pull dashboard, not a push system.</p>
+
+      <h3><span class="sec-n">13</span>Edge cases</h3>
+      <ul>
+        <li>A region with very low volume → small-sample statistics (e.g. "100% cancellation" from one booking) must be visually flagged as low-confidence, not presented with the same weight as a large-sample stat — a real statistics-communication requirement, not just a display nicety.</li>
+        <li>Materialized view staleness → every figure carries a visible "as of [refresh time]" label so ops never mistakes it for real-time.</li>
+      </ul>
+
+      <h3><span class="sec-n">14</span>Admin dashboard requirements</h3>
+      <p>This module's entire scope is admin dashboard requirements — see §§ 02, 06.</p>
+
+      <h3><span class="sec-n">15</span>Flutter project structure</h3>
+      <p>Not applicable.</p>
+
+      <h3><span class="sec-n">16</span>Supabase requirements</h3>
+      <p>Several new materialized views (no new base tables). A periodic refresh mechanism. No new Edge Function, no new consent category, no touch to any existing table's schema or RLS.</p>
+
+      <h3><span class="sec-n">17</span>Future scalability</h3>
+      <p>Region-level breakdowns are native to every view from day one via the existing <code>region_id</code> seam — a Phase 2+ city or country doesn't need a new dashboard, just a new filter value on ones that already exist.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="module wide" id="cross">
+      <div class="module-eyebrow">Cross-cutting</div>
+      <h2 class="module-title">Every touch to an existing, already-implemented module</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Existing module</th><th>What's added</th><th>Why it's necessary</th></tr></thead>
+          <tbody>
+            <tr><td><strong><code>bookings-create</code></strong> (Edge Function)</td><td class="muted">One additive authorization clause: a <code>care_coordinator</code> assigned to the elder may also initiate a booking</td><td class="muted">There's no way to grant scheduling authority to a coordinator without touching the one function that authorizes who can create a booking. Nothing about who's eligible to be <em>matched</em> changes.</td></tr>
+            <tr><td><strong><code>admin_scope</code></strong> enum (PRD Part 2 §16)</td><td class="muted">One additive value: <code>care_coordinator</code></td><td class="muted">The existing five scopes don't describe this role; same additive-enum pattern already used three times in this plan.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>Explicitly not touched, despite the obvious pull to do so:</strong> the <code>payments</code> table, <code>payments-create-order</code>, and <code>payments-webhook</code> — Care Plans' recurring billing lives entirely in new, parallel tables and functions, precisely to avoid blurring what <code>payments</code> means (see § Overview). Care Analytics touches nothing beyond reading.</p>
+    </section>
+
+    <section class="module" id="next">
+      <div class="module-eyebrow">Next</div>
+      <h2 class="module-title">Batch 7 preview — the final batch</h2>
+      <p>Consent &amp; Privacy Management and Enhanced Emergency Services close out all 25 modules. Both sit closest to the platform's most safety-critical existing modules (DPDP compliance, SOS) and will be handled with the most conservative touch discipline of the entire plan.</p>
+    </section>
+
+    <footer class="doc-footer">Part 9 of the Project Setu PRD · Batch 6 of 7 covering 25 missing modules · builds on Parts 1–8 and the live schema</footer>
+  </main>
+</div>
