@@ -85,6 +85,24 @@ class FamilyHomeScreen extends ConsumerWidget {
                         ),
                         TextButton.icon(
                           onPressed: () =>
+                              context.push('/elder/${elder.id}/medications'),
+                          icon: const Icon(Icons.medication_outlined),
+                          label: const Text('Medications'),
+                        ),
+                        TextButton.icon(
+                          onPressed: () =>
+                              context.push('/elder/${elder.id}/appointments'),
+                          icon: const Icon(Icons.event_outlined),
+                          label: const Text('Appointments'),
+                        ),
+                        TextButton.icon(
+                          onPressed: () =>
+                              context.push('/elder/${elder.id}/reminders'),
+                          icon: const Icon(Icons.notifications_outlined),
+                          label: const Text('Reminders'),
+                        ),
+                        TextButton.icon(
+                          onPressed: () =>
                               context.push('/elder/${elder.id}/consent'),
                           icon: const Icon(Icons.privacy_tip_outlined),
                           label: const Text('What you can see'),

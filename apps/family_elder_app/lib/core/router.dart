@@ -3,12 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
 
+import '../features/appointments/presentation/appointments_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/booking/presentation/booking_screen.dart';
 import '../features/consent/presentation/consent_screen.dart';
 import '../features/elder_home/presentation/elder_home_screen.dart';
 import '../features/family_access/presentation/family_access_screen.dart';
 import '../features/family_home/presentation/family_home_screen.dart';
+import '../features/medications/presentation/medications_screen.dart';
+import '../features/reminders/presentation/reminders_screen.dart';
 import '../features/sos/presentation/sos_screen.dart';
 import '../features/timeline/presentation/timeline_screen.dart';
 import 'providers.dart';
@@ -54,6 +57,21 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/elder/:elderId/family',
         builder: (context, state) =>
             FamilyAccessScreen(elderId: state.pathParameters['elderId']!),
+      ),
+      GoRoute(
+        path: '/elder/:elderId/medications',
+        builder: (context, state) =>
+            MedicationsScreen(elderId: state.pathParameters['elderId']!),
+      ),
+      GoRoute(
+        path: '/elder/:elderId/appointments',
+        builder: (context, state) =>
+            AppointmentsScreen(elderId: state.pathParameters['elderId']!),
+      ),
+      GoRoute(
+        path: '/elder/:elderId/reminders',
+        builder: (context, state) =>
+            RemindersScreen(elderId: state.pathParameters['elderId']!),
       ),
     ],
   );
