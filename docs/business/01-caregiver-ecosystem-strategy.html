@@ -1,0 +1,433 @@
+<title>Project Setu — Caregiver Ecosystem Strategy</title>
+<style>
+  :root{
+    --paper:#F2F4F0; --paper-raised:#FFFFFF; --ink:#15181A; --muted:#57625C; --border:#DADFD8;
+    --accent:#B8691A; --accent-ink:#5A3610; --accent-2:#1D6C5F; --danger:#A83F2A; --danger-bg:#F7EAE4;
+    --decision-bg:#EFEAF6; --decision-ink:#4B3B78; --decision-border:#D6CCEA;
+    --get-bg:#E6EFEA; --get-ink:#1D6C5F; --post-bg:#F3EBE0; --post-ink:#8A5A1C;
+    --radius:3px;
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+  }
+  :root[data-theme="dark"]{
+    --paper:#14181A; --paper-raised:#1B211F; --ink:#E9EDE9; --muted:#9AA69E; --border:#2A312C;
+    --accent:#E0A559; --accent-ink:#F4DEB8; --accent-2:#4BB6A3; --danger:#E2705C; --danger-bg:#3A2620;
+    --decision-bg:#2A2740; --decision-ink:#D9CFEF; --decision-border:#453D66;
+    --get-bg:#1C2E27; --get-ink:#5FCBB4; --post-bg:#332A1A; --post-ink:#E0A559;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#14181A; --paper-raised:#1B211F; --ink:#E9EDE9; --muted:#9AA69E; --border:#2A312C;
+      --accent:#E0A559; --accent-ink:#F4DEB8; --accent-2:#4BB6A3; --danger:#E2705C; --danger-bg:#3A2620;
+      --decision-bg:#2A2740; --decision-ink:#D9CFEF; --decision-border:#453D66;
+      --get-bg:#1C2E27; --get-ink:#5FCBB4; --post-bg:#332A1A; --post-ink:#E0A559;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--font-body); line-height:1.6; -webkit-font-smoothing:antialiased;}
+  a{color:var(--accent-2);}
+  a:focus-visible, button:focus-visible, .tocLink:focus-visible{outline:2px solid var(--accent-2); outline-offset:2px;}
+  .shell{display:grid; grid-template-columns:260px minmax(0,1fr); max-width:1200px; margin:0 auto;}
+  @media (max-width:880px){.shell{grid-template-columns:1fr;} .toc{position:static !important; height:auto !important; border-right:none !important; border-bottom:1px solid var(--border);}}
+  .toc{position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto; padding:32px 20px 32px 28px; border-right:1px solid var(--border);}
+  .toc-kicker{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:6px;}
+  .toc-title{font-family:var(--font-display); font-size:19px; margin:0 0 2px;}
+  .toc-sub{font-size:12px; color:var(--muted); margin-bottom:18px;}
+  .toc nav{display:flex; flex-direction:column; gap:1px;}
+  .tocLink{font-size:12.5px; color:var(--muted); text-decoration:none; padding:5px 8px; border-radius:var(--radius); display:flex; gap:8px;}
+  .tocLink:hover{background:var(--paper-raised); color:var(--ink);}
+  .tocLink .n{font-family:var(--font-mono); color:var(--accent); font-size:10.5px; padding-top:1px;}
+  .content{padding:48px 56px 96px; min-width:0;}
+  @media (max-width:880px){.content{padding:32px 24px 72px;}}
+  .doc-header{margin-bottom:40px; border-bottom:1px solid var(--border); padding-bottom:32px;}
+  .doc-kicker{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:14px;}
+  h1.doc-title{font-family:var(--font-display); font-size:clamp(28px,4vw,40px); line-height:1.12; margin:0 0 10px; text-wrap:balance;}
+  .doc-dek{font-size:16px; color:var(--muted); max-width:70ch; margin:0 0 20px;}
+  .meta-row{display:flex; flex-wrap:wrap; gap:20px; font-size:12px; font-family:var(--font-mono); color:var(--muted);}
+  .meta-row b{color:var(--ink); font-weight:600;}
+  .decisions-locked{display:flex; flex-wrap:wrap; gap:8px; margin-top:18px;}
+  .lock-chip{font-family:var(--font-mono); font-size:11px; background:var(--paper-raised); border:1px solid var(--border); padding:5px 10px; border-radius:2px;}
+  .lock-chip b{color:var(--accent-ink);}
+  section.doc-section{margin-bottom:80px; max-width:80ch;}
+  section.doc-section.wide{max-width:none;}
+  .section-eyebrow{font-family:var(--font-mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;}
+  h2{font-family:var(--font-display); font-size:27px; margin:0 0 6px; padding-top:8px; text-wrap:balance;}
+  h3{font-family:var(--font-display); font-size:18px; margin:26px 0 8px;}
+  p{margin:0 0 14px;}
+  ul,ol{margin:0 0 14px; padding-left:20px;}
+  li{margin-bottom:6px;}
+  strong{font-weight:600;}
+  .lede{font-size:16px;}
+  table{width:100%; border-collapse:collapse; font-size:13.5px; margin:8px 0 14px;}
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:14px;}
+  th,td{text-align:left; padding:10px 13px; border-bottom:1px solid var(--border); vertical-align:top;}
+  th{font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); background:var(--paper-raised); white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  td.muted{color:var(--muted);}
+  code{font-family:var(--font-mono); font-size:0.88em; background:var(--paper-raised); padding:1px 5px; border-radius:2px; border:1px solid var(--border);}
+  .callout{border-left:3px solid var(--accent-2); background:var(--paper-raised); border-radius:0 var(--radius) var(--radius) 0; padding:16px 20px; margin:0 0 16px;}
+  .callout h4{margin:0 0 6px; font-size:14.5px;}
+  .callout p{margin:0; font-size:14px;}
+  .risk{border-left:3px solid var(--danger); background:var(--danger-bg); border-radius:0 var(--radius) var(--radius) 0; padding:16px 20px; margin:0 0 14px;}
+  .risk h4{margin:0 0 6px; font-size:14.5px;}
+  .risk p{margin:0; font-size:14px;}
+  .decision{border-left:3px solid var(--decision-ink); background:var(--decision-bg); border-radius:0 var(--radius) var(--radius) 0; padding:16px 20px; margin:0 0 16px;}
+  .decision h4{margin:0 0 6px; font-size:14.5px; color:var(--decision-ink);}
+  .decision p{margin:0; font-size:14px; color:var(--decision-ink);}
+  .recommend{border:1px solid var(--get-ink); background:var(--get-bg); border-radius:var(--radius); padding:16px 20px; margin:0 0 16px;}
+  .recommend h4{margin:0 0 6px; font-size:13px; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.04em; color:var(--get-ink);}
+  .recommend p{margin:0; font-size:14px;}
+  .phase-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:16px 0;}
+  .phase{border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; background:var(--paper-raised);}
+  .phase .tag{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; color:var(--accent);}
+  .phase h5{margin:6px 0 4px; font-size:14px;}
+  .phase p{font-size:12.5px; color:var(--muted); margin:0;}
+  footer.doc-footer{margin-top:80px; padding-top:20px; border-top:1px solid var(--border); font-size:12px; color:var(--muted); font-family:var(--font-mono);}
+</style>
+
+<div class="shell">
+  <aside class="toc">
+    <div class="toc-kicker">Project Setu</div>
+    <div class="toc-title">Caregiver Ecosystem Strategy</div>
+    <div class="toc-sub">Business &amp; operations — no implementation content</div>
+    <nav>
+      <a class="tocLink" href="#foundation"><span class="n">·</span>Foundation: what's already locked</a>
+      <a class="tocLink" href="#s1"><span class="n">01</span>Acquisition Strategy</a>
+      <a class="tocLink" href="#s2"><span class="n">02</span>Onboarding Workflow</a>
+      <a class="tocLink" href="#s3"><span class="n">03</span>Caregiver Categories</a>
+      <a class="tocLink" href="#s4"><span class="n">04</span>Payment Model</a>
+      <a class="tocLink" href="#s5"><span class="n">05</span>Trust &amp; Safety Architecture</a>
+      <a class="tocLink" href="#s6"><span class="n">06</span>Legal &amp; Compliance</a>
+      <a class="tocLink" href="#s7"><span class="n">07</span>Operational Model</a>
+      <a class="tocLink" href="#s8"><span class="n">08</span>City Launch Strategy</a>
+      <a class="tocLink" href="#s9"><span class="n">09</span>Scaling Strategy</a>
+      <a class="tocLink" href="#s10"><span class="n">10</span>Risk Assessment</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="doc-header">
+      <div class="doc-kicker">Business &amp; Operations Strategy · No implementation content</div>
+      <h1 class="doc-title">Caregiver Ecosystem Strategy</h1>
+      <p class="doc-dek">How Project Setu sources, verifies, categorizes, pays, protects, and scales the caregiver side of the marketplace. This document does not re-decide anything already locked in the product PRD — it builds the operational depth underneath those decisions. Where a recommendation here would contradict something already built (payment model, verification vendor, pilot city, SOS design), that tension is called out explicitly rather than silently overridden.</p>
+      <div class="meta-row">
+        <span><b>Scope:</b> Caregiver-side of the marketplace only — family/elder-side strategy is covered in <code>docs/prd/</code></span>
+        <span><b>Geography:</b> India, MVP in Visakhapatnam</span>
+      </div>
+      <div class="decisions-locked">
+        <span class="lock-chip"><b>Payments:</b> merchant-of-record</span>
+        <span class="lock-chip"><b>Vetting:</b> clinical / non-clinical split</span>
+        <span class="lock-chip"><b>SOS:</b> 108-first mandatory</span>
+        <span class="lock-chip"><b>BGV vendor:</b> IDfy</span>
+        <span class="lock-chip"><b>Pilot city:</b> Visakhapatnam</span>
+        <span class="lock-chip"><b>Consent:</b> elder-granted, per category</span>
+      </div>
+    </div>
+
+    <section class="doc-section wide" id="foundation">
+      <div class="section-eyebrow">Foundation</div>
+      <h2>What this document inherits, and doesn't re-argue</h2>
+      <p style="max-width:78ch">Six decisions were locked before a line of this platform was built, and the schema, RLS, and Edge Functions already live in this repo enforce them. Re-deriving any of them here — even under headings like "Payment Model" or "City Launch Strategy" that invite a fresh comparison — would produce a document that contradicts the product. So: merchant-of-record payments, the clinical/non-clinical vetting split, 108-first SOS, IDfy as BGV vendor, Visakhapatnam as the pilot, and elder-granted per-category consent are treated as fixed inputs throughout. What follows is the operational detail underneath each of them — commission structure, onboarding SLAs, incident response, city-expansion criteria — the layer a technical PRD doesn't cover and a leadership team actually has to run the business on.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="doc-section wide" id="s1">
+      <div class="section-eyebrow">01 — Caregiver Acquisition Strategy</div>
+      <h2>A hybrid model, split along the same clinical/non-clinical line already locked</h2>
+      <p style="max-width:78ch">The vetting split isn't just a verification-workflow decision — it implies a different <em>sourcing</em> strategy for each track, because the two labor markets behave completely differently.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Track</th><th>Sourcing model</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Clinical</strong> (nurses, physiotherapists)</td><td class="muted">Partner with local home-nursing agencies and, where possible, hospitals — not individual onboarding as the primary channel</td><td class="muted">Agencies already carry professional indemnity insurance and workman's comp, already maintain vetted pools facing a genuine national nursing shortage, and can push several credentialed staff through onboarding in the time one individual application takes. Liability for a solo clinical worker without institutional backing is a real, avoidable exposure at MVP scale.</td></tr>
+            <tr><td><strong>Non-clinical</strong> (companion, hospital attendant, household support)</td><td class="muted">Individual gig-style onboarding, platform-recruited</td><td class="muted">This is where volume and cost-efficiency come from, and it's a labor market that already runs on individual gig platforms (Urban Company and similar). The trust-tier system is what makes individual sourcing safe here — it shouldn't be diluted by leaning on an agency's own, unauditable screening standard for this track.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="recommend">
+        <h4>MVP recommendation</h4>
+        <p>One anchor clinical partnership (a home-nursing agency or hospital) to seed credentialed supply fast, paired with direct-to-consumer recruiting (social media, local community boards, referral incentives) for the non-clinical track. Don't attempt individual clinical onboarding at MVP — the volume doesn't justify the liability review overhead per caregiver yet.</p>
+      </div>
+
+      <h3>City-to-city expansion</h3>
+      <p>Replicate the anchor-partnership playbook per new city: one clinical partner signed before or immediately at launch, non-clinical recruiting opened in parallel. Resist opening a city on non-clinical supply alone — a platform with hospital companions but no verified nursing option undersells the core "elder care" promise, not just a companionship-visit app.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="doc-section wide" id="s2">
+      <div class="section-eyebrow">02 — Caregiver Onboarding Workflow</div>
+      <h2>Two tracks, one converging into a trust tier</h2>
+      <p style="max-width:78ch">This maps directly onto the already-implemented <code>caregivers</code> table and <code>computeTrustTier()</code> logic — <code>bgv_status</code>, <code>police_verification_status</code>, <code>professional_council_reg_no</code>, <code>insurance_on_file</code> aren't abstractions here, they're the actual columns the onboarding flow populates.</p>
+
+      <h3>Sequential steps</h3>
+      <ol>
+        <li><strong>Phone verification (OTP)</strong> — the cheapest possible spam gate, first thing, before any document collection effort is spent.</li>
+        <li><strong>Profile + category selection</strong> — which <code>caregiver_type</code>/<code>sub_role</code> the applicant is applying under; this determines which of the following steps are required.</li>
+        <li><strong>Government ID upload</strong> (Aadhaar/PAN) — stored as a <code>caregiver_documents</code> row, <code>doc_type = 'gov_id'</code>.</li>
+        <li><strong>Selfie / liveness verification</strong> — a real gap worth naming: the current schema's <code>doc_type</code> values (<code>gov_id</code>, <code>police_verification</code>, <code>council_certificate</code>, <code>insurance</code>) don't yet include a selfie-liveness check against the ID photo. This is a standard, low-cost fraud control (IDfy and most Indian KYC vendors offer it as part of the same integration) and belongs early in the funnel, before police verification is even initiated — no product reason to run a multi-week police process against an unverified identity.</li>
+        <li><strong>Address verification</strong> — in practice, largely subsumed into the police verification step below rather than a separate check.</li>
+        <li><strong>Background check via IDfy</strong> (the locked vendor) — criminal-record and available employment-history checks. This is the faster, largely automated track (<code>bgv_status</code>, driven by <code>verification-idfy-webhook</code>).</li>
+        <li><strong>Police verification</strong> — a genuinely separate, slower track by design (see § Legal &amp; Compliance for why), typically conducted through the local police station covering the applicant's registered address, checking for a criminal record and a basic neighborhood character reference. No automated feed exists for this in most jurisdictions, which is exactly why <code>police_verification_status</code> is a manually-updated field in the schema, not a webhook-driven one like <code>bgv_status</code>.</li>
+        <li><strong>Professional certification</strong> (clinical track only) — nursing or physiotherapy council registration number, validated against the relevant state/national council registry.</li>
+        <li><strong>Insurance on file</strong> (clinical track only) — professional indemnity, before <code>clinical_verified</code> is reachable.</li>
+        <li><strong>Reference/background checks</strong> — prior employer references, weighted more heavily for the clinical track given the higher-trust, more independent nature of that work.</li>
+        <li><strong>Platform orientation and safety training</strong> — tracked as an onboarding checklist (informational, not currently gating trust tier — see the Caregiver Management System architecture for why that's a deliberate MVP boundary, not an oversight).</li>
+        <li><strong>Manual admin review and approval</strong> — a <code>verification_agent</code>-scoped reviewer confirms the full picture before advancing trust tier; nothing about this step is automatic.</li>
+      </ol>
+
+      <h3>Trust tier as the funnel's output, not a separate score</h3>
+      <p>The already-implemented ladder — <code>probationary</code> (BGV cleared) → <code>standard</code> (+ police verified) → <code>clinical_verified</code> (+ council registration, insurance, clinical track only) — <em>is</em> the onboarding funnel's result, not a parallel scoring system layered on top. A caregiver's tier at any moment is a direct, deterministic function of which steps above are complete; there's no separate "trust score" to reconcile against it.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Step</th><th>Typical SLA</th><th>Automated?</th></tr></thead>
+          <tbody>
+            <tr><td>Phone + profile</td><td class="muted">Same day</td><td class="muted">Yes</td></tr>
+            <tr><td>ID + selfie liveness</td><td class="muted">Same day</td><td class="muted">Yes (vendor-dependent)</td></tr>
+            <tr><td>IDfy background check</td><td class="muted">2-5 business days</td><td class="muted">Mostly — webhook-driven</td></tr>
+            <tr><td>Police verification</td><td class="muted">15-30 days, sometimes longer</td><td class="muted">No — manual, jurisdiction-dependent</td></tr>
+            <tr><td>Clinical credentials + insurance</td><td class="muted">3-7 business days</td><td class="muted">No — manual registry check</td></tr>
+            <tr><td>Final admin review</td><td class="muted">1-2 business days after all inputs complete</td><td class="muted">No — human judgment call</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="risk">
+        <h4>Police verification is the pipeline's real bottleneck</h4>
+        <p>At 15-30+ days, this single step dominates total onboarding time and is the least controllable. Two implications worth planning around: (1) a caregiver can and should reach <code>probationary</code> tier well before police verification completes, so supply isn't needlessly gated behind the slowest step for lower-risk, lower-trust-tier bookings; (2) city launch timelines need real buffer for this step specifically — don't plan a launch date assuming police verification turnaround matches the faster IDfy track.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="doc-section wide" id="s3">
+      <div class="section-eyebrow">03 — Caregiver Categories</div>
+      <h2>Mostly already in the schema — one requested category doesn't map cleanly</h2>
+      <p style="max-width:78ch">The existing <code>caregiver_sub_role</code> enum already anticipates most of what's being asked for here. Presented as a mapping rather than a fresh category design, since re-inventing categories that already exist in the live schema would create drift between this document and the product.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Requested category</th><th>Maps to</th><th>Allowed services</th></tr></thead>
+          <tbody>
+            <tr><td>Hospital Companion</td><td class="muted"><code>hospital_attendant</code> (non-clinical)</td><td class="muted"><code>hospital_companion</code> service, and any Hospital Companion Services multi-shift stay</td></tr>
+            <tr><td>Home Nurse</td><td class="muted"><code>nurse</code> (clinical)</td><td class="muted"><code>home_nursing</code>, medication administration during clinical bookings</td></tr>
+            <tr><td>Physiotherapist</td><td class="muted"><code>physiotherapist</code> (clinical)</td><td class="muted"><code>physiotherapy</code> only</td></tr>
+            <tr><td>Medicine Pickup Assistant</td><td class="muted">No dedicated sub-role — fulfilled by <code>companion</code>/<code>home_service_general</code></td><td class="muted"><code>medicine_pickup</code> (probationary tier — the lowest trust bar in the catalog, appropriately, since it's the lowest-risk service)</td></tr>
+            <tr><td>Companion Visitor</td><td class="muted"><code>companion</code> (non-clinical)</td><td class="muted"><code>companionship_visit</code></td></tr>
+            <tr><td>Household Support Staff</td><td class="muted"><code>home_service_maid</code>/<code>home_service_general</code> (non-clinical)</td><td class="muted">Household services, not yet in the seeded catalog beyond the MVP six — see § City Launch</td></tr>
+            <tr><td>Home Maintenance Services</td><td class="muted"><code>home_service_electrician</code>/<code>home_service_plumber</code></td><td class="muted">Already reserved in the schema's enum but not yet in the seeded service catalog — the data model anticipated this before the product roadmap caught up to it</td></tr>
+            <tr><td>Emergency Support Caregiver</td><td class="muted">Not a distinct category — see below</td><td class="muted">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="decision">
+        <h4>"Emergency Support Caregiver" is a certification, not a job category</h4>
+        <p>Recommend against adding this as a new <code>caregiver_type</code>/<code>sub_role</code>. Emergency-response readiness (basic life support / first-aid certification) is more naturally a cross-cutting credential any existing category can hold — a companion or a nurse can both be certified, and gating an entire new job category around it would fragment supply for no real benefit. This connects directly to the nearest-available-responder suggestion already architected in Enhanced Emergency Services (PRD Part 10): that feature should weight <em>certified</em> caregivers of any category more highly, not search a separate emergency-only pool.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="doc-section wide" id="s4">
+      <div class="section-eyebrow">04 — Payment Model</div>
+      <h2>Merchant-of-record is locked. Here's the commission, cancellation, and refund detail underneath it</h2>
+      <p style="max-width:78ch">The founder decision was merchant-of-record: Setu is the transacting party, families pay Setu via Razorpay, Setu pays caregivers separately via RazorpayX. Comparing this against a pure marketplace or lead-gen model isn't this document's job — that comparison already happened. What's underneath it and genuinely undecided is commission structure, cancellation policy, and refund handling.</p>
+
+      <h3>Commission structure — already correctly reflected in the seeded data</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Track</th><th>Commission</th><th>Why lower for clinical</th></tr></thead>
+          <tbody>
+            <tr><td>Clinical (nursing, physiotherapy)</td><td class="muted">15%</td><td class="muted">Clinical labor is scarcer and has higher operating costs (insurance, certification maintenance) — a platform has to be more generous to attract and retain this supply, especially while competing against agencies and direct hire.</td></tr>
+            <tr><td>Non-clinical (companionship, hospital attendant, medicine pickup, grocery)</td><td class="muted">20%</td><td class="muted">A larger, less specialized labor pool with lower barriers to entry; standard marketplace commission economics apply more cleanly here.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Worth flagging that this isn't a new recommendation — it's a confirmation that <code>supabase/seed.sql</code>'s existing per-service <code>commission_pct</code> values already implement exactly this split (15% for <code>home_nursing</code>/<code>physiotherapy</code>, 20% for everything else).</p>
+
+      <h3>Payment model by phase</h3>
+      <div class="phase-grid">
+        <div class="phase"><span class="tag">MVP</span><h5>Pure marketplace commission</h5><p>Pay-per-visit only, exactly what's implemented today. No subscription or retainer product yet.</p></div>
+        <div class="phase"><span class="tag">Phase 2</span><h5>+ Care Plans (subscriptions)</h5><p>A monthly-fee bundle of recurring visits, layered on top of — not replacing — per-visit commission economics for anything beyond the plan's allocation. Already architected in <code>docs/prd/09-prd-part9-business-layer.html</code>.</p></div>
+        <div class="phase"><span class="tag">Long-term</span><h5>+ Managed care retainer</h5><p>A premium concierge/care-coordinator tier (also already architected) carries its own retainer fee on top of underlying visit costs, for families wanting less self-service.</p></div>
+      </div>
+
+      <h3>Cancellation policy</h3>
+      <div class="table-wrap">
+        <table>
+          <tbody>
+            <tr><td style="width:1%;white-space:nowrap"><strong>Family cancels &gt;4h ahead</strong></td><td class="muted">Full refund. No cost to the caregiver's schedule that can't be absorbed.</td></tr>
+            <tr><td style="width:1%;white-space:nowrap"><strong>Family cancels &lt;4h ahead</strong></td><td class="muted">Partial charge (recommend 50%) — the caregiver's slot is often no longer reasonably re-fillable on short notice, and this compensates their blocked time.</td></tr>
+            <tr><td style="width:1%;white-space:nowrap"><strong>Caregiver cancels / no-show</strong></td><td class="muted">Family gets a full refund plus priority rebooking; the caregiver takes a strike against their standing — repeated occurrences should trigger an automatic trust-tier review (see § Operational Model).</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Refunds and tax</h3>
+      <p>Refunds process against the original Razorpay payment using <code>payments.provider_payment_ref</code> — the schema already separates the order reference from the payment reference specifically because a refund needs the latter, not the former (a real bug caught and fixed earlier in this project). On tax: <code>seed.sql</code>'s <code>tax_profile</code> jsonb already carries an 18% GST placeholder on platform commission with an explicit "confirm with a CA before launch" note — restated here rather than silently assumed correct, since neither this document nor the engineering team is positioned to finalize an actual tax determination.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="doc-section wide" id="s5">
+      <div class="section-eyebrow">05 — Trust and Safety Architecture</div>
+      <h2>Most of this is already built. The gaps are complaint handling and caregiver-initiated safety</h2>
+
+      <h3>What's already in place</h3>
+      <ul>
+        <li><strong>Multi-level verification</strong> — the onboarding ladder in § 02.</li>
+        <li><strong>Trust tier</strong> — vetting status (<code>probationary</code>/<code>standard</code>/<code>clinical_verified</code>), deliberately separate from...</li>
+        <li><strong>User ratings</strong> — service-quality rating, architected in <code>docs/prd/08-prd-part8-caregiver-and-platform-ux.html</code> as a genuinely distinct signal from trust tier. Worth restating the same distinction here in business terms: a family should never read "clinical_verified" as "5-star caregiver" — one is a safety floor, the other is a satisfaction signal, and conflating them in product copy or ops decisions would corrupt both.</li>
+        <li><strong>GPS tracking</strong> — already scoped, by design, to active-booking windows only. Not always-on background tracking of caregivers between jobs — a real privacy line worth defending even under pressure to "just track everyone always" for safety's sake; the active-booking scope already gives family/ops the safety-relevant signal without the privacy cost of continuous surveillance of gig workers' personal time.</li>
+        <li><strong>OTP-based visit verification</strong>, <strong>108-first SOS escalation</strong>, <strong>write-path audit logs</strong> — all live.</li>
+      </ul>
+
+      <h3>Real gaps worth naming</h3>
+      <div class="risk">
+        <h4>No caregiver-initiated safety alert exists yet</h4>
+        <p>The SOS flow is elder/family-initiated only — it checks that the caller is the elder or a linked family member. A caregiver who feels unsafe at a booking (a hostile household member, an unsafe environment) currently has no equivalent in-app path to raise an alert. This is a genuine, currently-unaddressed operational safety gap for the workforce side of the marketplace, not just a nice-to-have — flagged here for product/ops leadership to prioritize, not solved in this document.</p>
+      </div>
+      <div class="callout">
+        <h4>Complaint management needs a defined path, separate from ratings</h4>
+        <p>A 1-2 star rating captures dissatisfaction after the fact; it isn't the right tool for an active concern (a pattern of lateness, inappropriate conduct, a safety-adjacent complaint that isn't an emergency). Recommend a dedicated "report a concern" flow, distinct from the star-rating system, routed to ops with a defined SLA — for example, 24-48 hour acknowledgment, 5-7 day resolution target — and escalation criteria for anything safety-adjacent to bypass the queue entirely.</p>
+      </div>
+
+      <h3>Elder financial exploitation — a risk specific to this business, worth naming explicitly</h3>
+      <p>Elder financial abuse by caregivers is a well-documented risk pattern in home-care industries generally, not a Setu-specific hypothetical. Recommend: platform terms explicitly prohibiting a caregiver from being named as a beneficiary, witness, or agent on any financial or legal instrument of an elder they serve; and pattern monitoring for warning signs (a booking pattern that suddenly concentrates on a single caregiver, unusual gift-giving language appearing in visit notes) as an ops review trigger, not an automated block — false positives here would be damaging to a caregiver's livelihood, so this should surface for human review, not autonomous action.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="doc-section wide" id="s6">
+      <div class="section-eyebrow">06 — Legal and Compliance</div>
+      <h2>India-specific requirements underneath the already-built DPDP consent model</h2>
+
+      <h3>Background verification in India</h3>
+      <p>Police verification for domestic/in-home workers typically runs through the local police station covering the worker's registered address — an inquiry process (sometimes handled through the same administrative channel as residential tenant verification) checking for a criminal record and basic neighborhood character reference, taking 15-30+ days depending on jurisdiction and season. This is <em>why</em> the schema keeps <code>bgv_status</code> (IDfy, largely automated) and <code>police_verification_status</code> (manual, no webhook feed) as two separate tracks rather than one — they genuinely are two different processes with two different reliability and speed profiles, and the platform's founders were right to model them separately.</p>
+
+      <h3>Worker classification — a live regulatory risk, not a settled question</h3>
+      <div class="risk">
+        <h4>Independent contractor classification needs specific legal review under India's gig-worker provisions</h4>
+        <p>Most home-care platforms in India classify caregivers as independent contractors/platform partners rather than employees, avoiding PF/ESI employer obligations. India's Code on Social Security, 2020 introduces gig- and platform-worker welfare provisions that are being notified and enforced unevenly state by state — and elder care specifically (a physically-present, schedule-directed, platform-matched service) sits closer to an employment-like relationship than, say, ride-hailing, which increases scrutiny risk. Recommend dedicated legal counsel review of this classification specifically under the current Code on Social Security provisions before scaling caregiver headcount significantly — this is not a question engineering or product can resolve on their own.</p>
+      </div>
+
+      <h3>Liability, and a real cost of the merchant-of-record decision</h3>
+      <p>Because Setu is merchant-of-record — the transacting party, not merely a connector — its liability exposure for incidents during service delivery is somewhat higher than a pure lead-generation marketplace would carry. This is a known, accepted trade-off of that already-locked decision (in exchange for cleaner payment UX and stronger platform trust with families), not a new problem — but it should inform insurance decisions: general liability and professional indemnity coverage sized for a merchant-of-record risk profile, confirmed with counsel and an insurer, not assumed to be the same as a lighter-touch marketplace would need.</p>
+
+      <h3>Payment compliance</h3>
+      <p>As a merchant using Razorpay (an RBI-authorized Payment Aggregator) rather than acting as its own PA, Setu's compliance obligations under the RBI's Payment Aggregator Directions largely flow through Razorpay's own authorization and merchant onboarding review — worth explicit confirmation with Razorpay's onboarding/compliance team rather than assumed, since this determination sits outside engineering's visibility.</p>
+
+      <h3>Data protection — the caregiver side of DPDP, not just the elder side</h3>
+      <p>The consent model and DPDP Act 2023 compliance already built (per-category elder consent, <code>me-data-export</code>, <code>me-erasure-request</code>) covers the elder/family data-principal relationship. Caregivers are <em>also</em> DPDP data principals for their own verification documents (government ID, police verification records, professional credentials) — a related but distinct compliance surface. Recommend confirming retention limits and consent language for caregiver-side documents receive the same rigor as the elder-side model already has, rather than being treated as "just internal HR-style records" outside DPDP's scope.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="doc-section wide" id="s7">
+      <div class="section-eyebrow">07 — Operational Model</div>
+      <h2>The process layer around what <code>bookings-match</code> already automates</h2>
+
+      <h3>Assignment and SLA</h3>
+      <p>Matching itself is automated (trust tier + region + service type, extended with a preferred-caregiver tiebreak per PRD Part 6). What's undecided operationally: target match-time SLAs — recommend under 15 minutes for standard bookings, near-immediate for anything SOS-adjacent — and what happens on a match failure. Today a "no eligible caregiver" condition returns an error to the family; operationally this should also trigger an ops alert for manual sourcing, not just a dead end for the customer.</p>
+
+      <h3>Backup caregivers</h3>
+      <p>Not currently modeled at the schema level (a booking has exactly one <code>caregiver_id</code>). Recommend an operational practice — not a new architecture decision here — of maintaining a per-region, per-service-type backup pool ops can manually tap when a primary caregiver cancels or no-shows close to visit time, with a target backup-dispatch SLA (for example, under 30 minutes for same-day urgent bookings).</p>
+
+      <h3>No-shows and cancellations</h3>
+      <p>Caregiver no-show: immediate strike, automatic backup dispatch attempt, service credit to the affected family. Recommend an automatic trust-tier review trigger after a defined threshold (for example, two no-shows within 30 days) rather than leaving pattern detection to manual ops vigilance alone.</p>
+
+      <h3>Emergencies during a visit</h3>
+      <p>The 108-first SOS flow already covers the elder/family side. The caregiver-initiated gap is named in § 05 and repeated here because it's an operational readiness question, not just a product one: if a caregiver needs help during a visit today, there is no in-app path for it.</p>
+
+      <h3>Customer support tiers</h3>
+      <div class="table-wrap">
+        <table>
+          <tbody>
+            <tr><td style="width:1%;white-space:nowrap"><strong>Tier 1</strong></td><td class="muted">In-app chat/FAQ for booking and account questions</td></tr>
+            <tr><td style="width:1%;white-space:nowrap"><strong>Tier 2</strong></td><td class="muted">Phone support for active-visit issues</td></tr>
+            <tr><td style="width:1%;white-space:nowrap"><strong>Tier 3</strong></td><td class="muted">Ops escalation for disputes and safety incidents — the existing admin dashboard's Bookings &amp; Disputes page is this tier's working tool</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Ops team responsibilities, mapped to the scopes already in the schema</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Admin scope</th><th>Real-world responsibility</th></tr></thead>
+          <tbody>
+            <tr><td><code>verification_agent</code></td><td class="muted">Runs the onboarding funnel in § 02 — reviews documents, tracks police verification status, makes final approval calls</td></tr>
+            <tr><td><code>sos_operator</code></td><td class="muted">Staffs the live SOS monitor, coordinates with family and 108/EMS as needed during an active emergency</td></tr>
+            <tr><td><code>ops_admin</code></td><td class="muted">Owns Tier 3 support, dispute resolution, backup dispatch, no-show/cancellation enforcement</td></tr>
+            <tr><td><code>finance_ops</code></td><td class="muted">Owns payout reconciliation, refund processing, commission/tax accuracy</td></tr>
+            <tr><td><code>super_admin</code></td><td class="muted">Service catalog, region configuration, guardian-override consent review — the decisions with the widest blast radius</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="doc-section wide" id="s8">
+      <div class="section-eyebrow">08 — City Launch Strategy</div>
+      <h2>Why Visakhapatnam fits the pattern, and what to look for next</h2>
+      <p style="max-width:78ch">Visakhapatnam is already locked as the pilot; this section explains the underlying criteria so the <em>next</em> city choice isn't made from scratch.</p>
+
+      <h3>What makes a good launch city</h3>
+      <ul>
+        <li><strong>A significant population of adult children who've relocated</strong> — for work, often out-of-state or abroad — leaving elderly parents behind. This is the core customer insight the entire product is built around, and it's the single most important screening criterion.</li>
+        <li><strong>Reasonable hospital and nursing-agency density</strong>, for the anchor clinical partnership described in § 01.</li>
+        <li><strong>Adequate smartphone and digital-payment penetration among the family segment</strong> — critically, this is about the paying family member, not the elder, who may never touch the app directly.</li>
+        <li><strong>Moderate cost of living</strong> — keeps caregiver take-home pay and family-facing pricing both viable without one squeezing the other.</li>
+      </ul>
+
+      <h3>Sizing an MVP launch</h3>
+      <div class="recommend">
+        <h4>Suggested starting caregiver pool</h4>
+        <p>30-50 vetted non-clinical caregivers and 10-15 clinical (nursing/physiotherapy) for the pilot area — enough supply density to keep match times fast without diluting early caregiver earnings and utilization, which is exactly the kind of thing that determines whether early supply sticks around long enough for the marketplace to reach real liquidity.</p>
+      </div>
+      <p><strong>Minimum service catalog</strong>: the six already seeded (hospital companion, home nursing, physiotherapy, medicine pickup, grocery assistance, companionship visit) are correctly right-sized for an MVP launch — broad enough to cover the core use cases, narrow enough to keep the caregiver pool's category-mix requirements manageable.</p>
+      <p><strong>Operational footprint</strong>: a small on-ground team is sufficient at this scale — one city ops lead plus one to two verification/support staff — precisely because trust and safety are largely software-enforced (RLS, trust tiers, the consent model) rather than requiring a large manual review apparatus. That balance shifts as volume grows — see § 09.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="doc-section wide" id="s9">
+      <div class="section-eyebrow">09 — Scaling Strategy</div>
+      <h2>The <code>region_id</code> seam already solves the infrastructure problem. This is the human/process side</h2>
+      <p style="max-width:78ch">Multi-city and multi-country scaling is already an architectural non-event — every table that would otherwise hardcode a city or country carries a <code>region_id</code> instead, per the six-phase roadmap in the product PRD. What scaling actually strains first is the caregiver ecosystem's <em>human</em> processes, not the software.</p>
+
+      <h3>Caregiver-side scaling</h3>
+      <p>Acquisition should shift from platform-driven sourcing toward organic and referral-driven growth once the trust-tier and rating systems make caregiver earning potential visible — successful caregivers become the platform's best recruiters. Agency partnerships should also scale disproportionately faster than individual onboarding at volume, since one agency conversation can onboard twenty clinical caregivers where twenty individual applications take twenty times the review effort.</p>
+
+      <h3>User-side scaling</h3>
+      <p>Managed Elder Care Services (the care-coordinator concierge tier) becomes a more meaningful differentiator at scale, and Care Plans/Subscriptions improve retention and revenue predictability versus pure pay-per-visit — both already architected, not new proposals.</p>
+
+      <h3>Ops-side scaling — where the real strain shows up first</h3>
+      <p>Processes that are manually tractable at MVP scale (police-verification tracking, backup dispatch, complaint triage) need either better tooling or partial automation as volume grows by an order of magnitude. Care Analytics Dashboard (already architected) becomes essential here — not a nice-to-have reporting layer, but the actual instrument for spotting operational bottlenecks (a region's match-time SLA quietly degrading, a spike in a specific complaint category) before they become customer-visible failures.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="doc-section wide" id="s10">
+      <div class="section-eyebrow">10 — Risk Assessment</div>
+      <h2>Prioritized by what actually threatens a trust-dependent business</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Category</th><th>Specific risk</th><th>Mitigation direction</th></tr></thead>
+          <tbody>
+            <tr><td>Fraud</td><td class="muted">Fake caregiver identity; family payment chargebacks; rating manipulation</td><td class="muted">Selfie liveness (§ 02 gap); merchant-of-record means Setu bears more direct chargeback exposure than a pure marketplace would — a known cost of that decision, size dispute-handling capacity accordingly</td></tr>
+            <tr><td>Safety</td><td class="muted">Caregiver-elder physical incidents; elder financial exploitation</td><td class="muted">§ 05's caregiver-initiated-alert gap; § 05's financial-exploitation monitoring recommendation</td></tr>
+            <tr><td>Operational</td><td class="muted">Supply shortfalls in new cities; single-vendor dependency on IDfy</td><td class="muted">Anchor-partnership playbook (§ 01); a documented BGV vendor-failover plan even with IDfy remaining primary</td></tr>
+            <tr><td>Legal</td><td class="muted">Worker misclassification under evolving gig-worker law; state-by-state police-verification process variance</td><td class="muted">§ 06's counsel-review recommendation; budget real per-city legal review time, not just an engineering rollout</td></tr>
+            <tr><td>Payment</td><td class="muted">RazorpayX payout delays eroding caregiver trust</td><td class="muted">A caregiver who isn't paid on time churns fast — payout-SLA monitoring is an operational priority, feeding the same Care Analytics instrument as everything else</td></tr>
+            <tr><td>Trust</td><td class="muted">A single publicized safety incident is disproportionately damaging for a trust-dependent brand</td><td class="muted">An incident-response and crisis-communication playbook prepared in advance, not improvised; marketing language must never oversell "verified" as "guaranteed safe" — that framing increases both reputational and legal exposure if something does go wrong</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="risk">
+        <h4>The trust risk is the one worth weighting above the others</h4>
+        <p>Every other risk category has a conventional operational mitigation. Trust, once broken publicly in an elder-care business specifically, is unusually hard to rebuild — the customer relationship is built on a family trusting a stranger in their parent's home. This is the argument for prioritizing safety and verification rigor over growth speed at every stage, not a platitude: it's the actual asymmetry in this business's risk profile.</p>
+      </div>
+    </section>
+
+    <footer class="doc-footer">Project Setu — Caregiver Ecosystem Strategy · Business &amp; operations, no implementation content · builds on the six locked founder decisions and the live schema</footer>
+  </main>
+</div>
