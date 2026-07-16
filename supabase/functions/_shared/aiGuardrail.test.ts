@@ -7,7 +7,7 @@
 //
 // Deliberately dependency-free — see testUtil.ts for why.
 import { assertEquals, assertStringIncludes } from "./testUtil.ts";
-import { patternMatch, runGuardrail } from "./aiGuardrail.ts";
+import { patternMatch, runGuardrail, isMedicalQuestion } from "./aiGuardrail.ts";
 
 Deno.test("patternMatch: flags an explicit dosage-change instruction", () => {
   const result = patternMatch("You should increase the dose to twice daily.");
@@ -78,4 +78,23 @@ Deno.test("runGuardrail: fails closed if the classifier call itself errors", asy
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+// Module 13's input pre-filter — the mirror image of the output guardrail.
+Deno.test("isMedicalQuestion: flags a dosage-change question", () => {
+  assertEquals(isMedicalQuestion("Should I increase her blood pressure tablet?").flagged, true);
+});
+
+Deno.test("isMedicalQuestion: flags a 'is this serious' symptom question", () => {
+  assertEquals(isMedicalQuestion("Is this rash something dangerous?").flagged, true);
+});
+
+Deno.test("isMedicalQuestion: flags a 'does this mean' interpretation question", () => {
+  assertEquals(isMedicalQuestion("Does this mean she has dementia?").flagged, true);
+});
+
+Deno.test("isMedicalQuestion: does NOT flag an ordinary operational question", () => {
+  assertEquals(isMedicalQuestion("When is the next visit scheduled?").flagged, false);
+  assertEquals(isMedicalQuestion("What medications is she taking?").flagged, false);
+  assertEquals(isMedicalQuestion("Book a companion for tomorrow afternoon.").flagged, false);
 });

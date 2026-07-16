@@ -149,6 +149,9 @@ changes behavior; note them if you're used to seeing the more common imports.
 | `MEDICATIONS_SWEEP_SHARED_SECRET` | `medications-generate-doses` (same n8n-scheduled shared-secret pattern) |
 | `REMINDERS_SWEEP_SHARED_SECRET` | `reminders-dispatch-sweep` (same n8n-scheduled shared-secret pattern) |
 | `HOSPITAL_GAP_SWEEP_SHARED_SECRET` | `hospital-stays-gap-sweep` (same n8n-scheduled shared-secret pattern) |
+| `SUPABASE_ANON_KEY` | `ai-care-assistant` (the publishable key — builds the RLS-scoped as-caller client for tool execution; safe server-side, RLS is the real boundary) |
+| `REPORTS_SWEEP_SHARED_SECRET` | `ai-visit-report-generate` (same n8n-scheduled shared-secret pattern) |
+| `RECOMMENDATIONS_SWEEP_SHARED_SECRET` | `recommendations-generate` (same n8n-scheduled shared-secret pattern) |
 
 None of these are set in this repo. Configure them via `supabase secrets set` (or your CI's secret store) — never commit real keys.
 
@@ -308,6 +311,47 @@ Validated: `deno check`/`deno lint` clean; RLS covered by `tests/rls_smoke_test.
 (83/83 total passing), which caught a real "infinite recursion detected in policy" error in the
 first draft of the hospital-stay cross-caregiver read — see `tests/README.md`. Not yet invoked
 against the live project.
+
+## PRD Part 7, Batch 4: the AI layer
+
+`docs/prd/07-prd-part7-ai-layer.html`. Database: `migrations/0015_ai_interaction_types.sql` (three
+additive `ai_interaction_type` enum values) + `migrations/0016_batch4_ai_layer.sql` (`ai_visit_reports`,
+`care_suggestions` + `required_consent_for_suggestion()`). Every module is designed against the five
+AI-safety principles already locked in PRD Part 2 §14, not a fresh safety model — and the recurring
+pattern across all four is *AI proposes, deterministic code or a human decides*.
+
+Three new Edge Functions, plus one new shared helper:
+
+- `_shared/supabaseAsUser.ts` — builds a Supabase client carrying the caller's JWT, so queries run
+  under RLS **as that user**. This is the one deliberate exception to the codebase's
+  service-role-plus-manual-recheck pattern, and only the AI Care Assistant uses it (see below for why).
+- `POST /functions/v1/ai-care-assistant` (Module 13) — `requireUser()`, a fixed enumerated toolset
+  (`get_upcoming_bookings`, `get_medication_list`, `get_appointment_details`, `get_care_team_info`,
+  `get_recent_timeline`, `get_consent_status`, `initiate_booking`), OpenAI function-calling. **Its
+  tool calls run through `supabaseAsUser()`, not the admin client** — an LLM's tool selection isn't a
+  fixed set of call sites, so letting Postgres RLS (already exhaustively tested) scope every read is
+  far safer than hand-re-implementing every consent check the model might trigger. `isMedicalQuestion()`
+  (new, in `_shared/aiGuardrail.ts`, unit-tested) refuses medical-shaped questions before any API call;
+  `initiate_booking` only returns a draft the UI must confirm — it never calls `bookings-create`.
+- `POST /functions/v1/ai-visit-report-generate` (Module 14, `x-reports-sweep-secret`) — weekly digest
+  built only from already-guardrailed, already-happened facts (timeline events + check-in counts),
+  never raw clinical text; idempotent one-per-elder-per-period; flagged output stored with the
+  admin-only hold from 0016.
+- `POST /functions/v1/recommendations-generate` (Module 15, `x-recommendations-sweep-secret`) — a
+  **pure rules engine, zero generative AI**. Four deterministic rules (no visit in 14 days, low
+  medication stock, no check-in in 2 days, appointment without a companion) each write at most one
+  pending `care_suggestions` row with a fixed-template `suggestion_text` and a mandatory
+  `trigger_metric` recording exactly what fired it. The optional LLM-phrasing step the PRD allows is
+  deliberately not built — nothing here can hallucinate a recommendation.
+
+Voice Assistant (Module 16) adds no Edge Function — it's a pure modality converter handled client-side
+via platform-native STT/TTS, feeding text into the assistant's already-guardrailed path.
+
+Validated: all three functions + both shared helpers `deno check`/`deno lint` clean across the full
+30-file function tree, and the 4 new `isMedicalQuestion` unit tests pass alongside the existing 15
+(19 total). The new tables' RLS is covered by `tests/rls_smoke_test.sql` TESTs 84-92 (92/92 total). No
+AI function is live-invocable yet — this project still has no `OPENAI_API_KEY` configured (business
+item), so none of the four AI functions can be smoke-tested against the live project until that exists.
 
 ## CI/CD
 

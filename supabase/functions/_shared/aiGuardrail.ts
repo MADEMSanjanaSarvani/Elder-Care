@@ -75,6 +75,36 @@ export async function runGuardrail(text: string, openaiApiKey: string): Promise<
   return await modelClassify(text, openaiApiKey);
 }
 
+// PRD Part 7, Batch 4, Module 13 (AI Care Assistant), input side: a fast
+// deterministic pre-filter that refuses obviously medical-shaped questions
+// before an OpenAI call is even made — Part 2 §14's "escalation, not
+// silence" applied to the assistant's arbitrary user input, the mirror
+// image of the output guardrail above. Over-inclusive on purpose: a
+// false positive just redirects a borderline question to the clinician,
+// which is the safe direction to fail.
+const MEDICAL_QUESTION_PATTERNS: RegExp[] = [
+  /\bshould\s+(i|we|they|he|she)\b.*\b(take|increase|decrease|double|stop|skip|change)\b/i,
+  /\b(is|are|could|might)\s+(this|it|that|these)\b.*\b(serious|dangerous|cancer|infection|stroke|normal|symptom)\b/i,
+  /\bwhat('?s| is)\s+wrong\b/i,
+  /\b(diagnos|prescrib)/i,
+  /\bhow\s+much\s+.*\b(mg|ml|dose|medicine|medication)\b/i,
+  /\bdoes\s+(this|it|that)\s+mean\b.*\b(disease|condition|serious|dying|dementia)\b/i,
+];
+
+export function isMedicalQuestion(text: string): GuardrailResult {
+  for (const pattern of MEDICAL_QUESTION_PATTERNS) {
+    if (pattern.test(text)) {
+      return { flagged: true, reason: `Matched medical-question pattern: ${pattern.source}` };
+    }
+  }
+  return { flagged: false };
+}
+
+export const CLINICAL_REDIRECT =
+  "I can't help with medical questions like this — for anything about symptoms, " +
+  "medication, or whether something is serious, please contact the elder's assigned " +
+  "clinician or doctor directly. If this is an emergency, use the SOS button or call 108.";
+
 export const MEDICAL_DISCLAIMER =
   "This summary is generated to help you stay informed and is not medical advice. " +
   "For anything about medication, symptoms, or treatment, please confirm with your clinician.";
