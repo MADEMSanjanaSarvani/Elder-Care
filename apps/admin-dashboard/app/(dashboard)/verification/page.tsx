@@ -9,6 +9,24 @@ function bgvTone(status: string) {
   return "warning" as const;
 }
 
+const DOC_TYPE_LABELS: Record<string, string> = {
+  gov_id: "Government ID",
+  police_verification: "Police verification",
+  council_certificate: "Council certificate",
+  insurance: "Insurance",
+};
+
+function isImagePath(path: string): boolean {
+  return /\.(png|jpe?g|webp|gif|heic)$/i.test(path);
+}
+
+interface CaregiverDoc {
+  docType: string;
+  verified: boolean;
+  signedUrl: string | null;
+  isImage: boolean;
+}
+
 export default async function VerificationQueuePage() {
   const admin = await requireAdmin();
   requireScope(admin, "verification_agent");
@@ -19,6 +37,44 @@ export default async function VerificationQueuePage() {
     .select("*, profiles(display_name, phone)")
     .neq("trust_tier", "clinical_verified")
     .order("created_at", { ascending: true });
+
+  // Load each caregiver's uploaded documents and mint short-lived signed
+  // URLs so the reviewer can actually see the ID/certificate image, not
+  // just its verification status. The private-bucket RLS
+  // (caregiver_documents_storage_select) already grants read to the
+  // verification_agent scope this page requires — so this uses the admin's
+  // own authenticated client, no service-role bypass.
+  const docsByCaregiver: Record<string, CaregiverDoc[]> = {};
+  const caregiverIds = (caregivers ?? []).map((c) => c.id as string);
+  if (caregiverIds.length > 0) {
+    const { data: docRows } = await supabase
+      .from("caregiver_documents")
+      .select("caregiver_id, doc_type, storage_path, verified")
+      .in("caregiver_id", caregiverIds)
+      .order("uploaded_at", { ascending: true });
+
+    const paths = (docRows ?? []).map((d) => d.storage_path as string);
+    const signedByPath: Record<string, string> = {};
+    if (paths.length > 0) {
+      const { data: signed } = await supabase.storage
+        .from("caregiver-documents")
+        .createSignedUrls(paths, 300); // 5 minutes
+      for (const s of signed ?? []) {
+        if (s.signedUrl && s.path) signedByPath[s.path] = s.signedUrl;
+      }
+    }
+
+    for (const d of docRows ?? []) {
+      const cid = d.caregiver_id as string;
+      const path = d.storage_path as string;
+      (docsByCaregiver[cid] ??= []).push({
+        docType: d.doc_type as string,
+        verified: d.verified as boolean,
+        signedUrl: signedByPath[path] ?? null,
+        isImage: isImagePath(path),
+      });
+    }
+  }
 
   return (
     <div>
@@ -61,6 +117,50 @@ export default async function VerificationQueuePage() {
                 {caregiver.caregiver_type === "clinical" && (
                   <div className="text-muted">
                     Council reg. no: {caregiver.professional_council_reg_no ?? "not on file"}
+                  </div>
+                )}
+              </div>
+
+              <div className="mb-4">
+                <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">
+                  Uploaded documents
+                </div>
+                {(docsByCaregiver[caregiver.id] ?? []).length === 0 ? (
+                  <p className="text-sm text-muted">No documents uploaded yet.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-3">
+                    {(docsByCaregiver[caregiver.id] ?? []).map((doc, i) => (
+                      <div key={i} className="w-40 rounded border border-border bg-paper p-2">
+                        <div className="mb-1 flex items-center justify-between gap-1 text-xs">
+                          <span className="font-medium">
+                            {DOC_TYPE_LABELS[doc.docType] ?? doc.docType}
+                          </span>
+                          {doc.verified && (
+                            <StatusPill label="verified" tone="good" />
+                          )}
+                        </div>
+                        {doc.signedUrl ? (
+                          <a href={doc.signedUrl} target="_blank" rel="noopener noreferrer" className="block">
+                            {doc.isImage ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={doc.signedUrl}
+                                alt={`${doc.docType} document`}
+                                className="h-24 w-full rounded object-cover"
+                              />
+                            ) : (
+                              <span className="flex h-24 w-full items-center justify-center rounded bg-paper-raised text-sm text-accent underline">
+                                Open document
+                              </span>
+                            )}
+                          </a>
+                        ) : (
+                          <span className="flex h-24 w-full items-center justify-center rounded bg-paper-raised text-xs text-sos">
+                            Unavailable
+                          </span>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
