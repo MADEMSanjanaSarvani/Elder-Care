@@ -42,7 +42,25 @@ Deno.serve(async (req) => {
         .maybeSingle();
       isLinkedFamily = !!link;
     }
+    // PRD Part 9, Batch 6, Module 22: one additive authorization clause —
+    // an active care coordinator assigned to this elder may also initiate
+    // a booking. This grants OPERATIONAL (scheduling) authority only; it
+    // changes nothing about who's eligible to be matched. Same additive-OR
+    // shape as Batch 3's bookings-match tiebreak, not a rewrite. A
+    // coordinator's authority over consent-gated health data is
+    // deliberately NOT granted here — that still needs has_consent().
+    let isCareCoordinator = false;
     if (!isElderSelf && !isLinkedFamily) {
+      const { data: assignment } = await admin
+        .from("care_coordinator_assignments")
+        .select("id")
+        .eq("elder_id", elder_id)
+        .eq("coordinator_profile_id", user.id)
+        .eq("active", true)
+        .maybeSingle();
+      isCareCoordinator = !!assignment;
+    }
+    if (!isElderSelf && !isLinkedFamily && !isCareCoordinator) {
       return errorResponse("Not authorized to book on behalf of this elder", 403);
     }
 

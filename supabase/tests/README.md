@@ -178,6 +178,25 @@ elder sets their own, a linked family member can adjust them on the
 elder's behalf (TEST 103, since many elders never open a settings screen),
 and a stranger's change is a silent no-op (TEST 104).
 
+TESTs 105-114 cover `0019_batch6_business_layer.sql` (PRD Part 9, Batch 6:
+Care Plans & Subscriptions, Managed Elder Care, Care Analytics). TEST 105
+confirms the three-tier plan catalog is publicly readable. TESTs 106-110
+exercise the care-coordinator authority model, and 107-109 are the
+security heart of it: a coordinator assigned to an elder CAN see and pause
+that elder's subscription (operational authority, 107-108) but **cannot**
+read the elder's health notes without a consent grant (TEST 109 = 0). That
+last test caught a real security bug — the first draft modeled the
+coordinator as a `role='admin'` user, which passed the coarse, role-based
+`is_admin()` and thereby granted health-note access to *every* elder
+platform-wide. Fixed by keying coordinator authority solely on the
+per-elder assignment table (`is_care_coordinator_for()`) and making
+coordinators non-admin users; the reasoning is written into 0019. TESTs
+111-112 confirm `care_plan_charges` is billing-consent-gated for family,
+exactly like `payments`. TESTs 113-114 confirm the analytics wrapper views
+are `is_admin()`-gated: an admin sees rows, a non-admin sees zero — the
+enforcement mechanism for materialized views, which can't carry RLS
+themselves.
+
 Also worth stating: this migration does **not** implement column-level
 encryption for `emergency_medical_notes`/`insurance_policy_number`, even
 though the PRD claims it should reuse "an already-decided pattern." No
@@ -207,7 +226,8 @@ for f in 0001_schema 0002_rls 0003_realtime 0004_erasure_requests \
          0011_appointment_reminder_trigger 0012_medication_discontinue_trigger \
          0013_batch3_visits_and_records 0014_hospital_stay_gap_reminders \
          0015_ai_interaction_types 0016_batch4_ai_layer \
-         0017_batch5_caregiver_and_platform_ux; do
+         0017_batch5_caregiver_and_platform_ux 0018_care_coordinator_scope \
+         0019_batch6_business_layer; do
   psql -d setu_test -v ON_ERROR_STOP=1 -f "../migrations/$f.sql"
 done
 psql -d setu_test -v ON_ERROR_STOP=1 -f ../seed.sql

@@ -1052,3 +1052,109 @@ reset role;
 reset request.jwt.claim.sub;
 select text_scale as unchanged_scale from accessibility_preferences where user_id = '11111111-1111-1111-1111-111111111111';
 select status from care_suggestions where id = 'c15e0002-0000-0000-0000-000000000002';
+
+-- ===================================================================
+-- Batch 6 (docs/prd/09-prd-part9-business-layer.html): Care Plans &
+-- Subscription Management, Managed Elder Care Services, Care Analytics.
+-- ===================================================================
+
+-- Setup as the superuser (bypasses RLS): a care coordinator user + an
+-- active assignment to the elder, mirroring what a super_admin would do
+-- through the admin dashboard.
+-- The coordinator is deliberately NOT role='admin' — a coordinator with
+-- role='admin' would pass is_admin() and thereby read EVERY elder's health
+-- notes platform-wide, exactly the over-grant Module 22's boundary guards
+-- against. Their operational authority comes solely from the assignment
+-- (is_care_coordinator_for), and they carry the care_coordinator scope for
+-- admin-dashboard identification, without role='admin'.
+insert into auth.users (id, email) values ('c0000000-0000-0000-0000-000000000000', 'coordinator@test.com');
+insert into profiles (id, role, phone, display_name) values ('c0000000-0000-0000-0000-000000000000', 'family_member', '+91coord', 'Coordinator Kavya');
+insert into admin_scopes (profile_id, scope) values ('c0000000-0000-0000-0000-000000000000', 'care_coordinator');
+insert into care_coordinator_assignments (elder_id, coordinator_profile_id) values
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'c0000000-0000-0000-0000-000000000000');
+
+\echo '=== TEST 105: care plans are a public catalog — the elder can read all three tiers — expect 3 ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select count(*) as visible_plans from care_plans;
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 106: daughter subscribes the elder to the Standard plan — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+insert into elder_care_plan_subscriptions (id, elder_id, care_plan_id, subscribed_by)
+select 'd19e0001-0000-0000-0000-000000000001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', cp.id, '22222222-2222-2222-2222-222222222222'
+from care_plans cp where cp.code = 'standard';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 107: the assigned care coordinator can see the subscription (operational authority) — expect 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = 'c0000000-0000-0000-0000-000000000000';
+select count(*) as visible_subs from elder_care_plan_subscriptions where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 108: the coordinator can pause the subscription (scheduling authority) — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = 'c0000000-0000-0000-0000-000000000000';
+update elder_care_plan_subscriptions set status = 'paused' where id = 'd19e0001-0000-0000-0000-000000000001';
+select status from elder_care_plan_subscriptions where id = 'd19e0001-0000-0000-0000-000000000001';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 109: but coordinator authority does NOT extend to consent-gated health data — the coordinator still cannot read the elder''s health notes without a consent grant — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = 'c0000000-0000-0000-0000-000000000000';
+select count(*) as visible_notes from elder_health_notes where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 110: a stranger cannot see the subscription — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select count(*) as visible_subs from elder_care_plan_subscriptions where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+reset role;
+reset request.jwt.claim.sub;
+
+-- A billing charge, written as the billing-run would (superuser).
+insert into care_plan_charges (id, subscription_id, period_start, period_end, amount)
+values ('d19e0002-0000-0000-0000-000000000002', 'd19e0001-0000-0000-0000-000000000001', current_date, current_date + 30, 3999.00);
+
+\echo '=== TEST 111: second sibling (linked family, no billing consent) cannot see the charge — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '66666666-6666-6666-6666-666666666666';
+select count(*) as visible_charges from care_plan_charges where subscription_id = 'd19e0001-0000-0000-0000-000000000001';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 112: elder grants second sibling billing consent — the charge becomes visible — expect 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+insert into consent_grants (elder_id, family_user_id, category, granted, granted_via, granted_at)
+values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '66666666-6666-6666-6666-666666666666', 'billing', true, 'elder_app', now());
+reset role;
+reset request.jwt.claim.sub;
+set role authenticated;
+set request.jwt.claim.sub = '66666666-6666-6666-6666-666666666666';
+select count(*) as visible_charges from care_plan_charges where subscription_id = 'd19e0001-0000-0000-0000-000000000001';
+reset role;
+reset request.jwt.claim.sub;
+
+-- Refresh the analytics matviews (as the scheduled refresh would).
+select refresh_analytics_views();
+
+\echo '=== TEST 113: an admin sees booking-volume analytics rows — expect > 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '55555555-5555-5555-5555-555555555555';
+select (count(*) > 0) as admin_sees_analytics from analytics_booking_volume;
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 114: a non-admin family member sees ZERO analytics rows (the wrapper view is is_admin()-gated) — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select count(*) as nonadmin_analytics_rows from analytics_booking_volume;
+reset role;
+reset request.jwt.claim.sub;
