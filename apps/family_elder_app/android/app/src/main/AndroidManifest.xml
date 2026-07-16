@@ -1,6 +1,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Network access for Supabase. Without this a release build has no
+         connectivity at all — login and every screen would silently fail. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Location for the SOS flow (geolocator captures the elder's position
+         when notifying family + ops). Coarse is an acceptable fallback. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
     <application
-        android:label="family_elder_app"
+        android:label="Setu"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -40,6 +48,12 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- url_launcher opens the dialer for "Call 108". Android 11+ package
+             visibility hides the dialer unless we declare this intent. -->
+        <intent>
+            <action android:name="android.intent.action.DIAL"/>
+            <data android:scheme="tel"/>
         </intent>
     </queries>
 </manifest>

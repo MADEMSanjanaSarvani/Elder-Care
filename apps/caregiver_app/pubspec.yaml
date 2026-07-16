@@ -3,7 +3,7 @@ description: >
   Project Setu — Caregiver app. A work queue, not a brand showcase (PRD
   Part 3 §17): job list, OTP visit verification, earnings.
 publish_to: "none"
-version: 0.1.0
+version: 0.1.0+1
 
 environment:
   sdk: ">=3.4.0 <4.0.0"

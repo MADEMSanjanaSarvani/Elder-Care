@@ -1,0 +1,76 @@
+name: Build APKs
+
+# Builds installable Android APKs for both Flutter apps and uploads them as
+# downloadable artifacts. Run it manually from the GitHub "Actions" tab
+# (Build APKs -> Run workflow) whenever you want a fresh APK to share.
+#
+# These are RELEASE builds signed with the default debug key — installable
+# on any phone for testing, but NOT the key you'll publish to the Play Store
+# with. See docs/BUILD-ANDROID.md for the Play Store signing setup.
+#
+# Requires two repository secrets (Settings -> Secrets and variables ->
+# Actions): SUPABASE_URL and SUPABASE_ANON_KEY. Both are the public
+# client-side values from your Supabase project's API settings — the anon
+# key is safe to embed in a client app.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: family_elder_app
+            label: family-elder
+          - app: caregiver_app
+            label: caregiver
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Fetch dependencies
+        working-directory: apps/${{ matrix.app }}
+        run: flutter pub get
+
+      - name: Build release APK
+        working-directory: apps/${{ matrix.app }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "::error::Missing SUPABASE_URL or SUPABASE_ANON_KEY repository secret. Add them under Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+          flutter build apk --release \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+
+      - name: Rename APK
+        working-directory: apps/${{ matrix.app }}
+        run: |
+          mkdir -p ../../dist
+          cp build/app/outputs/flutter-apk/app-release.apk \
+             ../../dist/setu-${{ matrix.label }}.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: setu-${{ matrix.label }}-apk
+          path: dist/setu-${{ matrix.label }}.apk
+          if-no-files-found: error

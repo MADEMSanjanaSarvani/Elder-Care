@@ -15,7 +15,7 @@ import { corsHeaders, jsonResponse, errorResponse } from "../_shared/cors.ts";
 import { runGuardrail, MEDICAL_DISCLAIMER } from "../_shared/aiGuardrail.ts";
 
 const REPORTS_SWEEP_SHARED_SECRET = Deno.env.get("REPORTS_SWEEP_SHARED_SECRET")!;
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY")!;
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
 
 const PERIOD_DAYS = 7;
 
@@ -32,6 +32,9 @@ Deno.serve(async (req) => {
 
   const providedSecret = req.headers.get("x-reports-sweep-secret");
   if (providedSecret !== REPORTS_SWEEP_SHARED_SECRET) return errorResponse("Invalid credentials", 401);
+  // Background job: if the AI isn't provisioned, no-op cleanly rather than
+  // erroring, so the scheduler doesn't record failures before setup.
+  if (!OPENAI_API_KEY) return jsonResponse({ processed: 0, note: "OPENAI_API_KEY not set; skipped." });
 
   const admin = supabaseAdmin();
   const now = new Date();

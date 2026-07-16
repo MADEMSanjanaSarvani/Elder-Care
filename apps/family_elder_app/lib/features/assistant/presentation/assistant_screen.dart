@@ -55,8 +55,9 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
             bookingDraft: reply.bookingDraft,
           )));
     } catch (err) {
+      final message = err is StateError ? err.message : err.toString();
       setState(() => _messages.add(_ChatMessage(
-            text: 'Sorry, something went wrong: $err',
+            text: message,
             fromUser: false,
           )));
     } finally {

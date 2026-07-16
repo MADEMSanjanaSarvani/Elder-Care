@@ -21,7 +21,7 @@ import { supabaseAsUser } from "../_shared/supabaseAsUser.ts";
 import { corsHeaders, jsonResponse, errorResponse } from "../_shared/cors.ts";
 import { runGuardrail, isMedicalQuestion, CLINICAL_REDIRECT, MEDICAL_DISCLAIMER } from "../_shared/aiGuardrail.ts";
 
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY")!;
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
 
 const SYSTEM_PROMPT = `You are the care assistant for an elder-care app. You help a family member or elder
 with operational questions about care: upcoming visits, the medication list, appointments, who is on the
@@ -56,6 +56,11 @@ type ToolResult = { data?: unknown; access_denied?: boolean; draft?: unknown };
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
+  // Clean, user-friendly signal when the AI isn't provisioned yet, rather
+  // than leaking a confusing OpenAI 401 to the app. The UI shows this text.
+  if (!OPENAI_API_KEY) {
+    return errorResponse("The assistant isn't available yet — it's still being set up.", 503);
+  }
 
   try {
     const user = await requireUser(req);

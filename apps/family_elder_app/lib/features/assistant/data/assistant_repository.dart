@@ -26,7 +26,14 @@ class AssistantRepository {
       body: {'elder_id': elderId, 'message': message},
     );
     if (response.status != 200) {
-      throw StateError('Assistant error: ${response.data}');
+      // Surface the function's own friendly message (e.g. the 503 "still
+      // being set up" text) rather than a raw dump, so the chat never shows
+      // an ugly error blob to the user.
+      final data = response.data;
+      final message = data is Map && data['error'] is String
+          ? data['error'] as String
+          : 'The assistant is unavailable right now. Please try again shortly.';
+      throw StateError(message);
     }
     final data = response.data as Map<String, dynamic>;
     return AssistantReply(

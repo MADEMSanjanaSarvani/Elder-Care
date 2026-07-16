@@ -10,7 +10,7 @@ import { supabaseAdmin, requireUser } from "../_shared/supabaseAdmin.ts";
 import { corsHeaders, jsonResponse, errorResponse } from "../_shared/cors.ts";
 import { runGuardrail, MEDICAL_DISCLAIMER } from "../_shared/aiGuardrail.ts";
 
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY")!;
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
 
 const SYSTEM_PROMPT = `You summarize an in-home caregiver's visit notes for the elder's family.
 Rules you must follow exactly:
@@ -25,6 +25,7 @@ Rules you must follow exactly:
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
+  if (!OPENAI_API_KEY) return errorResponse("Visit summaries aren't available yet — still being set up.", 503);
 
   try {
     const user = await requireUser(req);
