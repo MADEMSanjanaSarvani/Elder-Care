@@ -76,9 +76,34 @@ with the right `event`/`caregiver_id`/`payout_amount` metadata — proving
 the audit instrumentation added after the fact actually fires in
 production, not just in the local RLS test harness.
 
-That's 6 of 14 functions now individually verified live (`regions-config`
-plus these 5). Still unverified: `bookings-match`'s TODO-flagged
-auth model aside, the 5 functions needing real third-party
+**Batches 1–3 database layer is now live too** (2026-07-15): migrations
+`0006`–`0014` were applied to `veumfexjpxqhxemjaaor` via the Dashboard SQL
+Editor, one file per run in order (0007's enum value committing before
+0008 references it). Verified immediately after with a single roll-up
+query: `notification_types` seeded exactly 8 rows, `daily_checkins` /
+`medication_doses` / `hospital_stays` all exist and are empty (0), and all
+four new database functions (`required_consent_for_source`,
+`is_caregiver_on_hospital_stay`, `enforce_must_deliver_notification_types`,
+`log_checkin_to_timeline`) are present — 8 / 0 / 0 / 0 / 4, matching
+expectations exactly. The four sweep shared secrets
+(`CHECKINS_SWEEP_SHARED_SECRET`, `MEDICATIONS_SWEEP_SHARED_SECRET`,
+`REMINDERS_SWEEP_SHARED_SECRET`, `HOSPITAL_GAP_SWEEP_SHARED_SECRET`) are
+set in the project's Edge Function secrets. The Batch 1–3 Edge Functions
+themselves (the 5 modified + `checkins-escalation-sweep`, `family-invite`,
+`medications-generate-doses`, `reminders-dispatch-sweep`,
+`hospital-stays-gap-sweep`) deployed automatically via `deploy-functions.yml`
+on each push, latest green at commit `127a385`. Not yet done: a live
+authenticated end-to-end exercise of the new sweep/table surface against
+real test data (the schema-presence check above is confirmed; a full
+"insert a check-in, watch the timeline trigger fire" live pass is the next
+verification step), and the n8n schedules that call the four sweeps on a
+timer. See `docs/deploy/01-deploy-batches-1-3.md` for the exact runbook used.
+
+That's 6 of 19 functions individually verified live end-to-end
+(`regions-config` plus the booking-lifecycle 5). Still unverified: the
+Batch 1–3 additions (schema-present and deployed, but not yet exercised
+with live data), `bookings-match`'s TODO-flagged auth model aside, and the
+5 functions needing real third-party
 credentials — `payments-create-order`, `payments-webhook`,
 `verification-idfy-webhook`, `ai-visit-summary`, `ai-translate` — none of
 which have Razorpay/IDfy/OpenAI secrets configured on this project yet
