@@ -29,4 +29,19 @@ class SosRepository {
     }
     return response.data as Map<String, dynamic>;
   }
+
+  /// A practice run (PRD Part 10, Batch 7, Module 25). Goes to the
+  /// SEPARATE `sos-drill-trigger` function — never `sos-trigger` — so a
+  /// drill can never fan out real alerts. Returns the coaching feedback
+  /// shown back to the practicing user.
+  Future<String> drill({String? elderId}) async {
+    final response = await _client.functions.invoke(
+      'sos-drill-trigger',
+      body: {if (elderId != null) 'elder_id': elderId},
+    );
+    if (response.status != 200) {
+      throw StateError('Drill failed: ${response.data}');
+    }
+    return (response.data as Map<String, dynamic>)['feedback'] as String;
+  }
 }

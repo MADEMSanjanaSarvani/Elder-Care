@@ -24,10 +24,44 @@ class SosScreen extends ConsumerStatefulWidget {
 class _SosScreenState extends ConsumerState<SosScreen> {
   bool _notifying = false;
   bool _notified = false;
+  bool _drilling = false;
   String? _error;
 
   Future<void> _call108() async {
     await launchUrl(Uri.parse('tel:108'));
+  }
+
+  /// A practice run. Goes to the SEPARATE drill function — it never fans out
+  /// a real alert to family or ops — and returns coaching feedback we show
+  /// in a dialog so the elder learns the flow without any real consequence.
+  Future<void> _practice() async {
+    setState(() {
+      _drilling = true;
+      _error = null;
+    });
+    try {
+      final feedback =
+          await SosRepository(ref.read(supabaseClientProvider))
+              .drill(elderId: widget.elderId);
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Practice complete'),
+          content: Text(feedback),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Got it'),
+            ),
+          ],
+        ),
+      );
+    } catch (err) {
+      setState(() => _error = err.toString());
+    } finally {
+      if (mounted) setState(() => _drilling = false);
+    }
   }
 
   Future<void> _notifyPlatform() async {
@@ -96,6 +130,15 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                 label: Text(
                     _notifying ? 'Notifying…' : 'Also notify family & Setu'),
               ),
+            const Spacer(),
+            const Divider(),
+            TextButton.icon(
+              onPressed: _drilling ? null : _practice,
+              icon: const Icon(Icons.school_outlined),
+              label: Text(_drilling
+                  ? 'Running practice…'
+                  : 'Practice this (no real alert)'),
+            ),
           ],
         ),
       ),

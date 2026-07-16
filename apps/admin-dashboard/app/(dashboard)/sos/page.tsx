@@ -1,6 +1,6 @@
 import { requireAdmin, requireScope } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { SosMonitor, type SosEventRow } from "@/components/SosMonitor";
+import { SosMonitor, type SosEventRow, type IncidentReport } from "@/components/SosMonitor";
 
 export default async function SosMonitorPage() {
   const admin = await requireAdmin();
@@ -24,6 +24,21 @@ export default async function SosMonitorPage() {
     notes: row.notes,
   }));
 
+  // Which resolved events already have a post-resolution incident report on
+  // file, so the monitor can hide the form for those and show the summary.
+  const { data: reportRows } = await supabase
+    .from("sos_incident_reports")
+    .select("sos_event_id, emergency_services_engaged, outcome_summary, lessons_notes, filed_at");
+  const reports: Record<string, IncidentReport> = {};
+  for (const r of reportRows ?? []) {
+    reports[r.sos_event_id as string] = {
+      emergency_services_engaged: r.emergency_services_engaged as boolean,
+      outcome_summary: r.outcome_summary as string,
+      lessons_notes: r.lessons_notes as string | null,
+      filed_at: r.filed_at as string,
+    };
+  }
+
   return (
     <div>
       <h1 className="mb-1 text-2xl font-semibold">Live SOS monitor</h1>
@@ -33,7 +48,7 @@ export default async function SosMonitorPage() {
         possible given how sos-trigger is implemented, so treat its appearance as a bug to investigate, not routine.
       </p>
       {error && <p className="text-sos">{error.message}</p>}
-      <SosMonitor initialEvents={initialEvents} />
+      <SosMonitor initialEvents={initialEvents} reports={reports} />
     </div>
   );
 }

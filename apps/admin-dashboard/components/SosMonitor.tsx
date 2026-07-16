@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { createClient } from "@/lib/supabase/client";
-import { resolveSosEvent } from "@/actions/sosActions";
+import { resolveSosEvent, fileIncidentReport } from "@/actions/sosActions";
 import { StatusPill } from "./StatusPill";
 import type { SosStatus } from "@/lib/types";
 
@@ -18,6 +18,13 @@ export interface SosEventRow {
   notes: string | null;
 }
 
+export interface IncidentReport {
+  emergency_services_engaged: boolean;
+  outcome_summary: string;
+  lessons_notes: string | null;
+  filed_at: string;
+}
+
 function statusTone(status: SosStatus) {
   if (status === "resolved") return "good" as const;
   if (status === "triggered") return "critical" as const;
@@ -29,7 +36,13 @@ function statusTone(status: SosStatus) {
  * changes on sos_events push straight into this list — an ops operator
  * should never need to refresh the page to see a new emergency.
  */
-export function SosMonitor({ initialEvents }: { initialEvents: SosEventRow[] }) {
+export function SosMonitor({
+  initialEvents,
+  reports,
+}: {
+  initialEvents: SosEventRow[];
+  reports: Record<string, IncidentReport>;
+}) {
   const [events, setEvents] = useState(initialEvents);
 
   useEffect(() => {
@@ -109,16 +122,69 @@ export function SosMonitor({ initialEvents }: { initialEvents: SosEventRow[] }) 
 
       <div>
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted">Resolved ({resolved.length})</h2>
+        <p className="-mt-2 mb-3 text-xs text-muted">
+          Every resolved event needs one post-resolution incident report — the after-action record used
+          for QA and drills (PRD Part 10, Module 25).
+        </p>
         <div className="flex flex-col gap-2">
           {resolved.slice(0, 20).map((event) => (
             <div key={event.id} className="rounded border border-border bg-paper-raised p-3 text-sm">
               <span className="font-medium">{event.elder_name ?? event.elder_id}</span>{" "}
               <span className="text-muted">— {new Date(event.created_at).toLocaleString()}</span>
               {event.notes && <div className="mt-1 text-xs text-muted">{event.notes}</div>}
+              <IncidentReportBlock eventId={event.id} report={reports[event.id]} />
             </div>
           ))}
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * The one incident report per resolved event. Once filed it's read-only
+ * here (the DB's unique constraint on sos_event_id is the real guarantee);
+ * until then it shows the filing form. `filed_by` and the sos_operator
+ * scope are enforced server-side, so this form carries no identity fields.
+ */
+function IncidentReportBlock({ eventId, report }: { eventId: string; report?: IncidentReport }) {
+  if (report) {
+    return (
+      <div className="mt-2 rounded border border-verified/40 bg-verified/5 p-2 text-xs">
+        <div className="font-medium text-verified">
+          Incident report filed {new Date(report.filed_at).toLocaleString()}
+        </div>
+        <div className="mt-1">
+          Emergency services {report.emergency_services_engaged ? "engaged" : "not engaged"}.
+        </div>
+        <div className="mt-1">{report.outcome_summary}</div>
+        {report.lessons_notes && <div className="mt-1 text-muted">Lessons: {report.lessons_notes}</div>}
+      </div>
+    );
+  }
+
+  return (
+    <form action={fileIncidentReport} className="mt-2 flex flex-col gap-2 rounded border border-border p-2">
+      <input type="hidden" name="sos_event_id" value={eventId} />
+      <label className="flex items-center gap-2 text-xs">
+        <input type="checkbox" name="emergency_services_engaged" />
+        Emergency services (108/EMS) were engaged
+      </label>
+      <textarea
+        name="outcome_summary"
+        required
+        placeholder="What happened and how it was resolved"
+        className="rounded border border-border bg-paper px-2 py-1 text-sm"
+        rows={2}
+      />
+      <input
+        name="lessons_notes"
+        placeholder="Lessons / follow-ups (optional)"
+        className="rounded border border-border bg-paper px-2 py-1 text-sm"
+      />
+      <button type="submit" className="self-start rounded bg-verified px-3 py-1 text-sm font-medium text-white">
+        File incident report
+      </button>
+    </form>
   );
 }

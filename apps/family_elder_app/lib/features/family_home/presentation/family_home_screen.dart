@@ -151,6 +151,12 @@ class FamilyHomeScreen extends ConsumerWidget {
                           icon: const Icon(Icons.privacy_tip_outlined),
                           label: const Text('What you can see'),
                         ),
+                        TextButton.icon(
+                          onPressed: () =>
+                              context.push('/elder/${elder.id}/privacy'),
+                          icon: const Icon(Icons.shield_outlined),
+                          label: const Text('Privacy centre'),
+                        ),
                       ],
                     ),
                   ],
