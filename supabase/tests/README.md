@@ -135,6 +135,25 @@ no family visibility at all) — TEST 82 confirms a family member with
 `visit_history` consent sees a coverage-gap reminder, TEST 83 confirms a
 stranger doesn't.
 
+TESTs 84-92 cover `0016_batch4_ai_layer.sql` (PRD Part 7, Batch 4:
+AI Visit Reports and AI Recommendation Engine — the AI Care Assistant and
+Voice Assistant modules add no tables). TESTs 84-87 exercise
+`ai_visit_reports`' flagged-hold rule, which is deliberately stricter than
+raw-data access: TEST 84 confirms **even the elder** sees only the cleared
+report, not a flagged/held one — a flagged AI report is a machine draft
+that failed the guardrail (potentially the exact hallucinated diagnosis
+the guardrail exists to catch), so "never delivered until reviewed" has to
+mean to *any* end user, elder included, admin-only until `human_reviewed`
+(TEST 87). This is the one place a viewer is denied their *own* generated
+content on purpose, and the reasoning is written into the migration.
+TESTs 88-92 exercise `care_suggestions`' consent-mapping-by-type: TEST 89
+(a family member with only `visit_history` sees neither a medication- nor
+a wellbeing-gated suggestion) and TEST 90 (a family member with
+`medication_list` + `wellbeing_checkins` sees both) confirm
+`required_consent_for_suggestion()` gates visibility by what each
+suggestion is *about*, exactly like `reminders` in Batch 2; TEST 92
+confirms a stranger's dismiss attempt is a silent no-op, not a bypass.
+
 Also worth stating: this migration does **not** implement column-level
 encryption for `emergency_medical_notes`/`insurance_policy_number`, even
 though the PRD claims it should reuse "an already-decided pattern." No
@@ -162,7 +181,8 @@ for f in 0001_schema 0002_rls 0003_realtime 0004_erasure_requests \
          0007_wellbeing_checkins_consent_category 0008_family_experience \
          0009_checkin_timeline_trigger 0010_batch2_care_logistics \
          0011_appointment_reminder_trigger 0012_medication_discontinue_trigger \
-         0013_batch3_visits_and_records 0014_hospital_stay_gap_reminders; do
+         0013_batch3_visits_and_records 0014_hospital_stay_gap_reminders \
+         0015_ai_interaction_types 0016_batch4_ai_layer; do
   psql -d setu_test -v ON_ERROR_STOP=1 -f "../migrations/$f.sql"
 done
 psql -d setu_test -v ON_ERROR_STOP=1 -f ../seed.sql

@@ -851,3 +851,95 @@ set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
 select count(*) as visible_gap_reminders from reminders where id = '11113333-1111-3333-1111-333311113333';
 reset role;
 reset request.jwt.claim.sub;
+
+-- ===================================================================
+-- Batch 4 (docs/prd/07-prd-part7-ai-layer.html): AI Visit Reports,
+-- AI Recommendation Engine. (AI Care Assistant and Voice Assistant add
+-- no tables.) By this point the elder has granted daughter
+-- health_notes (TEST 3 was revoked, but TEST 43 granted medication_list,
+-- TEST 69 granted visit_history). Grant health_notes freshly here.
+-- ===================================================================
+
+-- Simulates what a periodic-report Edge Function would write (service role).
+insert into ai_visit_reports (id, elder_id, period_start, period_end, report_text) values
+  ('a14e0001-0000-0000-0000-000000000001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', current_date - 7, current_date, 'A calm week: three visits completed, all check-ins on time.'),
+  ('a14e0002-0000-0000-0000-000000000002', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', current_date - 14, current_date - 7, 'Flagged draft pending review.');
+update ai_visit_reports set flagged = true, human_reviewed = false where id = 'a14e0002-0000-0000-0000-000000000002';
+
+\echo '=== TEST 84: even the elder sees only the CLEARED report, not the flagged/held one — expect 1. A flagged AI report is a draft that failed the guardrail (possibly a hallucinated diagnosis); "never delivered" means to any end user, elder included — it is admin-only until human_reviewed, deliberately unlike raw elder data which the elder always sees. ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select count(*) as visible_reports from ai_visit_reports where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 85: daughter WITHOUT health_notes consent cannot see any report — expect 0 (she has medication_list + visit_history, but reports are health_notes-gated) ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select count(*) as visible_reports from ai_visit_reports where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 86: elder RE-grants health_notes (it was granted in TEST 2, revoked in TEST 4) — daughter now sees ONLY the un-flagged report, not the held one — expect 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+update consent_grants set granted = true, revoked_at = null, granted_at = now()
+where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' and family_user_id = '22222222-2222-2222-2222-222222222222' and category = 'health_notes';
+reset role;
+reset request.jwt.claim.sub;
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select count(*) as visible_reports from ai_visit_reports where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 87: an admin sees the held/flagged report too — expect 2 ==='
+set role authenticated;
+set request.jwt.claim.sub = '55555555-5555-5555-5555-555555555555';
+select count(*) as visible_reports from ai_visit_reports where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+reset role;
+reset request.jwt.claim.sub;
+
+-- Simulates what the recommendation sweep would write (service role):
+-- a medication-gated suggestion and a wellbeing-gated one.
+insert into care_suggestions (id, elder_id, suggestion_type, trigger_metric, suggestion_text) values
+  ('c15e0001-0000-0000-0000-000000000001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'refill_due_soon', '{"medication":"Metformin","days_left":3}'::jsonb, 'Metformin is running low — consider booking a pickup.'),
+  ('c15e0002-0000-0000-0000-000000000002', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'checkin_streak_broken', '{"missed_days":2}'::jsonb, 'No check-in for two days — a quick call might be nice.');
+
+\echo '=== TEST 88: elder sees every suggestion regardless of type — expect 2 ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select count(*) as visible_suggestions from care_suggestions where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 89: second sibling has visit_history only (from TEST 49) — sees neither the medication- nor wellbeing-gated suggestion — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '66666666-6666-6666-6666-666666666666';
+select count(*) as visible_suggestions from care_suggestions where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 90: daughter (medication_list + wellbeing_checkins from TESTs 43/26) sees BOTH suggestions — expect 2 ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select count(*) as visible_suggestions from care_suggestions where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 91: daughter dismisses the refill suggestion — expect success, status now dismissed ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+update care_suggestions set status = 'dismissed' where id = 'c15e0001-0000-0000-0000-000000000001';
+select status from care_suggestions where id = 'c15e0001-0000-0000-0000-000000000001';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 92: a stranger cannot see or dismiss any suggestion — expect 0 visible, and the update is a silent no-op ==='
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select count(*) as visible_suggestions from care_suggestions where elder_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+update care_suggestions set status = 'dismissed' where id = 'c15e0002-0000-0000-0000-000000000002';
+reset role;
+reset request.jwt.claim.sub;
+select status from care_suggestions where id = 'c15e0002-0000-0000-0000-000000000002';
