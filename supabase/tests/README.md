@@ -197,6 +197,21 @@ are `is_admin()`-gated: an admin sees rows, a non-admin sees zero — the
 enforcement mechanism for materialized views, which can't carry RLS
 themselves.
 
+TESTs 115-124 cover `0020_batch7_trust_and_safety.sql` (PRD Part 10,
+Batch 7, FINAL: Consent & Privacy Management, Enhanced Emergency Services).
+TESTs 115-118 exercise `guardian_consent_requests`: family/elder file and
+read their own requests, but only an admin can change status (TEST 117 — a
+family member approving their own request is a silent no-op; TEST 118 — an
+admin can). TESTs 119-121 cover `sos_incident_reports`: an sos_operator
+files, the elder can *read* the report for their own event (transparency,
+TEST 120) but cannot file or alter it (TEST 121 — the outcome summary is
+unchanged after an elder's tamper attempt). TESTs 122-124 cover
+`sos_drills`, kept in a table deliberately separate from `sos_events`:
+a drill is private to the person who practiced it (TEST 122 sees their
+own, TEST 123 a different family member sees zero), and there is no client
+insert path at all — a drill can only originate from `sos-drill-trigger`,
+so a direct family insert is an RLS error (TEST 124).
+
 Also worth stating: this migration does **not** implement column-level
 encryption for `emergency_medical_notes`/`insurance_policy_number`, even
 though the PRD claims it should reuse "an already-decided pattern." No
@@ -227,7 +242,7 @@ for f in 0001_schema 0002_rls 0003_realtime 0004_erasure_requests \
          0013_batch3_visits_and_records 0014_hospital_stay_gap_reminders \
          0015_ai_interaction_types 0016_batch4_ai_layer \
          0017_batch5_caregiver_and_platform_ux 0018_care_coordinator_scope \
-         0019_batch6_business_layer; do
+         0019_batch6_business_layer 0020_batch7_trust_and_safety; do
   psql -d setu_test -v ON_ERROR_STOP=1 -f "../migrations/$f.sql"
 done
 psql -d setu_test -v ON_ERROR_STOP=1 -f ../seed.sql

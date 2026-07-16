@@ -85,6 +85,29 @@ Deno.serve(async (req) => {
       metadata: { sos_event_id: sosEvent.id },
     });
 
+    // PRD Part 10, Batch 7, Module 25 — the one behavioral touch to this
+    // function: enrich the notification payload with the elder's
+    // emergency-relevant health snapshot, so a responder (family or ops)
+    // has allergies / conditions / blood type / emergency notes in hand at
+    // the moment of the alert. Read via elder_health_profile, whose Batch 3
+    // RLS already grants life-safety-override visibility for exactly this
+    // scenario (here the service-role client reads it directly). Only what
+    // the message CONTAINS changes — the trigger/escalation/status logic is
+    // untouched. Fire-and-forget: a missing profile just means no snapshot.
+    const { data: healthProfile } = await admin
+      .from("elder_health_profile")
+      .select("blood_type, allergies, chronic_conditions, emergency_medical_notes")
+      .eq("elder_id", elder_id)
+      .maybeSingle();
+    const healthSnapshot = healthProfile
+      ? {
+          blood_type: healthProfile.blood_type,
+          allergies: healthProfile.allergies,
+          chronic_conditions: healthProfile.chronic_conditions,
+          emergency_medical_notes: healthProfile.emergency_medical_notes,
+        }
+      : null;
+
     // Fan out to every active family link.
     const { data: familyLinks } = await admin
       .from("family_links")
@@ -98,7 +121,7 @@ Deno.serve(async (req) => {
         notifiedUserIds.map((uid) => ({
           user_id: uid,
           type: "sos_triggered",
-          payload: { sos_event_id: sosEvent.id, elder_id, elder_name: elder.display_name, lat, lng },
+          payload: { sos_event_id: sosEvent.id, elder_id, elder_name: elder.display_name, lat, lng, health_snapshot: healthSnapshot },
         }))
       );
     }
@@ -114,7 +137,7 @@ Deno.serve(async (req) => {
         opsUsers.map((o) => ({
           user_id: o.profile_id,
           type: "sos_ops_alert",
-          payload: { sos_event_id: sosEvent.id, elder_id, lat, lng },
+          payload: { sos_event_id: sosEvent.id, elder_id, lat, lng, health_snapshot: healthSnapshot },
         }))
       );
     }

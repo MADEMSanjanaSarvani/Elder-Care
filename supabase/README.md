@@ -426,6 +426,34 @@ TESTs 105-114 (114/114 total) — which caught a real security bug where a coord
 `role='admin'` user would have read every elder's health notes platform-wide (see `tests/README.md`).
 Not yet applied to the live project.
 
+## PRD Part 10, Batch 7 (FINAL): trust & safety
+
+`docs/prd/10-prd-part10-trust-and-safety.html`. Database: `migrations/0020_batch7_trust_and_safety.sql`
+— `guardian_consent_requests` (+ a private `guardian-consent-documents` bucket), `sos_incident_reports`,
+and `sos_drills`. **Zero touches to the consent enforcement layer**: `consent_grants`, `has_consent()`,
+and every policy depending on them are unchanged — guardian override is a request queue in front of the
+already-permitted `granted_via = 'documented_guardian_process'` admin grant path.
+
+Two new Edge Functions, both `requireUser()` (no config change — they keep `verify_jwt = true`):
+
+- `GET /functions/v1/me-access-history` (Module 24) — a self-service "who accessed my elder's data"
+  history, resolving the caller's elder and reading `audit_log` entries whose `metadata.elder_id`
+  traces back to it (audit_log has no elder_id column; a fuller per-resource-type mapping as more
+  functions stamp elder_id is named future work).
+- `POST /functions/v1/sos-drill-trigger` (Module 25) — **deliberately separate from `sos-trigger`**,
+  sharing no code path, so a bug in one can never affect the other. A drill writes ONLY an `sos_drills`
+  row and returns feedback to the practicing user's own device — no family push, no ops alert, no
+  `notifications` row, no `sos_events` row.
+
+The one behavioral touch to `sos-trigger`: its family and ops notification payloads now include the
+elder's emergency health snapshot (allergies, conditions, blood type, emergency notes) from
+`elder_health_profile`, read via the life-safety override Batch 3 already established — only what the
+message *contains* changes; the trigger/escalation/status logic is untouched. Validated: `deno check`/
+`deno lint` clean across all 35 functions; RLS covered by `tests/rls_smoke_test.sql` TESTs 115-124
+(124/124 total). Not yet applied to the live project.
+
+**All 25 architected modules are now implemented.**
+
 Validated: all three functions + both shared helpers `deno check`/`deno lint` clean across the full
 30-file function tree, and the 4 new `isMedicalQuestion` unit tests pass alongside the existing 15
 (19 total). The new tables' RLS is covered by `tests/rls_smoke_test.sql` TESTs 84-92 (92/92 total). No

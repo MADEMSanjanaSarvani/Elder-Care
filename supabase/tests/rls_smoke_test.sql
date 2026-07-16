@@ -1158,3 +1158,94 @@ set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
 select count(*) as nonadmin_analytics_rows from analytics_booking_volume;
 reset role;
 reset request.jwt.claim.sub;
+
+-- ===================================================================
+-- Batch 7 (docs/prd/10-prd-part10-trust-and-safety.html): Consent &
+-- Privacy Management, Enhanced Emergency Services.
+-- ===================================================================
+
+\echo '=== TEST 115: a linked family member files a guardian-consent request for the elder — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+insert into guardian_consent_requests (id, elder_id, requested_by, category, basis_description)
+values ('e20e0001-0000-0000-0000-000000000001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222', 'health_notes', 'Elder has advanced dementia; medical certificate attached.');
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 116: a stranger cannot see the request — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select count(*) as visible_requests from guardian_consent_requests where id = 'e20e0001-0000-0000-0000-000000000001';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 117: a non-admin family member cannot approve their own request (change status) — expect a silent no-op (0 rows) ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+update guardian_consent_requests set status = 'approved' where id = 'e20e0001-0000-0000-0000-000000000001';
+reset role;
+reset request.jwt.claim.sub;
+select status as still_pending from guardian_consent_requests where id = 'e20e0001-0000-0000-0000-000000000001';
+
+\echo '=== TEST 118: an admin can approve the request — expect approved ==='
+set role authenticated;
+set request.jwt.claim.sub = '55555555-5555-5555-5555-555555555555';
+update guardian_consent_requests set status = 'approved', reviewed_by = '55555555-5555-5555-5555-555555555555', reviewed_at = now()
+where id = 'e20e0001-0000-0000-0000-000000000001';
+select status from guardian_consent_requests where id = 'e20e0001-0000-0000-0000-000000000001';
+reset role;
+reset request.jwt.claim.sub;
+
+-- A resolved SOS event to attach an incident report to (superuser seed).
+insert into sos_events (id, elder_id, triggered_by, status)
+values ('50500000-0000-0000-0000-000000000001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '11111111-1111-1111-1111-111111111111', 'resolved');
+-- Give the admin the sos_operator scope so it can file the report.
+insert into admin_scopes (profile_id, scope) values ('55555555-5555-5555-5555-555555555555', 'sos_operator');
+
+\echo '=== TEST 119: an sos_operator files an incident report — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '55555555-5555-5555-5555-555555555555';
+insert into sos_incident_reports (sos_event_id, emergency_services_engaged, outcome_summary, filed_by)
+values ('50500000-0000-0000-0000-000000000001', true, 'Ambulance dispatched, elder stable, admitted for observation.', '55555555-5555-5555-5555-555555555555');
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 120: the elder can read the incident report for their own SOS event (transparency) — expect 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select count(*) as visible_reports from sos_incident_reports where sos_event_id = '50500000-0000-0000-0000-000000000001';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 121: but the elder cannot FILE or alter an incident report (QA is ops-only) — expect a silent no-op (0 rows) ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+update sos_incident_reports set outcome_summary = 'tampered' where sos_event_id = '50500000-0000-0000-0000-000000000001';
+reset role;
+reset request.jwt.claim.sub;
+select outcome_summary from sos_incident_reports where sos_event_id = '50500000-0000-0000-0000-000000000001';
+
+-- A drill, written as sos-drill-trigger would (superuser / service role).
+insert into sos_drills (id, triggered_by, elder_id, feedback)
+values ('d1111000-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Practice complete.');
+
+\echo '=== TEST 122: the practicing user sees their own drill — expect 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select count(*) as own_drills from sos_drills where id = 'd1111000-0000-0000-0000-000000000001';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 123: a different family member does NOT see someone else''s drill (a drill is private to the practicer) — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select count(*) as visible_drills from sos_drills where id = 'd1111000-0000-0000-0000-000000000001';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 124: no client insert path on sos_drills — a family member cannot write one directly (drills only come from sos-drill-trigger) — expect an RLS ERROR ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+insert into sos_drills (triggered_by, feedback) values ('22222222-2222-2222-2222-222222222222', 'fake');
+reset role;
+reset request.jwt.claim.sub;
