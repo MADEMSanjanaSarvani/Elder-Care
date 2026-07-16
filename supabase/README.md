@@ -105,7 +105,19 @@ settings only take effect on a redeploy and `config.toml` sits outside the
 old `supabase/functions/**` path filter, `deploy-functions.yml` now also
 triggers on `config.toml` changes. After that redeploy, the wrong-secret
 call returns the function's own `401 Invalid credentials` and the
-right-secret call returns `200 {"processed":0,...}`. The Batch 1–3 Edge Functions
+right-secret call returns `200 {"processed":0,...}`.
+
+**Verified live after the redeploy** (2026-07-16): `checkins-escalation-sweep`
+with a wrong secret now returns the function's own `{"error":"Invalid
+credentials"} 401` (not the gateway's `UNAUTHORIZED_NO_AUTH_HEADER`), and
+with the correct secret returns `{"processed":0,"results":[]} 200` — the
+first live end-to-end invocation of any shared-secret sweep, confirming the
+whole pattern works together: gateway `verify_jwt = false`, the function's
+own header check, and a real query against the live `checkin_schedules`
+table (0 schedules exist, so 0 processed). The other three Batch-1/3 sweeps
+share this exact code path and secret pattern; this one standing in for the
+set is a reasonable live confidence check, though each could be curled
+individually the same way. The Batch 1–3 Edge Functions
 themselves (the 5 modified + `checkins-escalation-sweep`, `family-invite`,
 `medications-generate-doses`, `reminders-dispatch-sweep`,
 `hospital-stays-gap-sweep`) deployed automatically via `deploy-functions.yml`
