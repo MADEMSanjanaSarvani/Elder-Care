@@ -117,7 +117,21 @@ own header check, and a real query against the live `checkin_schedules`
 table (0 schedules exist, so 0 processed). The other three Batch-1/3 sweeps
 share this exact code path and secret pattern; this one standing in for the
 set is a reasonable live confidence check, though each could be curled
-individually the same way. The Batch 1–3 Edge Functions
+individually the same way.
+
+**Batch 4 database layer is now live too** (2026-07-16): migrations `0015`
+(three additive `ai_interaction_type` enum values) and `0016`
+(`ai_visit_reports`, `care_suggestions` + `required_consent_for_suggestion()`)
+applied via the SQL Editor and verified with a roll-up query — the
+`ai_interaction_type` enum now has 7 values (the original 4 + 3 new), and
+both new tables exist and are empty: **7 / 0 / 0**, matching expectations.
+This brings the entire live database through migration `0016` — Batches 1–4
+are fully deployed. The four AI Edge Functions (`ai-care-assistant`,
+`ai-visit-report-generate`, `recommendations-generate`, and the existing
+`ai-visit-summary`/`ai-translate`) remain dormant until an `OPENAI_API_KEY`
+is set on the project — a business item, not a code gap; `recommendations-generate`
+is the one AI-batch function that would work today even without it, since
+it uses zero generative AI. The Batch 1–3 Edge Functions
 themselves (the 5 modified + `checkins-escalation-sweep`, `family-invite`,
 `medications-generate-doses`, `reminders-dispatch-sweep`,
 `hospital-stays-gap-sweep`) deployed automatically via `deploy-functions.yml`
