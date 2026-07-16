@@ -55,6 +55,13 @@ class ElderHomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: SetuSpacing.md),
               DailyCheckInButton(elderId: elder.id),
+              const SizedBox(height: SetuSpacing.md),
+              _BigActionButton(
+                icon: Icons.chat_bubble_outline,
+                label: 'Ask for Help',
+                color: SetuColors.accentLight,
+                onTap: () => context.push('/elder/${elder.id}/assistant'),
+              ),
             ],
           ),
         );

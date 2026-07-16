@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
 
 import '../features/appointments/presentation/appointments_screen.dart';
+import '../features/assistant/presentation/assistant_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/booking/presentation/booking_screen.dart';
 import '../features/companion_visits/presentation/companion_preferences_screen.dart';
@@ -17,6 +18,7 @@ import '../features/medications/presentation/medications_screen.dart';
 import '../features/notifications/presentation/notification_inbox_screen.dart';
 import '../features/notifications/presentation/notification_preferences_screen.dart';
 import '../features/reminders/presentation/reminders_screen.dart';
+import '../features/reports/presentation/reports_screen.dart';
 import '../features/sos/presentation/sos_screen.dart';
 import '../features/timeline/presentation/timeline_screen.dart';
 import 'providers.dart';
@@ -100,6 +102,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/elder/:elderId/companion-preferences',
         builder: (context, state) => CompanionPreferencesScreen(
             elderId: state.pathParameters['elderId']!),
+      ),
+      GoRoute(
+        path: '/elder/:elderId/assistant',
+        builder: (context, state) =>
+            AssistantScreen(elderId: state.pathParameters['elderId']!),
+      ),
+      GoRoute(
+        path: '/elder/:elderId/reports',
+        builder: (context, state) =>
+            ReportsScreen(elderId: state.pathParameters['elderId']!),
       ),
     ],
   );

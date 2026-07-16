@@ -5,6 +5,7 @@ import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
 import '../../checkins/data/checkin_repository.dart';
+import '../../suggestions/presentation/suggestions_card.dart';
 
 /// Timeline-first dashboard (PRD Part 3 §17). Consent management is a
 /// top-level action here, not buried in a settings submenu — hiding it
@@ -37,6 +38,7 @@ class FamilyHomeScreen extends ConsumerWidget {
                     Text(elder.displayName,
                         style: Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height: SetuSpacing.sm),
+                    SuggestionsCard(elderId: elder.id),
                     FutureBuilder<DateTime?>(
                       future: CheckInRepository(ref.read(supabaseClientProvider))
                           .lastCheckInToday(elder.id),
@@ -118,6 +120,18 @@ class FamilyHomeScreen extends ConsumerWidget {
                               '/elder/${elder.id}/companion-preferences'),
                           icon: const Icon(Icons.diversity_1_outlined),
                           label: const Text('Companion'),
+                        ),
+                        TextButton.icon(
+                          onPressed: () =>
+                              context.push('/elder/${elder.id}/assistant'),
+                          icon: const Icon(Icons.chat_bubble_outline),
+                          label: const Text('Ask assistant'),
+                        ),
+                        TextButton.icon(
+                          onPressed: () =>
+                              context.push('/elder/${elder.id}/reports'),
+                          icon: const Icon(Icons.summarize_outlined),
+                          label: const Text('Weekly reports'),
                         ),
                         TextButton.icon(
                           onPressed: () =>
