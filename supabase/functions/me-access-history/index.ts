@@ -49,12 +49,13 @@ Deno.serve(async (req) => {
     }
     if (!isSelf && !isLinked) return errorResponse("Not authorized to view this elder's access history", 403);
 
-    // audit_log has no elder_id column, so map back per resource_type.
-    // Direct: sos_event/booking rows carry the elder via metadata.elder_id
-    // (written by sos-trigger / bookings-*). This covers the write-path
-    // audit entries that exist today; a fuller mapping (payments, ai_*)
-    // extends the same metadata-driven approach as those functions start
-    // stamping elder_id, named future work rather than a stub.
+    // audit_log has no elder_id column, so map back via metadata.elder_id.
+    // Write-path entries (sos-trigger, bookings-*) stamp it, and the admin
+    // dashboard's read-path logging (logAdminRead: action 'admin_read' on
+    // booking / ai_interaction) stamps it too — so this now surfaces both
+    // "who changed my data" and "who looked at my data". A fuller mapping
+    // (payments, more resource types) extends the same metadata-driven
+    // approach as those paths start stamping elder_id.
     const { data: entries } = await admin
       .from("audit_log")
       .select("action, resource_type, resource_id, metadata, created_at, actor_user_id")

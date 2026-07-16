@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { requireAdmin, requireScope, hasScope } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { logAdminRead } from "@/lib/audit";
 import { StatusPill } from "@/components/StatusPill";
 import { setBookingStatus, refundBookingPayment } from "@/actions/bookingActions";
 
@@ -18,6 +19,16 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
   ]);
 
   if (!booking) notFound();
+
+  // Read-path audit: an admin opened this elder's booking detail (which
+  // exposes their name, service, and payment). Surfaces in the elder's
+  // Privacy Centre via me-access-history's metadata.elder_id match.
+  await logAdminRead({
+    actorUserId: admin.id,
+    resourceType: "booking",
+    resourceId: booking.id,
+    elderId: booking.elder_id,
+  });
 
   return (
     <div>

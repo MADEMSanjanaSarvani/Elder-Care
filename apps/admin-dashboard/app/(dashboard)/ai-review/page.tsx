@@ -1,5 +1,6 @@
 import { requireAdmin, requireScope } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { logAdminReads } from "@/lib/audit";
 import { approveAiInteraction, rejectAiInteraction } from "@/actions/aiReviewActions";
 
 export default async function AiReviewQueuePage() {
@@ -13,6 +14,21 @@ export default async function AiReviewQueuePage() {
     .eq("flagged", true)
     .eq("human_reviewed", false)
     .order("created_at", { ascending: true });
+
+  // Read-path audit: each flagged interaction shown here exposes an elder's
+  // AI output text to the reviewer. Log one read per interaction (batched)
+  // so it appears in that elder's Privacy Centre. Rows without an elder_id
+  // are skipped — there's nothing to attribute the access to.
+  await logAdminReads(
+    (interactions ?? [])
+      .filter((i) => i.elder_id)
+      .map((i) => ({
+        actorUserId: admin.id,
+        resourceType: "ai_interaction",
+        resourceId: i.id as string,
+        elderId: i.elder_id as string,
+      })),
+  );
 
   return (
     <div>
