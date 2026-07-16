@@ -41,6 +41,11 @@ class _JobList extends ConsumerWidget {
         title: const Text('Your jobs'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.person_outline),
+            tooltip: 'Profile & ratings',
+            onPressed: () => context.push('/profile/${caregiver.id}'),
+          ),
+          IconButton(
             icon: const Icon(Icons.account_balance_wallet_outlined),
             onPressed: () => context.push('/earnings'),
           ),

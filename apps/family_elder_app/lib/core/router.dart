@@ -17,8 +17,10 @@ import '../features/hospital_stays/presentation/hospital_stays_screen.dart';
 import '../features/medications/presentation/medications_screen.dart';
 import '../features/notifications/presentation/notification_inbox_screen.dart';
 import '../features/notifications/presentation/notification_preferences_screen.dart';
+import '../features/rating/presentation/rate_visits_screen.dart';
 import '../features/reminders/presentation/reminders_screen.dart';
 import '../features/reports/presentation/reports_screen.dart';
+import '../features/settings/presentation/settings_screen.dart';
 import '../features/sos/presentation/sos_screen.dart';
 import '../features/timeline/presentation/timeline_screen.dart';
 import 'providers.dart';
@@ -89,6 +91,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const NotificationPreferencesScreen(),
       ),
       GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/elder/:elderId/rate',
+        builder: (context, state) =>
+            RateVisitsScreen(elderId: state.pathParameters['elderId']!),
+      ),
+      GoRoute(
         path: '/elder/:elderId/hospital-stays',
         builder: (context, state) =>
             HospitalStaysScreen(elderId: state.pathParameters['elderId']!),
@@ -143,6 +154,11 @@ class HomeRouterScreen extends ConsumerWidget {
               child: const Icon(Icons.notifications_outlined),
             ),
             onPressed: () => context.push('/notifications'),
+          ),
+          IconButton(
+            tooltip: 'Settings',
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => context.push('/settings'),
           ),
         ],
       ),

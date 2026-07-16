@@ -6,6 +6,7 @@ import '../features/auth/presentation/login_screen.dart';
 import '../features/earnings/presentation/earnings_screen.dart';
 import '../features/job_queue/presentation/job_queue_screen.dart';
 import '../features/otp_visit/presentation/otp_visit_screen.dart';
+import '../features/profile/presentation/caregiver_profile_screen.dart';
 import 'providers.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -32,6 +33,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/booking/:bookingId',
         builder: (context, state) =>
             OtpVisitScreen(bookingId: state.pathParameters['bookingId']!),
+      ),
+      GoRoute(
+        path: '/profile/:caregiverId',
+        builder: (context, state) =>
+            CaregiverProfileScreen(caregiverId: state.pathParameters['caregiverId']!),
       ),
     ],
   );

@@ -135,6 +135,12 @@ class FamilyHomeScreen extends ConsumerWidget {
                         ),
                         TextButton.icon(
                           onPressed: () =>
+                              context.push('/elder/${elder.id}/rate'),
+                          icon: const Icon(Icons.star_outline),
+                          label: const Text('Rate a visit'),
+                        ),
+                        TextButton.icon(
+                          onPressed: () =>
                               context.push('/elder/${elder.id}/consent'),
                           icon: const Icon(Icons.privacy_tip_outlined),
                           label: const Text('What you can see'),
