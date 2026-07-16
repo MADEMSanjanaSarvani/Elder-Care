@@ -7,6 +7,7 @@ import '../features/appointments/presentation/appointments_screen.dart';
 import '../features/assistant/presentation/assistant_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/booking/presentation/booking_screen.dart';
+import '../features/care_plans/presentation/care_plans_screen.dart';
 import '../features/companion_visits/presentation/companion_preferences_screen.dart';
 import '../features/consent/presentation/consent_screen.dart';
 import '../features/elder_home/presentation/elder_home_screen.dart';
@@ -123,6 +124,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/elder/:elderId/reports',
         builder: (context, state) =>
             ReportsScreen(elderId: state.pathParameters['elderId']!),
+      ),
+      GoRoute(
+        path: '/elder/:elderId/care-plans',
+        builder: (context, state) =>
+            CarePlansScreen(elderId: state.pathParameters['elderId']!),
       ),
     ],
   );

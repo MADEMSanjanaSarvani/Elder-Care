@@ -11,6 +11,7 @@ const NAV_ITEMS: { href: string; label: string; scope?: Parameters<typeof hasSco
   { href: "/caregivers", label: "Caregiver directory", scope: "ops_admin" },
   { href: "/ai-review", label: "AI review queue", scope: "ops_admin" },
   { href: "/payouts", label: "Payout reconciliation", scope: "finance_ops" },
+  { href: "/analytics", label: "Care analytics", scope: "ops_admin" },
   { href: "/services", label: "Service catalog", scope: "super_admin" },
   { href: "/erasure-requests", label: "Erasure requests", scope: "super_admin" },
   { href: "/audit", label: "Audit log", scope: "super_admin" },
