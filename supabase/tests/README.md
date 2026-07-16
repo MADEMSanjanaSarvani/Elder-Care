@@ -154,6 +154,30 @@ a wellbeing-gated suggestion) and TEST 90 (a family member with
 suggestion is *about*, exactly like `reminders` in Batch 2; TEST 92
 confirms a stranger's dismiss attempt is a silent no-op, not a bypass.
 
+TESTs 93-104 cover `0017_batch5_caregiver_and_platform_ux.sql` (PRD Part 8,
+Batch 5: Caregiver Management, Caregiver Performance & Rating,
+Accessibility — Multi-language adds no schema). TESTs 93-95 confirm a
+caregiver profile is visible to the caregiver, admins, and any family
+connected via a booking, but not to an unconnected stranger. TEST 96
+confirms the onboarding checklist is admin-write-only (a caregiver can't
+mark their own training complete). TESTs 97-100 are the security heart of
+the rating system: TEST 97 confirms a 5-star rating isn't auto-flagged
+(and, by the `<= 2` trigger, a low one would be), TEST 98 confirms the
+`AFTER INSERT` trigger recomputed the summary to avg 5.00 / count 1, and
+TESTs 99-100 confirm the *anonymity-toward-the-caregiver* property the PRD
+insists must be enforced in the database, not client code: the caregiver
+gets **0 rows** reading the base `caregiver_ratings` table (which contains
+`rated_by`), but **1 row** through `caregiver_ratings_anonymized`, whose
+schema has **0** `rated_by` columns — so a caregiver can read their own
+reviews yet can never learn who wrote any given one, enforced by a view
+running with definer rights over an RLS-blocked base table. TEST 101
+confirms a user with no link to the elder and no part in the booking is
+blocked from rating by RLS (before the unique constraint is even reached).
+TESTs 102-104 cover `accessibility_preferences`' dual-writer model: the
+elder sets their own, a linked family member can adjust them on the
+elder's behalf (TEST 103, since many elders never open a settings screen),
+and a stranger's change is a silent no-op (TEST 104).
+
 Also worth stating: this migration does **not** implement column-level
 encryption for `emergency_medical_notes`/`insurance_policy_number`, even
 though the PRD claims it should reuse "an already-decided pattern." No
@@ -182,7 +206,8 @@ for f in 0001_schema 0002_rls 0003_realtime 0004_erasure_requests \
          0009_checkin_timeline_trigger 0010_batch2_care_logistics \
          0011_appointment_reminder_trigger 0012_medication_discontinue_trigger \
          0013_batch3_visits_and_records 0014_hospital_stay_gap_reminders \
-         0015_ai_interaction_types 0016_batch4_ai_layer; do
+         0015_ai_interaction_types 0016_batch4_ai_layer \
+         0017_batch5_caregiver_and_platform_ux; do
   psql -d setu_test -v ON_ERROR_STOP=1 -f "../migrations/$f.sql"
 done
 psql -d setu_test -v ON_ERROR_STOP=1 -f ../seed.sql

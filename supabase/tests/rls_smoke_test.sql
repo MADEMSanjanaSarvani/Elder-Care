@@ -942,4 +942,113 @@ select count(*) as visible_suggestions from care_suggestions where elder_id = 'a
 update care_suggestions set status = 'dismissed' where id = 'c15e0002-0000-0000-0000-000000000002';
 reset role;
 reset request.jwt.claim.sub;
+
+-- ===================================================================
+-- Batch 5 (docs/prd/08-prd-part8-caregiver-and-platform-ux.html):
+-- Caregiver Management, Caregiver Performance & Rating, Accessibility.
+-- (Multi-language Support adds no schema.)
+-- ===================================================================
+
+-- A completed companion booking (caregiver bbbb..., requested by daughter)
+-- to rate. The caregiver's user is 44444444.
+insert into bookings (id, region_id, elder_id, requested_by, caregiver_id, service_id, required_trust_tier, status, scheduled_at)
+select 'cccccccc-3333-3333-3333-333333333333', r.id, 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+       '22222222-2222-2222-2222-222222222222', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+       sc.id, 'standard', 'completed', now()
+from regions r join service_catalog sc on sc.region_id = r.id and sc.code = 'companionship_visit'
+where r.code = 'vizag-ap-in';
+
+\echo '=== TEST 93: caregiver self-manages their profile details — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+insert into caregiver_profile_details (caregiver_id, bio, service_radius_km)
+values ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Ten years of companionship care.', 8);
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 94: the family who requested a booking with this caregiver can see the profile — expect 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select count(*) as visible_profiles from caregiver_profile_details where caregiver_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 95: a stranger with no booking connection cannot see the profile — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+select count(*) as visible_profiles from caregiver_profile_details where caregiver_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 96: a non-admin caregiver cannot mark their own onboarding item complete — expect an RLS ERROR ==='
+set role authenticated;
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+insert into caregiver_onboarding_checklist (caregiver_id, item, completed)
+values ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'safety_training', true);
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 97: daughter rates the completed booking 5 stars — expect success, not auto-flagged ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+insert into caregiver_ratings (id, booking_id, caregiver_id, rated_by, stars, review_text)
+values ('b18e0001-0000-0000-0000-000000000001', 'cccccccc-3333-3333-3333-333333333333', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '22222222-2222-2222-2222-222222222222', 5, 'Very kind and punctual.');
+select flagged_for_review from caregiver_ratings where id = 'b18e0001-0000-0000-0000-000000000001';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 98: the trigger recomputed the summary — expect avg 5.00, count 1 ==='
+set role authenticated;
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+select average_stars, rating_count from caregiver_rating_summary where caregiver_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 99: the caregiver CANNOT read the base ratings table (would expose rated_by) — expect 0 ==='
+set role authenticated;
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+select count(*) as visible_base_rows from caregiver_ratings where caregiver_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 100: but the caregiver CAN read their own reviews via the anonymized view — expect 1, and the view has no rated_by column at all ==='
+set role authenticated;
+set request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';
+select count(*) as visible_via_view from caregiver_ratings_anonymized where caregiver_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+select count(*) as rated_by_columns from information_schema.columns
+where table_name = 'caregiver_ratings_anonymized' and column_name = 'rated_by';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 101: a user with no link to the elder and no part in the booking cannot rate it — expect an RLS ERROR (not a unique-constraint error; RLS blocks before the row is even considered) ==='
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+insert into caregiver_ratings (booking_id, caregiver_id, rated_by, stars)
+values ('cccccccc-3333-3333-3333-333333333333', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '33333333-3333-3333-3333-333333333333', 1);
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 102: elder sets their own accessibility preferences — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+insert into accessibility_preferences (user_id, text_scale, simple_mode)
+values ('11111111-1111-1111-1111-111111111111', 'extra_large', true);
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 103: a linked family member can adjust the elder''s accessibility preferences on their behalf — expect success ==='
+set role authenticated;
+set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+update accessibility_preferences set text_scale = 'large' where user_id = '11111111-1111-1111-1111-111111111111';
+select text_scale from accessibility_preferences where user_id = '11111111-1111-1111-1111-111111111111';
+reset role;
+reset request.jwt.claim.sub;
+
+\echo '=== TEST 104: a stranger cannot change the elder''s accessibility preferences — expect a silent no-op (0 rows) ==='
+set role authenticated;
+set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+update accessibility_preferences set text_scale = 'default' where user_id = '11111111-1111-1111-1111-111111111111';
+reset role;
+reset request.jwt.claim.sub;
+select text_scale as unchanged_scale from accessibility_preferences where user_id = '11111111-1111-1111-1111-111111111111';
 select status from care_suggestions where id = 'c15e0002-0000-0000-0000-000000000002';
