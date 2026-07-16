@@ -371,6 +371,38 @@ authorization_url_path = "/oauth/consent"
 # Allow dynamic client registration
 allow_dynamic_registration = false
 
+# ---------------------------------------------------------------------
+# Per-function gateway auth.
+#
+# Supabase's gateway verifies a JWT on every function call BEFORE the
+# request reaches the function — so a function meant to authenticate with
+# only its own shared-secret header (n8n-scheduled sweeps) or a provider
+# signature (payment/verification webhooks) is unreachable under the
+# default, returning UNAUTHORIZED_NO_AUTH_HEADER at the gateway. These
+# functions do their OWN auth inside (a shared-secret header compare, or a
+# signature check), so gateway JWT verification is turned off for them and
+# their real check becomes the only one. Every function NOT listed here
+# keeps verify_jwt = true (the default) and uses requireUser().
+# ---------------------------------------------------------------------
+[functions.checkins-escalation-sweep]
+verify_jwt = false
+[functions.medications-generate-doses]
+verify_jwt = false
+[functions.reminders-dispatch-sweep]
+verify_jwt = false
+[functions.hospital-stays-gap-sweep]
+verify_jwt = false
+[functions.ai-visit-report-generate]
+verify_jwt = false
+[functions.recommendations-generate]
+verify_jwt = false
+[functions.payouts-run]
+verify_jwt = false
+[functions.verification-idfy-webhook]
+verify_jwt = false
+[functions.payments-webhook]
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.

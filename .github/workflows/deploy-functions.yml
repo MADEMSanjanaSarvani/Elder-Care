@@ -10,6 +10,9 @@ on:
       - claude/elder-care-platform-mx27jo
     paths:
       - "supabase/functions/**"
+      # config.toml carries per-function verify_jwt settings that only take
+      # effect on a redeploy, so a change to it must trigger this workflow too.
+      - "supabase/config.toml"
   workflow_dispatch: {}
 
 jobs:
