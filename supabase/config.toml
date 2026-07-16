@@ -402,6 +402,12 @@ verify_jwt = false
 verify_jwt = false
 [functions.payments-webhook]
 verify_jwt = false
+[functions.care-plans-generate-visits]
+verify_jwt = false
+[functions.care-plans-billing-run]
+verify_jwt = false
+[functions.analytics-refresh]
+verify_jwt = false
 
 [edge_runtime]
 enabled = true

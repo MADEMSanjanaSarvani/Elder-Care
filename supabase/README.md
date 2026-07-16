@@ -195,6 +195,9 @@ changes behavior; note them if you're used to seeing the more common imports.
 | `SUPABASE_ANON_KEY` | `ai-care-assistant` (the publishable key — builds the RLS-scoped as-caller client for tool execution; safe server-side, RLS is the real boundary) |
 | `REPORTS_SWEEP_SHARED_SECRET` | `ai-visit-report-generate` (same n8n-scheduled shared-secret pattern) |
 | `RECOMMENDATIONS_SWEEP_SHARED_SECRET` | `recommendations-generate` (same n8n-scheduled shared-secret pattern) |
+| `CAREPLAN_VISITS_SWEEP_SHARED_SECRET` | `care-plans-generate-visits` (same n8n-scheduled shared-secret pattern) |
+| `CAREPLAN_BILLING_SWEEP_SHARED_SECRET` | `care-plans-billing-run` (same n8n-scheduled shared-secret pattern) |
+| `ANALYTICS_REFRESH_SHARED_SECRET` | `analytics-refresh` (same n8n-scheduled shared-secret pattern) |
 
 None of these are set in this repo. Configure them via `supabase secrets set` (or your CI's secret store) — never commit real keys.
 
@@ -389,6 +392,39 @@ Three new Edge Functions, plus one new shared helper:
 
 Voice Assistant (Module 16) adds no Edge Function — it's a pure modality converter handled client-side
 via platform-native STT/TTS, feeding text into the assistant's already-guardrailed path.
+
+## PRD Part 9, Batch 6: the business layer
+
+`docs/prd/09-prd-part9-business-layer.html`. Database: `migrations/0018_care_coordinator_scope.sql`
+(additive `admin_scope` value) + `migrations/0019_batch6_business_layer.sql` (care plans, allocations,
+subscriptions, `care_plan_charges`, coordinator assignments, and analytics materialized views). The
+load-bearing boundary: **recurring subscription billing lives entirely in `care_plan_charges`, never in
+`payments`** — `payments`/`payments-create-order`/`payments-webhook` are untouched, so the
+merchant-of-record per-visit flow keeps its exact meaning. The one existing-Edge-Function touch is an
+additive coordinator-authorization clause in `bookings-create`.
+
+Three new scheduled functions, all shared-secret / `verify_jwt = false`:
+
+- `POST /functions/v1/care-plans-generate-visits` (`x-careplan-visits-sweep-secret`) — weekly; turns
+  each active subscription's plan allocations into `requested` booking drafts. **Deviation**: it does
+  NOT invoke `bookings-create` over HTTP (that function requires a user session a scheduler doesn't
+  have, and this batch forbids changing it); instead it performs the same two validations
+  (service-in-region, trust-tier-from-service) and inserts via the service-role client — reuse in
+  spirit, not a hole punched in the user-facing booking function.
+- `POST /functions/v1/care-plans-billing-run` (`x-careplan-billing-sweep-secret`) — monthly; records
+  one `pending` `care_plan_charges` row per active subscription per period (idempotent). The actual
+  Razorpay **Subscriptions** API call (a different product surface than the Orders API) needs
+  subscription credentials the project doesn't have yet — flagged as the remaining integration step,
+  like `payouts-run`'s RazorpayX calls, not faked.
+- `POST /functions/v1/analytics-refresh` (`x-analytics-refresh-secret`) — refreshes the four analytics
+  materialized views via the `refresh_analytics_views()` DB function.
+
+The three-tier plan ladder (Basic → Standard → Premium, each a strict superset; Premium's exclusive
+extras are home nursing + hospital companion) ships as seed data. Validated: `deno check`/`deno lint`
+clean across all 33 functions, 19 `_shared` unit tests pass, RLS covered by `tests/rls_smoke_test.sql`
+TESTs 105-114 (114/114 total) — which caught a real security bug where a coordinator modeled as a
+`role='admin'` user would have read every elder's health notes platform-wide (see `tests/README.md`).
+Not yet applied to the live project.
 
 Validated: all three functions + both shared helpers `deno check`/`deno lint` clean across the full
 30-file function tree, and the 4 new `isMedicalQuestion` unit tests pass alongside the existing 15
