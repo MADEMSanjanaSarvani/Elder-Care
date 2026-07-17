@@ -57,9 +57,22 @@ jobs:
             echo "::error::Missing SUPABASE_URL or SUPABASE_ANON_KEY repository secret. Add them under Settings -> Secrets and variables -> Actions."
             exit 1
           fi
-          flutter build apk --release \
-            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
-            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+          # Gradle occasionally gets a transient 403 from Maven while
+          # downloading dependencies. Retry the build a few times so a
+          # network blip doesn't fail the whole run.
+          n=0
+          until [ "$n" -ge 3 ]; do
+            flutter build apk --release \
+              --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+              --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" && break
+            n=$((n+1))
+            echo "::warning::Build attempt $n failed (often a transient network error). Retrying in 20s…"
+            sleep 20
+          done
+          if [ "$n" -ge 3 ]; then
+            echo "::error::Build failed after 3 attempts."
+            exit 1
+          fi
 
       - name: Rename APK
         working-directory: apps/${{ matrix.app }}
