@@ -55,3 +55,35 @@ final myElderProfilesProvider = FutureProvider<List<ElderProfile>>((ref) async {
   }
   return result;
 });
+
+/// Caregiver-mode providers (this app now serves caregivers too, chosen by
+/// role at login). A caregiver's own row exists only once ops has completed
+/// their verification (PRD Part 1 §04) — null means "not onboarded yet",
+/// which the caregiver home surfaces as a pending-verification screen. There
+/// is deliberately no self-serve path to create this row.
+final myCaregiverProvider = FutureProvider<Caregiver?>((ref) async {
+  ref.watch(authStateProvider);
+  final client = ref.watch(supabaseClientProvider);
+  final user = client.auth.currentUser;
+  if (user == null) return null;
+  final row = await client
+      .from('caregivers')
+      .select()
+      .eq('user_id', user.id)
+      .maybeSingle();
+  if (row == null) return null;
+  return Caregiver.fromJson(row);
+});
+
+final myBookingsProvider = FutureProvider<List<Booking>>((ref) async {
+  final caregiver = await ref.watch(myCaregiverProvider.future);
+  if (caregiver == null) return [];
+  final client = ref.watch(supabaseClientProvider);
+  final rows = await client
+      .from('bookings')
+      .select()
+      .eq('caregiver_id', caregiver.id)
+      .inFilter('status', ['matched', 'confirmed', 'in_progress']).order(
+          'scheduled_at');
+  return rows.map((row) => Booking.fromJson(row)).toList();
+});

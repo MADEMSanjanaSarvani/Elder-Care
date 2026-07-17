@@ -91,28 +91,31 @@ The app needs a region and services to show, or booking screens look empty.
 
 ## Step 5 — Build the APK
 
+There is now **one app** for everyone — at login the person picks their role
+(family member / senior / caregiver) and sees the right home.
+
 1. GitHub repo → **Actions** tab (top menu).
-2. Left sidebar → click **Build APKs**.
+2. Left sidebar → click **Build APK**.
 3. Click the **Run workflow** button (right side) → pick the branch
    `claude/elder-care-platform-mx27jo` → **Run workflow**.
 4. Wait ~10–15 minutes. When the run finishes (green tick), open it and scroll
-   to **Artifacts** at the bottom. Download:
-   - `setu-family-elder-apk` (the app for families & elders)
-   - `setu-caregiver-apk` (the app for caregivers — optional for friends)
-5. Unzip the download to get the `.apk` file.
+   to **Artifacts** at the bottom. Download **`setu-apk`**.
+5. Unzip the download to get **`setu.apk`**.
 
 ## Step 6 — Test it yourself, then share
 
-1. Copy `setu-family-elder.apk` to your Android phone (WhatsApp to yourself,
-   Google Drive, or USB).
+1. Copy `setu.apk` to your Android phone (WhatsApp to yourself, Google Drive,
+   or USB).
 2. Tap it to install. Android will warn "install from unknown source" — allow
    it (Settings will offer a toggle). This is normal for an APK not from the
    Play Store.
-3. Open **Setu**, log in with a test number from Step 3 (e.g. `+919000000001`
-   / `123456`), and click through: create a profile, browse services, open the
-   timeline, try SOS (it will offer to call 108 — you can cancel).
-4. Once **you** are happy it works, send the same `.apk` file + one test
-   number + code to each friend. Tell them to install the same way.
+3. Open **Setu**, log in (Email → Create account, or a test phone number), pick
+   **I'm a family member** (or senior), and click through: browse services,
+   open the timeline, try SOS (it will offer to call 108 — you can cancel).
+   To see the caregiver side, log in with another account and pick
+   **I'm a caregiver**.
+4. Once **you** are happy it works, send the same `setu.apk` file to each
+   friend with a login they can use. Tell them to install the same way.
 
 **After Part A:** friends can log in and use the whole app. The AI chat will
 say "still being set up" until you do Part B, and paying for a booking needs

@@ -1,11 +1,15 @@
-name: Build APKs
+name: Build APK
 
-# Builds installable Android APKs for both Flutter apps and uploads them as
-# downloadable artifacts. Run it manually from the GitHub "Actions" tab
-# (Build APKs -> Run workflow) whenever you want a fresh APK to share.
+# Builds an installable Android APK for the single Setu app and uploads it as
+# a downloadable artifact. Run it manually from the GitHub "Actions" tab
+# (Build APK -> Run workflow) whenever you want a fresh APK to share.
 #
-# These are RELEASE builds signed with the default debug key — installable
-# on any phone for testing, but NOT the key you'll publish to the Play Store
+# One app, three roles: at login the user picks family member / senior /
+# caregiver, and the app shows the matching home. (The old separate caregiver
+# app is superseded and no longer built.)
+#
+# This is a RELEASE build signed with the default debug key — installable on
+# any phone for testing, but NOT the key you'll publish to the Play Store
 # with. See docs/BUILD-ANDROID.md for the Play Store signing setup.
 #
 # Requires two repository secrets (Settings -> Secrets and variables ->
@@ -19,15 +23,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - app: family_elder_app
-            label: family-elder
-          - app: caregiver_app
-            label: caregiver
-
     steps:
       - uses: actions/checkout@v4
 
@@ -44,11 +39,11 @@ jobs:
           cache: true
 
       - name: Fetch dependencies
-        working-directory: apps/${{ matrix.app }}
+        working-directory: apps/family_elder_app
         run: flutter pub get
 
       - name: Build release APK
-        working-directory: apps/${{ matrix.app }}
+        working-directory: apps/family_elder_app
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
@@ -75,15 +70,14 @@ jobs:
           fi
 
       - name: Rename APK
-        working-directory: apps/${{ matrix.app }}
+        working-directory: apps/family_elder_app
         run: |
           mkdir -p ../../dist
-          cp build/app/outputs/flutter-apk/app-release.apk \
-             ../../dist/setu-${{ matrix.label }}.apk
+          cp build/app/outputs/flutter-apk/app-release.apk ../../dist/setu.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: setu-${{ matrix.label }}-apk
-          path: dist/setu-${{ matrix.label }}.apk
+          name: setu-apk
+          path: dist/setu.apk
           if-no-files-found: error

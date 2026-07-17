@@ -4,12 +4,16 @@ Everything is built. This page is your map: what each document is for, in the
 order you'll actually use them. You don't need to read all of it — follow the
 path for where you are.
 
-## The apps
-- **Setu** (`apps/family_elder_app`) — families & elders.
-- **Setu Care** (`apps/caregiver_app`) — caregivers.
+## The app
+- **Setu** (`apps/family_elder_app`) — **one app for everyone**. At login the
+  person picks their role (family member / senior / caregiver) and sees the
+  matching home. This is the single APK you build and share.
 - **Admin dashboard** (`apps/admin-dashboard`) — your ops team's web console.
 - **Backend** (`supabase/`) — database, security rules, and server functions
   (already deployed to your live project).
+
+  *(`apps/caregiver_app` is the old standalone caregiver app, now superseded by
+  the caregiver role inside Setu and no longer built or shipped.)*
 
 ---
 

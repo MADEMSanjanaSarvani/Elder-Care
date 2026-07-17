@@ -181,6 +181,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           onPressed: _busy ? null : () => _chooseRole('family_member'),
           child: const Text("I'm a family member"),
         ),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          onPressed: _busy ? null : () => _chooseRole('caregiver'),
+          child: const Text("I'm a caregiver"),
+        ),
       ];
     }
     return _mode == _AuthMode.phone ? _phoneFields() : _emailFields();

@@ -14,8 +14,12 @@ import '../features/elder_home/presentation/elder_home_screen.dart';
 import '../features/family_access/presentation/family_access_screen.dart';
 import '../features/family_home/presentation/family_home_screen.dart';
 import '../features/health_profile/presentation/health_profile_screen.dart';
+import '../features/earnings/presentation/earnings_screen.dart';
 import '../features/hospital_stays/presentation/hospital_stays_screen.dart';
+import '../features/job_queue/presentation/job_queue_screen.dart';
 import '../features/medications/presentation/medications_screen.dart';
+import '../features/otp_visit/presentation/otp_visit_screen.dart';
+import '../features/profile/presentation/caregiver_profile_screen.dart';
 import '../features/notifications/presentation/notification_inbox_screen.dart';
 import '../features/notifications/presentation/notification_preferences_screen.dart';
 import '../features/privacy/presentation/privacy_screen.dart';
@@ -136,6 +140,21 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>
             PrivacyScreen(elderId: state.pathParameters['elderId']!),
       ),
+      // Caregiver-mode routes (reached when the signed-in profile's role is
+      // 'caregiver'; the home screen shows the job queue for that role).
+      GoRoute(
+          path: '/earnings',
+          builder: (context, state) => const EarningsScreen()),
+      GoRoute(
+        path: '/booking/:bookingId',
+        builder: (context, state) =>
+            OtpVisitScreen(bookingId: state.pathParameters['bookingId']!),
+      ),
+      GoRoute(
+        path: '/profile/:caregiverId',
+        builder: (context, state) => CaregiverProfileScreen(
+            caregiverId: state.pathParameters['caregiverId']!),
+      ),
     ],
   );
 });
@@ -151,9 +170,33 @@ class HomeRouterScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(currentProfileProvider);
-    final unreadAsync = ref.watch(unreadCountProvider);
-    final unread = unreadAsync.asData?.value ?? 0;
 
+    return profileAsync.when(
+      data: (profile) {
+        final role = profile?['role'] as String?;
+        // Caregivers get their own screen (which brings its own Scaffold and
+        // work-focused app bar), not the family/elder shell.
+        if (role == 'caregiver') return const JobQueueScreen();
+        return _FamilyElderShell(isElder: role == 'elder');
+      },
+      loading: () => const Scaffold(
+          body: Center(child: CircularProgressIndicator())),
+      error: (err, stack) => Scaffold(
+          body: Center(child: Text('Failed to load profile: $err'))),
+    );
+  }
+}
+
+/// The shared family/elder home shell: the Setu app bar (notification bell +
+/// settings) over either the elder or family home body.
+class _FamilyElderShell extends ConsumerWidget {
+  const _FamilyElderShell({required this.isElder});
+
+  final bool isElder;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unread = ref.watch(unreadCountProvider).asData?.value ?? 0;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Setu'),
@@ -175,16 +218,7 @@ class HomeRouterScreen extends ConsumerWidget {
         ],
       ),
       body: SafeArea(
-        child: profileAsync.when(
-          data: (profile) {
-            final role = profile?['role'] as String?;
-            if (role == 'elder') return const ElderHomeScreen();
-            return const FamilyHomeScreen();
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) =>
-              Center(child: Text('Failed to load profile: $err')),
-        ),
+        child: isElder ? const ElderHomeScreen() : const FamilyHomeScreen(),
       ),
     );
   }
