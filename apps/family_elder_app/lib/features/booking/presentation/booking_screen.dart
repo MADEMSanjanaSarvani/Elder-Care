@@ -5,6 +5,25 @@ import 'package:setu_core/setu_core.dart';
 import '../../../core/providers.dart';
 import '../data/booking_repository.dart';
 
+IconData _serviceIcon(String code) {
+  switch (code) {
+    case 'companionship_visit':
+      return Icons.diversity_1_outlined;
+    case 'medicine_pickup':
+      return Icons.medication_outlined;
+    case 'grocery_assistance':
+      return Icons.shopping_basket_outlined;
+    case 'physiotherapy':
+      return Icons.self_improvement_outlined;
+    case 'home_nursing':
+      return Icons.medical_services_outlined;
+    case 'hospital_companion':
+      return Icons.local_hospital_outlined;
+    default:
+      return Icons.volunteer_activism_outlined;
+  }
+}
+
 class BookingScreen extends ConsumerStatefulWidget {
   const BookingScreen({required this.elderId, super.key});
 
@@ -22,7 +41,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
   BookingRepository get _repo =>
       BookingRepository(ref.read(supabaseClientProvider));
 
-  Future<void> _confirm(String regionId) async {
+  Future<void> _confirm() async {
     if (_selected == null) return;
     setState(() {
       _submitting = true;
@@ -32,19 +51,19 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
       await _repo.createBooking(
         elderId: widget.elderId,
         serviceId: _selected!.id,
-        scheduledAt: DateTime.now().add(const Duration(
-            hours:
-                2)), // MVP: "as soon as possible" slot picker is a Phase 2 refinement
+        // MVP: "as soon as possible" — a slot picker is a Phase 2 refinement.
+        scheduledAt: DateTime.now().add(const Duration(hours: 2)),
       );
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Booking requested')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Help requested — we\'ll match a caregiver.')),
+        );
         setState(() => _selected = null);
       }
     } catch (err) {
-      setState(() => _error = err.toString());
+      setState(() => _error = 'Could not book: $err');
     } finally {
-      setState(() => _submitting = false);
+      if (mounted) setState(() => _submitting = false);
     }
   }
 
@@ -70,39 +89,48 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
               return Column(
                 children: [
                   Expanded(
-                    child: RadioGroup<SetuService>(
-                      groupValue: _selected,
-                      onChanged: (value) => setState(() => _selected = value),
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(SetuSpacing.lg),
-                        itemCount: services.length,
-                        itemBuilder: (context, index) {
-                          final service = services[index];
-                          return RadioListTile<SetuService>(
-                            value: service,
-                            title: Text(service.name),
-                            subtitle: Text(
-                                '${service.currency} ${service.basePrice.toStringAsFixed(0)}'),
-                          );
-                        },
-                      ),
+                    child: ListView(
+                      padding: const EdgeInsets.all(SetuSpacing.lg),
+                      children: [
+                        Text('What help do you need?',
+                            style: Theme.of(context).textTheme.titleLarge),
+                        const SizedBox(height: SetuSpacing.xs),
+                        const Text(
+                          'Pick a service — we\'ll match a verified caregiver near you.',
+                          style: TextStyle(color: SetuColors.mutedLight),
+                        ),
+                        const SizedBox(height: SetuSpacing.md),
+                        for (final service in services)
+                          _ServiceCard(
+                            service: service,
+                            selected: _selected?.id == service.id,
+                            onTap: () => setState(() => _selected = service),
+                          ),
+                      ],
                     ),
                   ),
                   if (_error != null)
                     Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: SetuSpacing.lg),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: SetuSpacing.lg),
                       child: Text(_error!,
                           style: TextStyle(
                               color: Theme.of(context).colorScheme.error)),
                     ),
-                  Padding(
-                    padding: const EdgeInsets.all(SetuSpacing.lg),
-                    child: FilledButton(
-                      onPressed: (_selected == null || _submitting)
-                          ? null
-                          : () => _confirm(regionId),
-                      child: Text(_submitting ? 'Booking…' : 'Confirm booking'),
+                  SafeArea(
+                    top: false,
+                    child: Padding(
+                      padding: const EdgeInsets.all(SetuSpacing.lg),
+                      child: FilledButton(
+                        onPressed: (_selected == null || _submitting)
+                            ? null
+                            : _confirm,
+                        child: Text(_submitting
+                            ? 'Requesting…'
+                            : _selected == null
+                                ? 'Choose a service'
+                                : 'Request ${_selected!.name}'),
+                      ),
                     ),
                   ),
                 ],
@@ -113,6 +141,71 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) =>
             Center(child: Text('Something went wrong: $err')),
+      ),
+    );
+  }
+}
+
+class _ServiceCard extends StatelessWidget {
+  const _ServiceCard(
+      {required this.service, required this.selected, required this.onTap});
+
+  final SetuService service;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    const accent = SetuColors.accentLight;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: SetuSpacing.sm),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(SetuSpacing.md),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            color: selected ? accent.withValues(alpha: 0.06) : null,
+            border: Border.all(
+              color: selected ? accent : SetuColors.borderLight,
+              width: selected ? 2 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(SetuSpacing.sm),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(_serviceIcon(service.code), color: accent),
+              ),
+              const SizedBox(width: SetuSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(service.name,
+                        style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 2),
+                    Text(
+                      'From ${service.currency} ${service.basePrice.toStringAsFixed(0)}',
+                      style: const TextStyle(color: SetuColors.mutedLight),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                selected
+                    ? Icons.check_circle
+                    : Icons.radio_button_unchecked,
+                color: selected ? accent : SetuColors.borderLight,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
