@@ -4,6 +4,7 @@ import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
 import '../data/booking_repository.dart';
+import 'caregiver_select_screen.dart';
 
 IconData _serviceIcon(String code) {
   switch (code) {
@@ -35,36 +36,18 @@ class BookingScreen extends ConsumerStatefulWidget {
 
 class _BookingScreenState extends ConsumerState<BookingScreen> {
   SetuService? _selected;
-  bool _submitting = false;
-  String? _error;
 
   BookingRepository get _repo =>
       BookingRepository(ref.read(supabaseClientProvider));
 
-  Future<void> _confirm() async {
+  void _chooseCaregiver() {
     if (_selected == null) return;
-    setState(() {
-      _submitting = true;
-      _error = null;
-    });
-    try {
-      await _repo.createBooking(
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => CaregiverSelectScreen(
         elderId: widget.elderId,
-        serviceId: _selected!.id,
-        // MVP: "as soon as possible" — a slot picker is a Phase 2 refinement.
-        scheduledAt: DateTime.now().add(const Duration(hours: 2)),
-      );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Help requested — we\'ll match a caregiver.')),
-        );
-        setState(() => _selected = null);
-      }
-    } catch (err) {
-      setState(() => _error = 'Could not book: $err');
-    } finally {
-      if (mounted) setState(() => _submitting = false);
-    }
+        service: _selected!,
+      ),
+    ));
   }
 
   @override
@@ -96,7 +79,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                             style: Theme.of(context).textTheme.titleLarge),
                         const SizedBox(height: SetuSpacing.xs),
                         const Text(
-                          'Pick a service — we\'ll match a verified caregiver near you.',
+                          'Pick a service, then choose the caregiver you like best.',
                           style: TextStyle(color: SetuColors.mutedLight),
                         ),
                         const SizedBox(height: SetuSpacing.md),
@@ -109,27 +92,16 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                       ],
                     ),
                   ),
-                  if (_error != null)
-                    Padding(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: SetuSpacing.lg),
-                      child: Text(_error!,
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.error)),
-                    ),
                   SafeArea(
                     top: false,
                     child: Padding(
                       padding: const EdgeInsets.all(SetuSpacing.lg),
-                      child: FilledButton(
-                        onPressed: (_selected == null || _submitting)
-                            ? null
-                            : _confirm,
-                        child: Text(_submitting
-                            ? 'Requesting…'
-                            : _selected == null
-                                ? 'Choose a service'
-                                : 'Request ${_selected!.name}'),
+                      child: FilledButton.icon(
+                        onPressed: _selected == null ? null : _chooseCaregiver,
+                        icon: const Icon(Icons.groups_outlined),
+                        label: Text(_selected == null
+                            ? 'Choose a service'
+                            : 'See caregivers for ${_selected!.name}'),
                       ),
                     ),
                   ),

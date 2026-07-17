@@ -7,13 +7,19 @@
 import { supabaseAdmin, requireUser } from "../_shared/supabaseAdmin.ts";
 import { corsHeaders, jsonResponse, errorResponse } from "../_shared/cors.ts";
 
+const TIER_RANK: Record<string, number> = {
+  probationary: 0,
+  standard: 1,
+  clinical_verified: 2,
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
   try {
     const user = await requireUser(req);
-    const { elder_id, service_id, scheduled_at } = await req.json();
+    const { elder_id, service_id, scheduled_at, caregiver_id } = await req.json();
     if (!elder_id || !service_id || !scheduled_at) {
       return errorResponse("elder_id, service_id, and scheduled_at are required");
     }
@@ -74,6 +80,32 @@ Deno.serve(async (req) => {
       return errorResponse("Service is not offered in the elder's region", 422);
     }
 
+    // Optional: the family chose a specific caregiver to request. Validate the
+    // caregiver is real, active, background-verified, in the same region, and
+    // meets the service's trust-tier requirement — the same bar the auto-match
+    // path enforces, so a hand-picked request can never bypass it.
+    let chosenCaregiverId: string | null = null;
+    if (caregiver_id) {
+      const { data: cg } = await admin
+        .from("caregivers")
+        .select("id, region_id, active, bgv_status, trust_tier")
+        .eq("id", caregiver_id)
+        .maybeSingle();
+      if (!cg) return errorResponse("Caregiver not found", 404);
+      if (!cg.active || cg.bgv_status !== "cleared") {
+        return errorResponse("This caregiver isn't available for booking", 422);
+      }
+      if (cg.region_id !== elder.region_id) {
+        return errorResponse("Caregiver is not in the elder's region", 422);
+      }
+      if ((TIER_RANK[cg.trust_tier] ?? 0) <
+          (TIER_RANK[service.requires_trust_tier] ?? 0)) {
+        return errorResponse(
+          "This caregiver isn't cleared for this service", 422);
+      }
+      chosenCaregiverId = cg.id;
+    }
+
     const { data: booking, error: insertErr } = await admin
       .from("bookings")
       .insert({
@@ -81,6 +113,7 @@ Deno.serve(async (req) => {
         elder_id,
         requested_by: user.id,
         service_id,
+        caregiver_id: chosenCaregiverId,
         required_trust_tier: service.requires_trust_tier,
         scheduled_at,
         status: "requested",
@@ -93,7 +126,7 @@ Deno.serve(async (req) => {
       booking_id: booking.id,
       event_type: "requested",
       actor_user_id: user.id,
-      payload: { service_id },
+      payload: { service_id, caregiver_id: chosenCaregiverId },
     });
 
     await admin.from("audit_log").insert({
