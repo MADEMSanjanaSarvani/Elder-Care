@@ -247,24 +247,27 @@ class _ElderCardState extends ConsumerState<_ElderCard> {
     final elder = widget.elder;
     final id = elder.id;
 
+    const sage = SetuColors.accentLight;
+    const peach = SetuColors.peachLight;
+    const lav = SetuColors.lavenderLight;
     const primary = <_Action>[
-      _Action(Icons.add_circle_outline, 'Book help', 'booking'),
-      _Action(Icons.timeline_outlined, 'Timeline', 'timeline'),
-      _Action(Icons.medication_outlined, 'Medicines', 'medications'),
-      _Action(Icons.event_outlined, 'Appointments', 'appointments'),
-      _Action(Icons.card_membership_outlined, 'Care plans', 'care-plans'),
-      _Action(Icons.chat_bubble_outline, 'Ask assistant', 'assistant'),
+      _Action(Icons.add_circle_outline, 'Book help', 'booking', sage),
+      _Action(Icons.timeline_outlined, 'Timeline', 'timeline', lav),
+      _Action(Icons.medication_outlined, 'Medicines', 'medications', peach),
+      _Action(Icons.event_outlined, 'Appointments', 'appointments', sage),
+      _Action(Icons.card_membership_outlined, 'Care plans', 'care-plans', lav),
+      _Action(Icons.chat_bubble_outline, 'Ask assistant', 'assistant', lav),
     ];
     const more = <_Action>[
-      _Action(Icons.notifications_outlined, 'Reminders', 'reminders'),
-      _Action(Icons.local_hospital_outlined, 'Hospital stays', 'hospital-stays'),
-      _Action(Icons.favorite_outline, 'Health profile', 'health-profile'),
-      _Action(Icons.diversity_1_outlined, 'Companion', 'companion-preferences'),
-      _Action(Icons.summarize_outlined, 'Weekly reports', 'reports'),
-      _Action(Icons.star_outline, 'Rate a visit', 'rate'),
-      _Action(Icons.group_outlined, 'Family access', 'family'),
-      _Action(Icons.privacy_tip_outlined, 'What you can see', 'consent'),
-      _Action(Icons.shield_outlined, 'Privacy centre', 'privacy'),
+      _Action(Icons.notifications_outlined, 'Reminders', 'reminders', peach),
+      _Action(Icons.local_hospital_outlined, 'Hospital stays', 'hospital-stays', sage),
+      _Action(Icons.favorite_outline, 'Health profile', 'health-profile', peach),
+      _Action(Icons.diversity_1_outlined, 'Companion', 'companion-preferences', lav),
+      _Action(Icons.summarize_outlined, 'Weekly reports', 'reports', sage),
+      _Action(Icons.star_outline, 'Rate a visit', 'rate', peach),
+      _Action(Icons.group_outlined, 'Family access', 'family', sage),
+      _Action(Icons.privacy_tip_outlined, 'What you can see', 'consent', lav),
+      _Action(Icons.shield_outlined, 'Privacy centre', 'privacy', sage),
     ];
 
     return Card(
@@ -391,10 +394,11 @@ class _ElderCardState extends ConsumerState<_ElderCard> {
 }
 
 class _Action {
-  const _Action(this.icon, this.label, this.route);
+  const _Action(this.icon, this.label, this.route, this.color);
   final IconData icon;
   final String label;
   final String route;
+  final Color color;
 }
 
 class _ActionTile extends StatelessWidget {
@@ -412,7 +416,8 @@ class _ActionTile extends StatelessWidget {
         padding: const EdgeInsets.all(SetuSpacing.sm),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: SetuColors.borderLight),
+          color: action.color.withValues(alpha: 0.05),
+          border: Border.all(color: action.color.withValues(alpha: 0.22)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -420,10 +425,10 @@ class _ActionTile extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(SetuSpacing.sm),
               decoration: BoxDecoration(
-                color: SetuColors.accentLight.withValues(alpha: 0.12),
+                color: action.color.withValues(alpha: 0.14),
                 shape: BoxShape.circle,
               ),
-              child: Icon(action.icon, color: SetuColors.accentLight, size: 22),
+              child: Icon(action.icon, color: action.color, size: 22),
             ),
             const SizedBox(height: SetuSpacing.xs),
             Text(
