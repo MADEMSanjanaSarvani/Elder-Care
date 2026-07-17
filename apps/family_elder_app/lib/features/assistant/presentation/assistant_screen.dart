@@ -68,92 +68,174 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Care assistant')),
+      appBar: AppBar(title: const Text('CareHive companion')),
       body: Column(
         children: [
-          if (_messages.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(SetuSpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Ask me about visits, medications, appointments, or your care team.'),
-                  const SizedBox(height: SetuSpacing.md),
-                  Wrap(
-                    spacing: SetuSpacing.sm,
-                    runSpacing: SetuSpacing.xs,
-                    children: [
-                      for (final s in _suggestions)
-                        ActionChip(label: Text(s), onPressed: () => _send(s)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(SetuSpacing.lg),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final m = _messages[index];
-                return Align(
-                  alignment: m.fromUser ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: SetuSpacing.sm),
-                    padding: const EdgeInsets.all(SetuSpacing.md),
-                    constraints: BoxConstraints(
-                        maxWidth: MediaQuery.of(context).size.width * 0.8),
-                    decoration: BoxDecoration(
-                      color: m.fromUser
-                          ? SetuColors.accentLight.withValues(alpha: 0.14)
-                          : SetuColors.verifiedLight.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(m.text),
-                        if (m.bookingDraft != null) ...[
-                          const SizedBox(height: SetuSpacing.sm),
-                          FilledButton.icon(
-                            icon: const Icon(Icons.check),
-                            label: const Text('Review & confirm booking'),
-                            onPressed: () =>
-                                context.push('/elder/${widget.elderId}/booking'),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+            child: _messages.isEmpty ? _welcome() : _chatList(),
           ),
-          if (_busy) const LinearProgressIndicator(),
-          Padding(
-            padding: const EdgeInsets.all(SetuSpacing.md),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration: const InputDecoration(
-                      hintText: 'Ask a question…',
-                      border: OutlineInputBorder(),
-                    ),
-                    onSubmitted: _send,
-                  ),
+          if (_busy)
+            const LinearProgressIndicator(
+                color: SetuColors.lavenderLight, minHeight: 2),
+          _inputBar(),
+        ],
+      ),
+    );
+  }
+
+  Widget _welcome() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(SetuSpacing.xl),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(height: SetuSpacing.xl),
+          const _BreathingOrb(),
+          const SizedBox(height: SetuSpacing.xl),
+          Text('Hello, I\'m here whenever you\'d like to talk',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: SetuSpacing.xs),
+          const Text(
+            'Ask about visits, medicines, appointments or your care team.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: SetuColors.mutedLight),
+          ),
+          const SizedBox(height: SetuSpacing.lg),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: SetuSpacing.sm,
+            runSpacing: SetuSpacing.sm,
+            children: [
+              for (final s in _suggestions)
+                ActionChip(
+                  label: Text(s),
+                  onPressed: () => _send(s),
+                  backgroundColor:
+                      SetuColors.lavenderLight.withValues(alpha: 0.10),
+                  side: BorderSide(
+                      color: SetuColors.lavenderLight.withValues(alpha: 0.30)),
                 ),
-                const SizedBox(width: SetuSpacing.sm),
-                IconButton.filled(
-                  icon: const Icon(Icons.send),
-                  onPressed: _busy ? null : () => _send(_controller.text),
-                ),
-              ],
-            ),
+            ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _chatList() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(SetuSpacing.lg),
+      itemCount: _messages.length,
+      itemBuilder: (context, index) {
+        final m = _messages[index];
+        final isUser = m.fromUser;
+        return Align(
+          alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            margin: const EdgeInsets.only(bottom: SetuSpacing.sm),
+            padding: const EdgeInsets.all(SetuSpacing.md),
+            constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.82),
+            decoration: BoxDecoration(
+              color: isUser
+                  ? SetuColors.accentLight.withValues(alpha: 0.14)
+                  : SetuColors.lavenderLight.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(18),
+                topRight: const Radius.circular(18),
+                bottomLeft: Radius.circular(isUser ? 18 : 4),
+                bottomRight: Radius.circular(isUser ? 4 : 18),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(m.text, style: const TextStyle(height: 1.4)),
+                if (m.bookingDraft != null) ...[
+                  const SizedBox(height: SetuSpacing.sm),
+                  FilledButton.icon(
+                    icon: const Icon(Icons.check),
+                    label: const Text('Review & confirm booking'),
+                    onPressed: () =>
+                        context.push('/elder/${widget.elderId}/booking'),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _inputBar() {
+    return Padding(
+      padding: const EdgeInsets.all(SetuSpacing.md),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _controller,
+              decoration: const InputDecoration(hintText: 'Type a message…'),
+              onSubmitted: _send,
+            ),
+          ),
+          const SizedBox(width: SetuSpacing.sm),
+          IconButton.filled(
+            style: IconButton.styleFrom(
+                backgroundColor: SetuColors.lavenderLight,
+                minimumSize: const Size(52, 52)),
+            icon: const Icon(Icons.send),
+            onPressed: _busy ? null : () => _send(_controller.text),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A soft, slowly-breathing lavender orb — the companion's calm presence.
+/// Honours reduced-motion (renders a static orb).
+class _BreathingOrb extends StatefulWidget {
+  const _BreathingOrb();
+
+  @override
+  State<_BreathingOrb> createState() => _BreathingOrbState();
+}
+
+class _BreathingOrbState extends State<_BreathingOrb>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+      vsync: this, duration: const Duration(seconds: 4))
+    ..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final reduce = MediaQuery.of(context).disableAnimations;
+    Widget orb(double scale) => Container(
+          width: 132 * scale,
+          height: 132 * scale,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(colors: [
+              SetuColors.lavenderLight.withValues(alpha: 0.35),
+              SetuColors.lavenderLight.withValues(alpha: 0.08),
+            ]),
+          ),
+          child: const Icon(Icons.auto_awesome,
+              size: 52, color: SetuColors.lavenderLight),
+        );
+    if (reduce) return orb(1);
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (_, __) => orb(0.94 + _c.value * 0.12),
     );
   }
 }
