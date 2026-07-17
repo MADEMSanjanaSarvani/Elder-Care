@@ -25,7 +25,7 @@ class ElderHomeScreen extends ConsumerWidget {
         }
         final elder = elders
             .first; // an elder-mode login always maps to exactly one profile
-        return Padding(
+        return SingleChildScrollView(
           padding: const EdgeInsets.all(SetuSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
