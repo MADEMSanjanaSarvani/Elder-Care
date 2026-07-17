@@ -11,29 +11,39 @@ import 'package:flutter/material.dart';
 class SetuColors {
   const SetuColors._();
 
-  static const Color paperLight = Color(0xFFF2F4F0);
+  // "A Home Away From Home" — warm, pastel, reassuring. Ground tones are a
+  // warm cream/beige; text is a warm brown-charcoal, not a cold grey.
+  static const Color paperLight = Color(0xFFFFF8F0); // warm cream
   static const Color paperRaisedLight = Color(0xFFFFFFFF);
-  static const Color inkLight = Color(0xFF15181A);
-  static const Color mutedLight = Color(0xFF57625C);
-  static const Color borderLight = Color(0xFFDADFD8);
+  static const Color inkLight = Color(0xFF463D34); // warm brown-charcoal
+  static const Color mutedLight = Color(0xFF7C6F62);
+  static const Color borderLight = Color(0xFFEBE2D6);
 
-  static const Color paperDark = Color(0xFF14181A);
-  static const Color paperRaisedDark = Color(0xFF1B211F);
-  static const Color inkDark = Color(0xFFE9EDE9);
-  static const Color mutedDark = Color(0xFF9AA69E);
-  static const Color borderDark = Color(0xFF2A312C);
+  static const Color paperDark = Color(0xFF211E1B); // warm charcoal
+  static const Color paperRaisedDark = Color(0xFF2A2622);
+  static const Color inkDark = Color(0xFFF1EAE0);
+  static const Color mutedDark = Color(0xFFBEB2A4);
+  static const Color borderDark = Color(0xFF3A342E);
 
-  /// Trust / primary action.
-  static const Color accentLight = Color(0xFFB8691A);
-  static const Color accentDark = Color(0xFFE0A559);
+  /// Soft Sage — primary action & "all good". Deep tints keep text AA.
+  static const Color accentLight = Color(0xFF5E9E7C);
+  static const Color accentDark = Color(0xFF8CC6A6);
 
-  /// Verified / success semantic color — distinct hue from the accent.
-  static const Color verifiedLight = Color(0xFF1D6C5F);
-  static const Color verifiedDark = Color(0xFF4BB6A3);
+  /// Verified / success — sage family, a touch deeper than the accent.
+  static const Color verifiedLight = Color(0xFF4E8F70);
+  static const Color verifiedDark = Color(0xFF8CC6A6);
 
-  /// SOS / critical semantic color — never reused for anything else.
-  static const Color sosLight = Color(0xFFA83F2A);
-  static const Color sosDark = Color(0xFFE2705C);
+  /// SOS / critical — a warm coral, the only alarming colour, used only here.
+  static const Color sosLight = Color(0xFFD46A4E);
+  static const Color sosDark = Color(0xFFEF9377);
+
+  /// Lavender — calm & the AI companion.
+  static const Color lavenderLight = Color(0xFF8B76CF);
+  static const Color lavenderDark = Color(0xFFB7A6EC);
+
+  /// Peach — warmth & human touch (attention states).
+  static const Color peachLight = Color(0xFFE0885A);
+  static const Color peachDark = Color(0xFFF0A778);
 }
 
 class SetuSpacing {
