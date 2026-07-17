@@ -194,10 +194,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       style: theme.textTheme.headlineLarge),
                   const SizedBox(height: 6),
                   Text(
-                    'Care, coordinated — for the ones who raised us.',
+                    'A home away from home for the ones who raised us.',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium
                         ?.copyWith(color: SetuColors.mutedLight),
+                  ),
+                  const SizedBox(height: SetuSpacing.md),
+                  Text(
+                    'Book trusted caregivers, track medicines, get daily '
+                    'check-ins, and one-tap emergency help — everything to '
+                    'care for your parents, together, from anywhere.',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(color: SetuColors.mutedLight, height: 1.5),
+                  ),
+                  const SizedBox(height: SetuSpacing.md),
+                  const Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _MiniFeature(Icons.volunteer_activism_outlined, 'Caregivers'),
+                      _MiniFeature(Icons.medication_outlined, 'Medicines'),
+                      _MiniFeature(Icons.favorite_outline, 'Check-ins'),
+                      _MiniFeature(Icons.sos_outlined, 'SOS help'),
+                    ],
                   ),
                   const SizedBox(height: SetuSpacing.xl),
                   Card(
@@ -355,5 +376,39 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           onPressed: _busy ? null : _sendCode,
           child: Text(_busy ? 'Please wait…' : 'Send code')),
     ];
+  }
+}
+
+/// A small feature pill used on the welcome/login header to tell newcomers
+/// what CareHive is at a glance.
+class _MiniFeature extends StatelessWidget {
+  const _MiniFeature(this.icon, this.label);
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: SetuColors.accentLight.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+            color: SetuColors.accentLight.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15, color: SetuColors.accentLight),
+          const SizedBox(width: 6),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: SetuColors.accentLight)),
+        ],
+      ),
+    );
   }
 }

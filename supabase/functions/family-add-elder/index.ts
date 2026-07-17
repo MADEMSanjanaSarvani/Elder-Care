@@ -42,6 +42,18 @@ Deno.serve(async (req) => {
 
     const admin = supabaseAdmin();
 
+    // Self-heal: ensure the caller has a profiles row (elder_profiles.created_by
+    // references it). A user can reach this point signed-in but without a
+    // profile if role selection was skipped; create one as family_member if so.
+    await admin.from("profiles").upsert(
+      {
+        id: user.id,
+        role: "family_member",
+        phone: user.phone ?? null,
+      },
+      { onConflict: "id", ignoreDuplicates: true },
+    );
+
     // Region lookup (the pilot region by default).
     const { data: region, error: regionErr } = await admin
       .from("regions").select("id").eq("code", regionCode).maybeSingle();

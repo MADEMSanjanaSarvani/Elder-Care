@@ -107,36 +107,118 @@ Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
   }
 }
 
+/// First-run welcome. Rather than a bare empty state, this explains what
+/// CareHive is for a brand-new family member and invites them to begin — so
+/// the very first screen after sign-in teaches the idea and feels warm.
 class _NoElders extends ConsumerWidget {
   const _NoElders();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(SetuSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.family_restroom,
-                size: 56, color: SetuColors.mutedLight),
-            const SizedBox(height: SetuSpacing.md),
-            Text('No one added yet',
-                style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: SetuSpacing.xs),
-            const Text(
-              'Add the parent or elder you care for to see their day at a glance.',
-              textAlign: TextAlign.center,
+    final theme = Theme.of(context);
+    const features = <List<dynamic>>[
+      [Icons.volunteer_activism_outlined, SetuColors.accentLight, 'Trusted caregivers',
+        'Book background-verified helpers for visits, nursing and companionship.'],
+      [Icons.medication_outlined, SetuColors.peachLight, 'Medicines & refills',
+        'Track every dose and get a nudge before medicines run low.'],
+      [Icons.favorite_outline, SetuColors.lavenderLight, 'Daily check-ins',
+        'A gentle "I\'m okay today" from your parent, so you never wonder.'],
+      [Icons.chat_bubble_outline, SetuColors.lavenderLight, 'AI companion',
+        'Someone for them to talk to, plus warm weekly wellbeing updates.'],
+      [Icons.sos_outlined, SetuColors.sosLight, 'Emergency SOS',
+        'One tap calls for help and alerts your whole family at once.'],
+      [Icons.timeline_outlined, SetuColors.accentLight, 'Health & timeline',
+        'Every visit, appointment and update gathered in one calm place.'],
+    ];
+
+    return ListView(
+      padding: const EdgeInsets.all(SetuSpacing.lg),
+      children: [
+        const SizedBox(height: SetuSpacing.sm),
+        Center(
+          child: Container(
+            padding: const EdgeInsets.all(SetuSpacing.lg),
+            decoration: BoxDecoration(
+              color: SetuColors.accentLight.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
             ),
-            const SizedBox(height: SetuSpacing.lg),
-            FilledButton.icon(
-              onPressed: () => showAddElderDialog(context, ref),
-              icon: const Icon(Icons.person_add_alt_1_outlined),
-              label: const Text('Add someone you care for'),
-            ),
-          ],
+            child: const Icon(Icons.holiday_village_outlined,
+                size: 44, color: SetuColors.accentLight),
+          ),
         ),
-      ),
+        const SizedBox(height: SetuSpacing.md),
+        Text('Welcome to CareHive',
+            textAlign: TextAlign.center, style: theme.textTheme.headlineMedium),
+        const SizedBox(height: SetuSpacing.xs),
+        Text(
+          'A warm, simple way to look after your parents — together, from '
+          'anywhere. Here\'s everything CareHive does for your family.',
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodyMedium
+              ?.copyWith(color: SetuColors.mutedLight, height: 1.5),
+        ),
+        const SizedBox(height: SetuSpacing.lg),
+
+        // Start-here card
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(SetuSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Let\'s begin', style: theme.textTheme.titleLarge),
+                const SizedBox(height: SetuSpacing.xs),
+                Text(
+                  'Add the parent or elder you care for to unlock their '
+                  'dashboard — bookings, medicines, check-ins and more.',
+                  style: theme.textTheme.bodyMedium
+                      ?.copyWith(color: SetuColors.mutedLight),
+                ),
+                const SizedBox(height: SetuSpacing.md),
+                FilledButton.icon(
+                  onPressed: () => showAddElderDialog(context, ref),
+                  icon: const Icon(Icons.person_add_alt_1_outlined),
+                  label: const Text('Add someone you care for'),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: SetuSpacing.xl),
+
+        Text('What you can do', style: theme.textTheme.titleLarge),
+        const SizedBox(height: SetuSpacing.sm),
+        for (final f in features)
+          Padding(
+            padding: const EdgeInsets.only(bottom: SetuSpacing.sm),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(SetuSpacing.md),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SetuIconChip(icon: f[0] as IconData, color: f[1] as Color),
+                    const SizedBox(width: SetuSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(f[2] as String,
+                              style: theme.textTheme.titleMedium),
+                          const SizedBox(height: 2),
+                          Text(f[3] as String,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: SetuColors.mutedLight, height: 1.4)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        const SizedBox(height: SetuSpacing.lg),
+      ],
     );
   }
 }
