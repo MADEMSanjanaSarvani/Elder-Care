@@ -1,9 +1,10 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Phone-OTP auth via Supabase Auth. Phone OTP (rather than email/password)
-/// matches the primary elder persona from PRD Part 1 §05 — a phone number
-/// is something Raghunath already has memorized and dials daily; a
-/// password is one more thing to forget.
+/// Auth via Supabase Auth. Phone OTP is the primary path — a phone number is
+/// something the elder persona (PRD Part 1 §05) already has memorized and
+/// dials daily. Email + password is offered as a second option for family
+/// members who prefer it (and it needs no SMS provider), so `profiles.phone`
+/// is left null for email accounts (the column is nullable by design).
 class AuthRepository {
   AuthRepository(this._client);
 
@@ -17,6 +18,18 @@ class AuthRepository {
     return _client.auth
         .verifyOTP(phone: phone, token: token, type: OtpType.sms);
   }
+
+  Future<AuthResponse> signInWithEmail(
+          {required String email, required String password}) =>
+      _client.auth.signInWithPassword(email: email, password: password);
+
+  /// Creates an email account. If "Confirm email" is OFF in Supabase Auth
+  /// (recommended for testing), a session is returned immediately and the
+  /// caller can proceed. If it's ON, `session` is null and the user must
+  /// click the emailed link before signing in.
+  Future<AuthResponse> signUpWithEmail(
+          {required String email, required String password}) =>
+      _client.auth.signUp(email: email, password: password);
 
   Future<void> ensureProfile(
       {required String role, required String preferredLanguage}) async {

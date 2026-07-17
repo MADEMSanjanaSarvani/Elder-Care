@@ -41,25 +41,38 @@ The app is built automatically on GitHub. It needs the two values from Step 1.
 
 ## Step 3 — Make login work (so friends can actually sign in) — FREE
 
-The app signs in with a **phone number + a code (OTP)**. Normally that needs a
-paid SMS service. For testing, Supabase lets you create **fake test numbers**
-with fixed codes — no SMS, no cost. You give these to your friends.
+Both apps now let people sign in **two ways: by email or by phone**. Pick the
+easiest one for testing.
 
-1. Supabase dashboard → **Authentication** (left sidebar).
-2. Go to **Providers** → click **Phone** → toggle it **ON** → **Save**.
-   (If it insists on an SMS provider, that's fine — test numbers below still
-   work without sending real SMS.)
-3. Still in the Phone settings, find **Test phone numbers** (a small section
-   for mapping a number to a fixed code). Add a few, for example:
+### Option A (easiest) — Email + password, no SMS at all
+
+Your friends just create an account with their own email and a password. To make
+this instant, turn off email confirmation while testing:
+
+1. Supabase dashboard → **Authentication** (left sidebar) → **Providers** →
+   **Email** → make sure it's **ON**.
+2. Turn **OFF** "**Confirm email**" (also called "Enable email confirmations").
+   Save. (This means no confirmation link is needed — good for testing. Turn it
+   back on before a public launch.)
+3. Done. In the app, tap **Email**, enter any email + password, tap **Create
+   account**, and you're in. Friends do the same on their phones.
+
+### Option B — Phone number with free test codes
+
+The app also signs in with a phone number + a code (OTP). Real SMS needs a paid
+service, but Supabase lets you make **fake test numbers** with fixed codes:
+
+1. Supabase → **Authentication** → **Providers** → **Phone** → toggle **ON** →
+   **Save**. (If it insists on an SMS provider, test numbers below still work
+   without sending real SMS.)
+2. Find **Test phone numbers** and add a few, e.g.:
    - `+919000000001` → code `123456`
    - `+919000000002` → code `123456`
-   - `+919000000003` → code `123456`
-4. Save. Now anyone can log in with, say, `+919000000001` and code `123456`
-   — no real SIM needed.
+3. In the app, tap **Phone**, enter `+919000000001`, then code `123456`.
 
-> If you don't see a "Test phone numbers" option on your plan, set up **Twilio**
-> (free trial) as the SMS provider instead — Authentication → Providers →
-> Phone → choose Twilio and paste its credentials. Real SMS then works.
+> For **real** users later: keep email confirmation ON, and/or connect an SMS
+> provider (Twilio has a free trial) under Authentication → Providers → Phone so
+> real mobile numbers receive a real OTP.
 
 ## Step 4 — Check your data is loaded (30 seconds)
 

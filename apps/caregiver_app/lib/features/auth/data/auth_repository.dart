@@ -14,6 +14,17 @@ class AuthRepository {
         .verifyOTP(phone: phone, token: token, type: OtpType.sms);
   }
 
+  Future<AuthResponse> signInWithEmail(
+          {required String email, required String password}) =>
+      _client.auth.signInWithPassword(email: email, password: password);
+
+  /// Creates an email account. If "Confirm email" is OFF in Supabase Auth
+  /// a session is returned immediately; if ON, `session` is null and the
+  /// caregiver must confirm via the emailed link before signing in.
+  Future<AuthResponse> signUpWithEmail(
+          {required String email, required String password}) =>
+      _client.auth.signUp(email: email, password: password);
+
   /// Creates the `profiles` row only. The matching `caregivers` row —
   /// clinical/non-clinical type, BGV, police verification — is created by
   /// ops after reviewing submitted documents (PRD Part 1 §04), not by this
