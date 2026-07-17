@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/providers.dart';
 import '../../checkins/data/checkin_repository.dart';
@@ -81,30 +82,66 @@ Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
     ),
   );
 
-  if (submitted != true || nameController.text.trim().isEmpty) return;
+  final name = nameController.text.trim();
+  if (submitted != true || name.isEmpty) return;
 
   try {
     final client = ref.read(supabaseClientProvider);
-    final response = await client.functions.invoke('family-add-elder', body: {
-      'display_name': nameController.text.trim(),
+    // invoke() returns only on a 2xx; anything else throws FunctionException.
+    await client.functions.invoke('family-add-elder', body: {
+      'display_name': name,
       'relationship': relationshipController.text.trim(),
     });
-    if (response.status != 201) {
-      throw StateError('${response.data}');
-    }
+    // Wait for the fresh list so the new person is actually on screen before
+    // we say "added" — no more "did it save?" ambiguity.
     ref.invalidate(myElderProfilesProvider);
+    await ref.read(myElderProfilesProvider.future);
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${nameController.text.trim()} added.')),
+        SnackBar(content: Text('$name added to your care circle.')),
       );
     }
   } catch (err) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not add: $err')),
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Couldn't add just now"),
+          content: Text(_addElderError(err)),
+          actions: [
+            FilledButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK')),
+          ],
+        ),
       );
     }
   }
+}
+
+/// Turns a raw add-elder failure into a plain, honest explanation the family
+/// member can act on (and screenshot for support).
+String _addElderError(Object err) {
+  if (err is FunctionException) {
+    final d = err.details;
+    final serverMsg = d is Map && d['error'] != null
+        ? d['error'].toString()
+        : (d is String ? d : null);
+    switch (err.status) {
+      case 404:
+        return 'We could not reach the add-person service yet. It may still '
+            'be finishing setup on the server — please try again in a few '
+            'minutes.';
+      case 401:
+        return 'Your session has expired. Please sign out and sign in again, '
+            'then try once more.';
+      default:
+        return (serverMsg != null && serverMsg.isNotEmpty)
+            ? serverMsg
+            : 'The server returned an error (${err.status}). Please try again.';
+    }
+  }
+  return 'Something went wrong. Please check your connection and try again.';
 }
 
 /// First-run welcome. Rather than a bare empty state, this explains what
