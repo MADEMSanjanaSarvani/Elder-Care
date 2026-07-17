@@ -1,0 +1,786 @@
+<title>CareHive — A Home Away From Home · Design System & Screen Blueprints</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --cream:#FFF8F0; --beige:#F7F4EF; --sand:#EFE7DC;
+    --sage:#B7D7C0; --sage-deep:#5E9E7C; --sage-ink:#3E6E55;
+    --lav:#DCCEF7; --lav-deep:#8B76CF; --lav-ink:#5E4E97;
+    --peach:#FFD7BA; --peach-deep:#E0885A; --peach-ink:#B5613A;
+    --ink:#463D34; --ink-soft:#7C6F62; --ink-faint:#A99B8B;
+    --glass:rgba(255,255,255,.55); --glass-2:rgba(255,255,255,.38);
+    --glass-brd:rgba(255,255,255,.85); --hair:rgba(70,61,52,.10);
+    --good:#5E9E7C; --warn:#E0885A; --crit:#D46A4E; --info:#8B76CF;
+    --shadow:0 10px 34px -14px rgba(90,70,50,.34), 0 2px 8px -4px rgba(90,70,50,.18);
+    --radius:24px; --radius-sm:16px;
+    --font-display:'Poppins',ui-rounded,'SF Pro Rounded','Segoe UI',system-ui,sans-serif;
+    --font-body:'Nunito',ui-rounded,'Segoe UI',system-ui,sans-serif;
+    --font-data:'Inter',ui-sans-serif,system-ui,sans-serif;
+    --maxw:1080px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --cream:#211E1B; --beige:#26221E; --sand:#2E2925;
+      --sage:#3C5B4B; --sage-deep:#8CC6A6; --sage-ink:#A7D6BC;
+      --lav:#3E3757; --lav-deep:#B7A6EC; --lav-ink:#C9BCF2;
+      --peach:#4B3728; --peach-deep:#F0A778; --peach-ink:#F3B993;
+      --ink:#F1EAE0; --ink-soft:#BEB2A4; --ink-faint:#8C8072;
+      --glass:rgba(255,255,255,.055); --glass-2:rgba(255,255,255,.03);
+      --glass-brd:rgba(255,255,255,.14); --hair:rgba(255,255,255,.09);
+      --good:#8CC6A6; --warn:#F0A778; --crit:#EF9377; --info:#B7A6EC;
+      --shadow:0 14px 40px -16px rgba(0,0,0,.6), 0 2px 10px -6px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="light"]{
+    --cream:#FFF8F0; --beige:#F7F4EF; --sand:#EFE7DC;
+    --sage:#B7D7C0; --sage-deep:#5E9E7C; --sage-ink:#3E6E55;
+    --lav:#DCCEF7; --lav-deep:#8B76CF; --lav-ink:#5E4E97;
+    --peach:#FFD7BA; --peach-deep:#E0885A; --peach-ink:#B5613A;
+    --ink:#463D34; --ink-soft:#7C6F62; --ink-faint:#A99B8B;
+    --glass:rgba(255,255,255,.55); --glass-2:rgba(255,255,255,.38);
+    --glass-brd:rgba(255,255,255,.85); --hair:rgba(70,61,52,.10);
+    --good:#5E9E7C; --warn:#E0885A; --crit:#D46A4E; --info:#8B76CF;
+    --shadow:0 10px 34px -14px rgba(90,70,50,.34), 0 2px 8px -4px rgba(90,70,50,.18);
+  }
+  :root[data-theme="dark"]{
+    --cream:#211E1B; --beige:#26221E; --sand:#2E2925;
+    --sage:#3C5B4B; --sage-deep:#8CC6A6; --sage-ink:#A7D6BC;
+    --lav:#3E3757; --lav-deep:#B7A6EC; --lav-ink:#C9BCF2;
+    --peach:#4B3728; --peach-deep:#F0A778; --peach-ink:#F3B993;
+    --ink:#F1EAE0; --ink-soft:#BEB2A4; --ink-faint:#8C8072;
+    --glass:rgba(255,255,255,.055); --glass-2:rgba(255,255,255,.03);
+    --glass-brd:rgba(255,255,255,.14); --hair:rgba(255,255,255,.09);
+    --good:#8CC6A6; --warn:#F0A778; --crit:#EF9377; --info:#B7A6EC;
+    --shadow:0 14px 40px -16px rgba(0,0,0,.6), 0 2px 10px -6px rgba(0,0,0,.5);
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; font-family:var(--font-body); color:var(--ink);
+    background:var(--cream); line-height:1.6;
+    -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  }
+  /* ambient pastel blobs */
+  .atmos{position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none}
+  .blob{position:absolute; border-radius:50%; filter:blur(60px); opacity:.55}
+  .b1{width:46vw;height:46vw;background:var(--sage);top:-10vw;left:-8vw}
+  .b2{width:40vw;height:40vw;background:var(--lav);top:20vw;right:-12vw;opacity:.5}
+  .b3{width:38vw;height:38vw;background:var(--peach);bottom:-12vw;left:18vw;opacity:.5}
+  @media (prefers-reduced-motion:no-preference){
+    .b1{animation:drift 22s ease-in-out infinite alternate}
+    .b2{animation:drift 26s ease-in-out infinite alternate-reverse}
+    .b3{animation:drift 30s ease-in-out infinite alternate}
+  }
+  @keyframes drift{to{transform:translate3d(3vw,4vw,0) scale(1.08)}}
+
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 22px}
+
+  /* top nav */
+  header.nav{position:sticky; top:0; z-index:20; backdrop-filter:blur(18px) saturate(1.3);
+    -webkit-backdrop-filter:blur(18px) saturate(1.3);
+    background:var(--glass-2); border-bottom:1px solid var(--hair)}
+  .nav-in{max-width:var(--maxw); margin:0 auto; padding:12px 22px; display:flex; align-items:center; gap:16px}
+  .brand{display:flex; align-items:center; gap:10px; font-family:var(--font-display); font-weight:700; letter-spacing:-.01em}
+  .brand .hex{width:30px;height:30px;flex:none}
+  .nav-links{margin-left:auto; display:flex; gap:6px; flex-wrap:wrap}
+  .nav-links a{font-size:.8rem; color:var(--ink-soft); text-decoration:none; padding:6px 11px; border-radius:999px}
+  .nav-links a:hover{background:var(--glass); color:var(--ink)}
+  .toggle{border:1px solid var(--hair); background:var(--glass); color:var(--ink); font:inherit; font-size:.8rem;
+    padding:7px 13px; border-radius:999px; cursor:pointer}
+  .toggle:hover{border-color:var(--sage-deep)}
+
+  /* hero */
+  .hero{padding:76px 0 40px; text-align:center}
+  .eyebrow{font-family:var(--font-data); text-transform:uppercase; letter-spacing:.22em; font-size:.7rem;
+    color:var(--sage-ink); font-weight:600}
+  h1{font-family:var(--font-display); font-weight:800; letter-spacing:-.025em; text-wrap:balance;
+    font-size:clamp(2.4rem,6vw,4.1rem); line-height:1.02; margin:.35em 0 .1em}
+  .hero .tag{font-family:var(--font-display); font-weight:500; font-size:clamp(1.05rem,2.4vw,1.5rem);
+    color:var(--ink-soft); font-style:italic}
+  .hero p.lead{max-width:60ch; margin:18px auto 0; color:var(--ink-soft)}
+  .pills{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:26px}
+  .pill{font-size:.78rem; padding:7px 14px; border-radius:999px; background:var(--glass); border:1px solid var(--glass-brd);
+    box-shadow:var(--shadow); backdrop-filter:blur(8px)}
+
+  /* glass card */
+  .card{background:var(--glass); border:1px solid var(--glass-brd); border-radius:var(--radius);
+    box-shadow:var(--shadow); backdrop-filter:blur(16px) saturate(1.25);
+    -webkit-backdrop-filter:blur(16px) saturate(1.25)}
+
+  section.band{padding:54px 0 8px}
+  .sec-head{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin-bottom:22px}
+  .sec-head h2{font-family:var(--font-display); font-weight:700; letter-spacing:-.02em; font-size:clamp(1.5rem,3.4vw,2.1rem); margin:0}
+  .sec-head .num{font-family:var(--font-data); font-size:.72rem; letter-spacing:.2em; color:var(--ink-faint); font-weight:600}
+  .sec-head p{margin:0; color:var(--ink-soft); flex:1 1 240px; min-width:220px}
+
+  /* palette */
+  .swatches{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:14px}
+  .sw{border-radius:var(--radius-sm); overflow:hidden; border:1px solid var(--hair); background:var(--glass)}
+  .sw .chip{height:74px}
+  .sw .meta{padding:10px 12px}
+  .sw .meta b{font-family:var(--font-display); font-size:.92rem; display:block}
+  .sw .meta code{font-family:var(--font-data); font-size:.74rem; color:var(--ink-soft)}
+
+  .grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px}
+  .panel{padding:22px}
+  .panel h3{font-family:var(--font-display); font-weight:700; margin:.1em 0 .5em; font-size:1.05rem}
+  .panel ul{margin:.2em 0; padding-left:1.1em}
+  .panel li{margin:.28em 0}
+  .panel li b{color:var(--ink)}
+
+  /* type scale demo */
+  .scale > div{display:flex; align-items:baseline; gap:14px; padding:8px 0; border-bottom:1px solid var(--hair)}
+  .scale > div:last-child{border-bottom:0}
+  .scale .lbl{font-family:var(--font-data); font-size:.7rem; color:var(--ink-faint); width:96px; flex:none; letter-spacing:.05em}
+  .scale .demo{font-family:var(--font-display)}
+
+  /* component chips */
+  .btnrow{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:.4em 0}
+  .b{border:none; border-radius:999px; font-family:var(--font-body); font-weight:700; cursor:pointer; padding:12px 22px; font-size:.95rem}
+  .b-primary{background:linear-gradient(135deg,var(--sage-deep),var(--sage-ink)); color:#fff; box-shadow:var(--shadow)}
+  .b-soft{background:var(--lav); color:var(--lav-ink)}
+  .b-ghost{background:transparent; border:1.5px solid var(--hair); color:var(--ink)}
+  .b-sos{background:linear-gradient(135deg,#E88A6B,var(--crit)); color:#fff}
+  .chipset{display:flex; gap:8px; flex-wrap:wrap}
+  .tchip{font-family:var(--font-data); font-size:.74rem; padding:6px 12px; border-radius:999px; background:var(--glass); border:1px solid var(--hair)}
+  .status{display:inline-flex; align-items:center; gap:6px; font-size:.78rem; font-weight:700; padding:5px 11px; border-radius:999px}
+  .s-good{background:color-mix(in srgb,var(--good) 18%, transparent); color:var(--good)}
+  .s-warn{background:color-mix(in srgb,var(--warn) 20%, transparent); color:var(--warn)}
+  .s-crit{background:color-mix(in srgb,var(--crit) 20%, transparent); color:var(--crit)}
+  .dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+
+  /* skeleton demo */
+  .skel{height:14px;border-radius:8px;background:linear-gradient(90deg,var(--hair),var(--glass-brd),var(--hair));
+    background-size:200% 100%; margin:9px 0}
+  @media (prefers-reduced-motion:no-preference){.skel{animation:sheen 1.4s linear infinite}}
+  @keyframes sheen{to{background-position:-200% 0}}
+
+  /* screens */
+  .screens{display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:18px}
+  .screen{padding:20px; display:flex; flex-direction:column; gap:2px; scroll-margin-top:80px}
+  .screen .top{display:flex; align-items:center; gap:12px; margin-bottom:6px}
+  .screen .idx{font-family:var(--font-data); font-weight:700; font-size:.72rem; color:#fff; background:var(--sage-ink);
+    width:30px;height:30px;border-radius:10px; display:grid; place-items:center; flex:none}
+  .screen h4{font-family:var(--font-display); font-weight:700; margin:0; font-size:1.06rem; letter-spacing:-.01em}
+  .screen .purpose{color:var(--ink-soft); font-size:.9rem; margin:2px 0 12px}
+  .spec{display:grid; grid-template-columns:auto 1fr; gap:6px 12px; font-size:.83rem}
+  .spec dt{font-family:var(--font-data); font-size:.66rem; letter-spacing:.08em; text-transform:uppercase; color:var(--sage-ink); font-weight:700; padding-top:2px}
+  .spec dd{margin:0; color:var(--ink)}
+  .spec dd .k{color:var(--ink-soft)}
+  .wire{margin-top:12px; border:1px dashed var(--hair); border-radius:14px; padding:10px; background:var(--glass-2); font-family:var(--font-data); font-size:.72rem; color:var(--ink-soft)}
+  .wire .bar{height:9px;border-radius:6px;background:var(--sand); margin:5px 0}
+  .wire .bar.w1{width:70%} .wire .bar.w2{width:45%} .wire .bar.big{height:30px;background:color-mix(in srgb,var(--sage) 45%,transparent)}
+  .wire .row{display:flex; gap:6px} .wire .row .bar{flex:1}
+
+  .grouphead{grid-column:1/-1; margin:26px 0 2px; display:flex; align-items:center; gap:12px}
+  .grouphead:first-child{margin-top:4px}
+  .grouphead span{font-family:var(--font-data); font-size:.72rem; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-faint); font-weight:700}
+  .grouphead .line{height:1px; background:var(--hair); flex:1}
+
+  footer{padding:56px 0 80px; text-align:center; color:var(--ink-soft)}
+  footer .card{padding:30px; display:inline-block; max-width:60ch}
+  a.top{color:var(--sage-ink); text-decoration:none; font-weight:700}
+
+  :focus-visible{outline:3px solid var(--lav-deep); outline-offset:2px; border-radius:6px}
+  @media (max-width:560px){ .hero{padding:52px 0 30px} .spec{grid-template-columns:1fr; gap:2px} .spec dt{padding-top:8px} }
+</style>
+
+<div class="atmos" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+
+<header class="nav">
+  <div class="nav-in">
+    <div class="brand">
+      <svg class="hex" viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,6 88,28 88,72 50,94 12,72 12,28" fill="none" stroke="var(--sage-ink)" stroke-width="7"/><path d="M35 60 V48 L50 36 L65 48 V60 Z" fill="var(--sage-ink)"/><path d="M50 52c-3-4-9-2-9 3 0 4 9 9 9 9s9-5 9-9c0-5-6-7-9-3z" fill="var(--cream)"/></svg>
+      CareHive
+    </div>
+    <nav class="nav-links">
+      <a href="#system">System</a>
+      <a href="#entry">Entry</a>
+      <a href="#dash">Dashboards</a>
+      <a href="#care">Care</a>
+      <a href="#health">Health</a>
+      <a href="#ai">AI &amp; Safety</a>
+      <a href="#account">Account</a>
+    </nav>
+    <button class="toggle" id="themeToggle" aria-label="Toggle light or dark theme">◐ Theme</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow">CareHive · Design Language</div>
+    <h1>A Home Away<br>From Home</h1>
+    <div class="tag">"Because every parent deserves care."</div>
+    <p class="lead">A complete, emotionally-warm design system and blueprint for 35 screens — cozy, premium, and calm. Built for elders and the families who love them, never clinical, always human.</p>
+    <div class="pills">
+      <span class="pill">🫖 Cozy &amp; warm</span>
+      <span class="pill">🪟 Glassmorphism</span>
+      <span class="pill">🌗 Light &amp; dark</span>
+      <span class="pill">👵 Elder-first accessibility</span>
+      <span class="pill">💬 Voice-friendly</span>
+    </div>
+  </section>
+
+  <!-- DESIGN SYSTEM -->
+  <section class="band" id="system">
+    <div class="sec-head">
+      <span class="num">FOUNDATIONS</span>
+      <h2>The design system</h2>
+      <p>Every screen is assembled from these tokens, so the whole product feels like one warm, considered home.</p>
+    </div>
+
+    <h3 style="font-family:var(--font-display);margin:8px 0 12px">Palette — warm, pastel, reassuring</h3>
+    <div class="swatches">
+      <div class="sw"><div class="chip" style="background:#FFF8F0"></div><div class="meta"><b>Warm Cream</b><code>#FFF8F0 · ground</code></div></div>
+      <div class="sw"><div class="chip" style="background:#F7F4EF"></div><div class="meta"><b>Light Beige</b><code>#F7F4EF · surface</code></div></div>
+      <div class="sw"><div class="chip" style="background:#B7D7C0"></div><div class="meta"><b>Soft Sage</b><code>#B7D7C0 · primary</code></div></div>
+      <div class="sw"><div class="chip" style="background:#DCCEF7"></div><div class="meta"><b>Lavender</b><code>#DCCEF7 · calm/AI</code></div></div>
+      <div class="sw"><div class="chip" style="background:#FFD7BA"></div><div class="meta"><b>Soft Peach</b><code>#FFD7BA · warmth</code></div></div>
+      <div class="sw"><div class="chip" style="background:linear-gradient(135deg,rgba(255,255,255,.7),rgba(255,255,255,.25));border:1px solid var(--glass-brd)"></div><div class="meta"><b>White Glass</b><code>rgba · frosted card</code></div></div>
+    </div>
+    <p style="color:var(--ink-soft);font-size:.9rem;margin-top:14px">Sage is the primary accent (calm, alive, growing). Lavender belongs to the AI companion and moments of calm; peach carries warmth and human touch. Deeper tints (<code>#5E9E7C</code>, <code>#8B76CF</code>, <code>#E0885A</code>) are derived for text/icons so every pairing clears <b>WCAG AA</b>. Semantic colours — good <span class="status s-good"><span class="dot"></span>sage</span> warning <span class="status s-warn"><span class="dot"></span>peach</span> urgent <span class="status s-crit"><span class="dot"></span>warm coral</span> — stay distinct from the accent, and urgent is a warm coral, never a clinical red.</p>
+
+    <div class="grid2" style="margin-top:24px">
+      <div class="card panel">
+        <h3>Typography</h3>
+        <div class="scale">
+          <div><span class="lbl">Poppins · 800</span><span class="demo" style="font-size:1.9rem;font-weight:800;letter-spacing:-.02em">Good morning, Amma</span></div>
+          <div><span class="lbl">Poppins · 600</span><span class="demo" style="font-size:1.25rem;font-weight:600">Today's care</span></div>
+          <div><span class="lbl">Nunito · body</span><span style="font-family:var(--font-body);font-size:1rem">Warm, rounded, deeply legible running text that never feels sterile.</span></div>
+          <div><span class="lbl">Inter · data</span><span style="font-family:var(--font-data);font-size:.9rem;font-variant-numeric:tabular-nums">₹3,999 · 08:00 · 12 Jan 2026</span></div>
+        </div>
+        <p style="color:var(--ink-soft);font-size:.84rem;margin-bottom:0"><b>Poppins</b> for display &amp; headings, <b>Nunito</b> for cozy body copy, <b>Inter</b> for numbers, times &amp; data. Base body <b>17–18px</b>; elder mode scales to 20px+. Line-height ≥1.5, never justified.</p>
+      </div>
+      <div class="card panel">
+        <h3>Shape, glass &amp; elevation</h3>
+        <ul>
+          <li><b>24px</b> radius on cards, 16px on inputs/chips, pill buttons.</li>
+          <li><b>Glassmorphism:</b> <code>backdrop-blur(16px)</code>, translucent white fill, 1px light border, soft warm shadow — floating, not flat.</li>
+          <li><b>Soft shadows</b> only (warm-toned, large blur, low opacity) — depth by light, never hard drop-shadows.</li>
+          <li><b>Floating elements:</b> sticky SOS, floating action buttons, gently layered cards.</li>
+        </ul>
+        <div class="btnrow">
+          <button class="b b-primary">Book care</button>
+          <button class="b b-soft">Talk to companion</button>
+          <button class="b b-ghost">Skip</button>
+        </div>
+      </div>
+      <div class="card panel">
+        <h3>Motion &amp; micro-interactions</h3>
+        <ul>
+          <li>Calm easing (<code>200–320ms</code>), gentle fades &amp; rises — never bouncy or urgent.</li>
+          <li>Page transitions: soft cross-fade + 8px lift. Cards: 2px hover-raise, warm glow.</li>
+          <li>Signature moments: floating particles on splash, breathing AI orb, pulsing SOS ring, confetti-soft check-in.</li>
+          <li>Everything honours <code>prefers-reduced-motion</code>.</li>
+        </ul>
+      </div>
+      <div class="card panel">
+        <h3>Loading &amp; empty states</h3>
+        <p style="font-size:.85rem;color:var(--ink-soft);margin-top:0">Skeletons shimmer in the card shape before content arrives:</p>
+        <div class="skel" style="width:60%"></div><div class="skel"></div><div class="skel" style="width:80%"></div>
+        <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:0">Empty states are <b>premium, never blank</b> — a soft illustration, a warm line, and one clear action ("Add the parent you care for").</p>
+      </div>
+      <div class="card panel">
+        <h3>Accessibility — elder-first</h3>
+        <ul>
+          <li>Touch targets ≥48px (elder mode 56–64px); generous spacing for tremor.</li>
+          <li><b>Simple Mode</b>: fewer choices, huge tiles, one task per screen.</li>
+          <li><b>High-contrast</b> &amp; text-scale to 200% without breakage.</li>
+          <li>Voice input &amp; read-aloud on key flows; full screen-reader labels.</li>
+          <li>Colour never the only signal — always icon + label.</li>
+        </ul>
+      </div>
+      <div class="card panel">
+        <h3>Illustration &amp; iconography</h3>
+        <ul>
+          <li>Warm, multi-generational, real Indian families — soft gouache/flat-vector style, pastel washes.</li>
+          <li>Rounded 2px-stroke icon set; friendly, never medical cross-and-clipboard.</li>
+          <li>Cozy motifs: home, tea, hands, hive, plants, sunrise.</li>
+          <li>Dark mode dims the pastels and deepens the ground to a warm charcoal — still cozy, never cold.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN BLUEPRINTS -->
+  <section class="band">
+    <div class="sec-head">
+      <span class="num">35 SCREENS</span>
+      <h2>Screen blueprints</h2>
+      <p>Each screen below carries its layout, components, key actions, illustration, motion, states, and accessibility notes.</p>
+    </div>
+
+    <div class="screens">
+
+      <!-- ENTRY -->
+      <div class="grouphead" id="entry"><span>Entry &amp; onboarding</span><div class="line"></div></div>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">01</div><h4>Splash</h4></div>
+        <div class="purpose">The first breath — warm, alive, unmistakably home.</div>
+        <dl class="spec">
+          <dt>Layout</dt><dd>Centered animated hive-heart logo over a cream→peach gradient; elderly-couple illustration rising softly beneath; tagline below.</dd>
+          <dt>Copy</dt><dd>"Because every parent deserves care."</dd>
+          <dt>Motion</dt><dd>Logo draws in, floating pastel particles, 1.2s fade to onboarding.</dd>
+          <dt>States</dt><dd>Doubles as first-load; skeleton-free (assets preloaded).</dd>
+          <dt>A11y</dt><dd>Respects reduced-motion (static logo); auto-advances yet tappable.</dd>
+          <dt>Colours</dt><dd><span class="k">Cream ground · sage logo · peach glow</span></dd>
+        </dl>
+        <div class="wire" aria-hidden="true"><div style="text-align:center">✦ logo ✦</div><div class="bar big" style="width:40%;margin:10px auto"></div><div class="bar w1" style="margin:0 auto"></div></div>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">02</div><h4>Onboarding</h4></div>
+        <div class="purpose">Five gentle promises, swiped through in seconds.</div>
+        <dl class="spec">
+          <dt>Slides</dt><dd>1 Stay connected · 2 Book trusted caregivers · 3 Monitor health &amp; days · 4 Emergency support · 5 AI companion for wellbeing.</dd>
+          <dt>Components</dt><dd>Full-bleed illustration, headline, dot progress, <b>Skip</b> (top-right) &amp; <b>Next</b> (pill).</dd>
+          <dt>Motion</dt><dd>Parallax illustration, dots morph, slide cross-fade.</dd>
+          <dt>States</dt><dd>Last slide swaps Next→"Get started".</dd>
+          <dt>A11y</dt><dd>Swipe or buttons; each slide read aloud; Skip always reachable.</dd>
+          <dt>Colours</dt><dd><span class="k">One pastel per slide: sage, peach, lavender, coral, lavender</span></dd>
+        </dl>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">03</div><h4>Welcome</h4></div>
+        <div class="purpose">The warm front door — story first, sign-in second.</div>
+        <dl class="spec">
+          <dt>Layout</dt><dd>Hero family illustration + tagline; two big CTAs; a soft feature grid below.</dd>
+          <dt>Features</dt><dd>Trusted caregivers · Medication tracking · Daily check-ins · AI companion · SOS support · Health monitoring — each a glass tile w/ icon.</dd>
+          <dt>CTAs</dt><dd><span class="btnrow"><button class="b b-primary">Log in</button><button class="b b-ghost">Create account</button></span></dd>
+          <dt>Motion</dt><dd>Feature tiles rise on scroll; buttons soft-glow on hover.</dd>
+          <dt>Colours</dt><dd><span class="k">Cream + rotating pastel tiles</span></dd>
+        </dl>
+        <div class="wire" aria-hidden="true"><div class="bar big"></div><div class="row"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div><div class="row"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div></div>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">04</div><h4>Login</h4></div>
+        <div class="purpose">One frosted card, two easy ways in.</div>
+        <dl class="spec">
+          <dt>Fields</dt><dd>Email / Phone toggle · Password (show/hide).</dd>
+          <dt>Buttons</dt><dd>Login · Continue with Google · Create account.</dd>
+          <dt>Options</dt><dd>Remember me · Forgot password.</dd>
+          <dt>Design</dt><dd>Centered glass card on illustrated warm backdrop; floating label inputs.</dd>
+          <dt>States</dt><dd>Inline friendly errors ("That password doesn't match"), button "Logging in…" spinner.</dd>
+          <dt>A11y</dt><dd>Large inputs, visible focus, autofill hints, biometric on capable devices.</dd>
+        </dl>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">05</div><h4>Register</h4></div>
+        <div class="purpose">A short, reassuring sign-up with OTP.</div>
+        <dl class="spec">
+          <dt>Fields</dt><dd>Name · Email · Phone · Password · Confirm password.</dd>
+          <dt>Verify</dt><dd>6-box OTP step with auto-advance &amp; resend timer.</dd>
+          <dt>Legal</dt><dd>Terms &amp; Privacy checkbox with links.</dd>
+          <dt>States</dt><dd>Live password-strength meter; OTP error shake (reduced-motion: colour only).</dd>
+          <dt>Flow</dt><dd>Details → OTP → Role selection.</dd>
+          <dt>A11y</dt><dd>OTP boxes labelled; paste-to-fill supported.</dd>
+        </dl>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">06</div><h4>Role selection</h4></div>
+        <div class="purpose">"Who's signing in?" — Netflix-warm profile picker.</div>
+        <dl class="spec">
+          <dt>Cards</dt><dd>Family member · Elder · Caregiver · Admin — each an illustrated glass tile + one-line description.</dd>
+          <dt>Motion</dt><dd>Cards scale &amp; glow on focus; selected card lifts and fills sage.</dd>
+          <dt>A11y</dt><dd>Big targets, arrow-key nav, spoken descriptions.</dd>
+          <dt>Flow</dt><dd>Choice routes to the matching home; remembered next time.</dd>
+          <dt>Colours</dt><dd><span class="k">Each role a pastel: family sage · elder peach · caregiver lavender · admin beige</span></dd>
+        </dl>
+        <div class="wire" aria-hidden="true"><div class="row"><div class="bar big"></div><div class="bar big"></div></div><div class="row"><div class="bar big"></div><div class="bar big"></div></div></div>
+      </article>
+
+      <!-- DASHBOARDS -->
+      <div class="grouphead" id="dash"><span>Dashboards</span><div class="line"></div></div>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">07</div><h4>Family dashboard</h4></div>
+        <div class="purpose">In 5 seconds: "Is Amma okay, and what's next?"</div>
+        <dl class="spec">
+          <dt>Summary</dt><dd>Today's summary hero · parent health status · medication status · check-in status · SOS status — glass stat cards with a status pill each.</dd>
+          <dt>Widgets</dt><dd>Upcoming appointments &amp; visits · caregiver status · monthly expenses (soft donut) · AI companion summary.</dd>
+          <dt>Quick actions</dt><dd>Book caregiver · Emergency SOS · Video-call parent · Add medication · View reports · Book doctor.</dd>
+          <dt>Charts</dt><dd>Gentle sparklines &amp; progress rings — area fills, faint grid, emphasized endpoint.</dd>
+          <dt>States</dt><dd>Skeleton stat-cards; empty = "Add someone you care for".</dd>
+          <dt>A11y</dt><dd>Summary before detail; every status has icon+label+colour.</dd>
+        </dl>
+        <div class="wire" aria-hidden="true"><div class="bar big"></div><div class="row"><div class="bar big" style="height:22px"></div><div class="bar big" style="height:22px"></div></div><div class="row"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div></div>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">08</div><h4>Elder dashboard</h4></div>
+        <div class="purpose">Radically simple. Big, kind, one-tap.</div>
+        <dl class="spec">
+          <dt>Sections</dt><dd>"Good morning, Amma" · today's schedule · medication reminder · mood tracker · upcoming visitor · appointment reminder.</dd>
+          <dt>Hero</dt><dd>Giant SOS + AI-companion buttons anchored, always reachable.</dd>
+          <dt>Voice</dt><dd>Mic FAB: "Call my daughter", "What's today?" — spoken back.</dd>
+          <dt>Motion</dt><dd>Sun-rise greeting; buttons breathe softly.</dd>
+          <dt>A11y</dt><dd>Simple mode default: 3–4 huge tiles, 20px+ text, read-aloud everywhere.</dd>
+          <dt>Colours</dt><dd><span class="k">Peach warmth · sage confirm · coral SOS</span></dd>
+        </dl>
+        <div class="wire" aria-hidden="true"><div class="bar w2"></div><div class="bar big" style="height:40px"></div><div class="row"><div class="bar big" style="height:34px"></div><div class="bar big" style="height:34px"></div></div></div>
+      </article>
+
+      <!-- ELDER & PROFILES -->
+      <div class="grouphead"><span>Elder profiles &amp; family</span><div class="line"></div></div>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">09</div><h4>Add elder profile</h4></div>
+        <div class="purpose">Bringing a loved one into the home — friendly, unhurried.</div>
+        <dl class="spec">
+          <dt>Fields</dt><dd>Photo upload · Name · DOB · Address · Language · Emergency contacts · Blood group · Allergies · Insurance · Medical notes.</dd>
+          <dt>Layout</dt><dd>Grouped glass sections (About · Health · Contacts), progress along the top.</dd>
+          <dt>States</dt><dd>Autosave draft; optional fields clearly marked; success = warm confirmation.</dd>
+          <dt>A11y</dt><dd>Large labelled inputs; photo upload with camera; skip-and-return.</dd>
+          <dt>Flow</dt><dd>Save → links you → lands on the elder's profile.</dd>
+        </dl>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">10</div><h4>Elder profile</h4></div>
+        <div class="purpose">The whole person, at a glance and with dignity.</div>
+        <dl class="spec">
+          <dt>Sections</dt><dd>Health summary · medication details · doctor info · emergency contacts · care plans · daily activities · timeline.</dd>
+          <dt>Layout</dt><dd>Portrait header (photo, name, age, language) over glass tab-cards.</dd>
+          <dt>Motion</dt><dd>Tab underline glides; cards cross-fade.</dd>
+          <dt>States</dt><dd>Each block its own empty state ("No care plan yet — explore plans").</dd>
+          <dt>A11y</dt><dd>Consent-gated blocks show a lock + "why you can't see this".</dd>
+        </dl>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">25</div><h4>Family members</h4></div>
+        <div class="purpose">The circle of care around one elder.</div>
+        <dl class="spec">
+          <dt>Content</dt><dd>Family profiles (avatar, relationship), permission summary, invite by phone/email.</dd>
+          <dt>Components</dt><dd>Member cards with role chips; "Invite" FAB; pending-invite state.</dd>
+          <dt>States</dt><dd>Empty = "Invite a sibling to share the load."</dd>
+          <dt>A11y</dt><dd>Relationship + permission spoken; large invite target.</dd>
+        </dl>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">26</div><h4>Consent management</h4></div>
+        <div class="purpose">Trust made visible — the elder is always in control.</div>
+        <dl class="spec">
+          <dt>Content</dt><dd>Per-category toggles (location, health notes, medicines, billing…) per family member; medical-data access.</dd>
+          <dt>Design</dt><dd>Calm switch rows with plain-language labels; "only Amma can change this" note.</dd>
+          <dt>Motion</dt><dd>Switch fills sage with a soft settle.</dd>
+          <dt>A11y</dt><dd>Read-only view for non-owners; every change confirmed &amp; logged.</dd>
+          <dt>Colours</dt><dd><span class="k">Lavender = privacy surface</span></dd>
+        </dl>
+      </article>
+
+      <!-- CARE & BOOKING -->
+      <div class="grouphead" id="care"><span>Care, booking &amp; plans</span><div class="line"></div></div>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">11</div><h4>Care services</h4></div>
+        <div class="purpose">Choosing help should feel like choosing comfort.</div>
+        <dl class="spec">
+          <dt>Services</dt><dd>Companion · home care · nurse visit · doctor consult · medication help · physiotherapy · emergency · hospital assistance.</dd>
+          <dt>Card</dt><dd>Illustrated glass tile: rating ★, price, duration, availability, trust badge.</dd>
+          <dt>Motion</dt><dd>Tiles rise on scroll; selected tile fills sage.</dd>
+          <dt>States</dt><dd>Skeleton tiles; "unavailable today" softly dimmed.</dd>
+          <dt>A11y</dt><dd>Icon + name always; price in Inter tabular.</dd>
+        </dl>
+        <div class="wire" aria-hidden="true"><div class="row"><div class="bar big"></div><div class="bar big"></div></div><div class="row"><div class="bar big"></div><div class="bar big"></div></div></div>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">12</div><h4>Caregiver list</h4></div>
+        <div class="purpose">Trusted people, easy to compare.</div>
+        <dl class="spec">
+          <dt>Controls</dt><dd>Search + filter chips (service, rating, distance, language, trust tier).</dd>
+          <dt>Card</dt><dd>Photo, name, experience, ⭐ rating, trust score, distance, "Verified" badge.</dd>
+          <dt>States</dt><dd>Skeleton rows; empty = "No caregivers match — widen your filters."</dd>
+          <dt>A11y</dt><dd>Filters as large toggle chips; results count announced.</dd>
+        </dl>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">13</div><h4>Caregiver profile</h4></div>
+        <div class="purpose">Confidence before you book — verification worn proudly.</div>
+        <dl class="spec">
+          <dt>Content</dt><dd>Photo, experience, trust tier, background &amp; police verification, certifications, languages, reviews, service radius, availability calendar.</dd>
+          <dt>Trust</dt><dd>Verification shown as green shield badges; reviews with star breakdown.</dd>
+          <dt>CTAs</dt><dd><span class="btnrow"><button class="b b-primary">Book now</button><button class="b b-soft">Chat</button><button class="b b-ghost">Save</button></span></dd>
+          <dt>Motion</dt><dd>Calendar day-cells gently highlight; sticky book bar.</dd>
+          <dt>A11y</dt><dd>Availability spoken; calendar keyboard-navigable.</dd>
+        </dl>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">14</div><h4>Booking</h4></div>
+        <div class="purpose">Arrange help in a few calm taps.</div>
+        <dl class="spec">
+          <dt>Steps</dt><dd>Date · time · duration · service type · instructions.</dd>
+          <dt>Summary</dt><dd>Assigned caregiver card + price breakdown (base, taxes, platform fee).</dd>
+          <dt>Design</dt><dd>Sticky bottom summary bar with total &amp; "Confirm".</dd>
+          <dt>States</dt><dd>Time-slot skeleton; "matching a caregiver…" gentle loader.</dd>
+          <dt>A11y</dt><dd>Stepper labelled; date-picker large-touch.</dd>
+        </dl>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">15</div><h4>Payment</h4></div>
+        <div class="purpose">Secure, calm, and clearly explained.</div>
+        <dl class="spec">
+          <dt>Methods</dt><dd>UPI · debit · credit · wallet · net-banking — glass method tiles.</dd>
+          <dt>Summary</dt><dd>Itemised total, discounts, coupon field.</dd>
+          <dt>Motion</dt><dd>Padlock "securing…" animation → soft success check.</dd>
+          <dt>States</dt><dd>Processing overlay; friendly failure with retry.</dd>
+          <dt>A11y</dt><dd>Amounts in Inter tabular; success spoken &amp; shown.</dd>
+        </dl>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">16</div><h4>Subscription plans</h4></div>
+        <div class="purpose">Netflix-warm plan cards — pick the peace of mind that fits.</div>
+        <dl class="spec">
+          <dt>Plans</dt><dd>Basic · Premium · Assisted · Hospital — monthly price, included services, visit limits, AI benefits, emergency support.</dd>
+          <dt>Design</dt><dd>Tall gradient plan cards, "Most loved" ribbon, feature checklist, monthly/annual toggle.</dd>
+          <dt>Motion</dt><dd>Selected plan lifts &amp; deepens gradient.</dd>
+          <dt>A11y</dt><dd>Feature list read row-by-row; price prominent.</dd>
+          <dt>Colours</dt><dd><span class="k">Sage · lavender · peach · deep-sage gradients</span></dd>
+        </dl>
+        <div class="wire" aria-hidden="true"><div class="row"><div class="bar big" style="height:60px"></div><div class="bar big" style="height:60px"></div><div class="bar big" style="height:60px"></div></div></div>
+      </article>
+
+      <!-- HEALTH & DAILY -->
+      <div class="grouphead" id="health"><span>Health &amp; daily life</span><div class="line"></div></div>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">17</div><h4>Medication management</h4></div>
+        <div class="purpose">Never a missed dose — gentle, visual, forgiving.</div>
+        <dl class="spec">
+          <dt>Content</dt><dd>Today's medicines (time cards, Taken/Snooze) · refill alerts · history · progress tracker · calendar view.</dd>
+          <dt>Design</dt><dd>Pill-shaped med cards, adherence ring, low-stock peach flag + "Book pickup".</dd>
+          <dt>Motion</dt><dd>"Taken" fills a soft check; ring animates up.</dd>
+          <dt>States</dt><dd>Empty = "Add a medicine to track doses."</dd>
+          <dt>A11y</dt><dd>Big Taken/Missed buttons; spoken reminders.</dd>
+        </dl>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">18</div><h4>Daily check-in</h4></div>
+        <div class="purpose">A single warm tap: "I'm okay today."</div>
+        <dl class="spec">
+          <dt>Content</dt><dd>Mood tracker (cute pastel faces), optional note, one-tap check-in.</dd>
+          <dt>Motion</dt><dd>Chosen mood bounces gently; soft confetti + "Family notified".</dd>
+          <dt>States</dt><dd>Already done today = calm confirmation, not a form.</dd>
+          <dt>A11y</dt><dd>Huge mood targets; voice "I feel good"; read-aloud prompt.</dd>
+          <dt>Colours</dt><dd><span class="k">Full pastel spectrum for moods</span></dd>
+        </dl>
+        <div class="wire" aria-hidden="true"><div class="bar w1" style="margin:0 auto"></div><div class="row" style="margin-top:8px"><div class="bar big" style="height:34px"></div><div class="bar big" style="height:34px"></div><div class="bar big" style="height:34px"></div></div></div>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">19</div><h4>Appointments</h4></div>
+        <div class="purpose">Every doctor visit, remembered for them.</div>
+        <dl class="spec">
+          <dt>Content</dt><dd>Upcoming list + calendar view · reminder settings · hospital visits.</dd>
+          <dt>Design</dt><dd>Chronological glass cards (list is kinder than a grid for elders); companion-booked chip.</dd>
+          <dt>States</dt><dd>Empty = "No appointments — add a doctor visit."</dd>
+          <dt>A11y</dt><dd>List default; calendar optional; reminders spoken.</dd>
+        </dl>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">20</div><h4>Health notes</h4></div>
+        <div class="purpose">Doctor, caregiver &amp; AI notes — gathered gently.</div>
+        <dl class="spec">
+          <dt>Content</dt><dd>Doctor notes · caregiver notes · reports · AI suggestions (clearly labelled "AI · reviewed").</dd>
+          <dt>Design</dt><dd>Timeline of note cards, source chip &amp; author avatar; attachment thumbnails.</dd>
+          <dt>States</dt><dd>Empty = "Notes from visits will gather here."</dd>
+          <dt>A11y</dt><dd>AI content flagged; reports openable large.</dd>
+        </dl>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">21</div><h4>Hospital stay</h4></div>
+        <div class="purpose">When it's serious, everything in one calm place.</div>
+        <dl class="spec">
+          <dt>Content</dt><dd>Admission details · assigned caregiver(s) · doctor notes · shift tracking · discharge info.</dd>
+          <dt>Design</dt><dd>Status banner (Admitted/Discharged), shift timeline, coverage-gap peach alert.</dd>
+          <dt>States</dt><dd>Empty = "No hospital stays — track one to arrange companions."</dd>
+          <dt>A11y</dt><dd>Shift hand-offs spoken; gap alerts high-contrast.</dd>
+        </dl>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">27</div><h4>Timeline</h4></div>
+        <div class="purpose">The story of care — Google-Timeline calm.</div>
+        <dl class="spec">
+          <dt>Content</dt><dd>Medication, visits, appointments, hospital stays, AI reports, SOS events — one warm feed.</dd>
+          <dt>Design</dt><dd>Vertical thread, colour-coded event chips (sage good · peach attention · coral SOS), day dividers.</dd>
+          <dt>Motion</dt><dd>Items fade-rise; pull-to-refresh.</dd>
+          <dt>States</dt><dd>Empty = "Visits &amp; updates will appear here."</dd>
+          <dt>A11y</dt><dd>"Today / Yesterday" friendly times; each event spoken.</dd>
+        </dl>
+        <div class="wire" aria-hidden="true"><div class="bar w2"></div><div class="bar w1"></div><div class="bar"></div><div class="bar w1"></div></div>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">32</div><h4>AI visit reports</h4></div>
+        <div class="purpose">A gentle weekly letter about your parent's days.</div>
+        <dl class="spec">
+          <dt>Content</dt><dd>Weekly &amp; monthly reports · AI-generated suggestions, newest first.</dd>
+          <dt>Design</dt><dd>Warm "letter" cards with period header &amp; read-time; suggestion chips.</dd>
+          <dt>States</dt><dd>Empty = "Your first weekly summary is on its way."</dd>
+          <dt>A11y</dt><dd>Read-aloud whole report; AI clearly attributed.</dd>
+        </dl>
+      </article>
+
+      <!-- AI & SAFETY -->
+      <div class="grouphead" id="ai"><span>AI companion &amp; safety</span><div class="line"></div></div>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">22</div><h4>AI companion</h4></div>
+        <div class="purpose">Someone to talk to — Calm meets a caring chat.</div>
+        <dl class="spec">
+          <dt>Features</dt><dd>Voice conversation · emotional support · daily talks · storytelling · mood analysis · med reminders · family updates.</dd>
+          <dt>Design</dt><dd>Breathing lavender AI orb centre-stage; soft chat bubbles; big mic button; waveform on listen.</dd>
+          <dt>Motion</dt><dd>Orb pulses with speech; particles drift; typing shimmer.</dd>
+          <dt>States</dt><dd>Idle = "Hello Amma, shall we talk?"; offline = graceful note.</dd>
+          <dt>A11y</dt><dd>Voice-first, large captions, adjustable speech rate.</dd>
+          <dt>Colours</dt><dd><span class="k">Lavender + cream, dim glass</span></dd>
+        </dl>
+        <div class="wire" aria-hidden="true"><div style="text-align:center;font-size:1.6rem">◍</div><div class="bar w2"></div><div class="bar w1" style="margin-left:auto"></div><div class="bar big" style="height:30px;width:40%;margin:6px auto 0;border-radius:999px"></div></div>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">23</div><h4>SOS</h4></div>
+        <div class="purpose">The moment that matters most — one tap, total clarity.</div>
+        <dl class="spec">
+          <dt>Hero</dt><dd>Giant pulsing SOS button; "Call emergency services" leads, always.</dd>
+          <dt>Actions</dt><dd>Notify family · share location · call services · alert nearby caregiver — run in parallel.</dd>
+          <dt>Motion</dt><dd>Concentric pulse rings; on trigger → calm "Help is on the way" with live status.</dd>
+          <dt>States</dt><dd>Practice mode (no real alert) clearly separate.</dd>
+          <dt>A11y</dt><dd>Largest target, AAA contrast, fully spoken, one-handed.</dd>
+          <dt>Colours</dt><dd><span class="k">Warm coral — the only alarming colour, used only here</span></dd>
+        </dl>
+        <div class="wire" aria-hidden="true"><div style="text-align:center"><div class="bar big" style="height:70px;width:70px;border-radius:50%;margin:6px auto;background:color-mix(in srgb,var(--crit) 40%,transparent)"></div></div><div class="bar w1" style="margin:0 auto"></div></div>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">24</div><h4>Notifications</h4></div>
+        <div class="purpose">Everything that happened, warmly sorted.</div>
+        <dl class="spec">
+          <dt>Content</dt><dd>Medication alerts · booking updates · check-ins · appointment reminders · SOS alerts.</dd>
+          <dt>Design</dt><dd>Grouped by day; unread dot; coloured icon chip per type; SOS pinned &amp; coral.</dd>
+          <dt>States</dt><dd>Empty = "You're all caught up 🌿"; skeleton rows.</dd>
+          <dt>A11y</dt><dd>Tap opens the exact screen; times friendly; swipe or button to clear.</dd>
+        </dl>
+      </article>
+
+      <!-- CAREGIVER OPS -->
+      <div class="grouphead"><span>Caregiver &amp; trust</span><div class="line"></div></div>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">28</div><h4>Caregiver onboarding</h4></div>
+        <div class="purpose">Joining the hive — professional, welcoming.</div>
+        <dl class="spec">
+          <dt>Steps</dt><dd>Personal details · document upload · certifications · background verification.</dd>
+          <dt>Design</dt><dd>Progress stepper, drag-drop uploads with previews, save-and-continue.</dd>
+          <dt>States</dt><dd>Per-document status (uploaded / in review); resumable.</dd>
+          <dt>A11y</dt><dd>Camera capture, large fields, clear next-step guidance.</dd>
+        </dl>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">29</div><h4>Caregiver verification</h4></div>
+        <div class="purpose">Trust, tracked transparently.</div>
+        <dl class="spec">
+          <dt>Content</dt><dd>Verification status · police verification · trust tier progress.</dd>
+          <dt>Design</dt><dd>Tier ladder (Probationary → Standard → Clinical-verified) with shield badges &amp; "what unlocks next".</dd>
+          <dt>States</dt><dd>Pending = calm "in progress" with ETA; approved = celebratory.</dd>
+          <dt>A11y</dt><dd>Status + next action spoken; high-contrast badges.</dd>
+        </dl>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">30</div><h4>Ratings &amp; reviews</h4></div>
+        <div class="purpose">Gratitude, made easy to give.</div>
+        <dl class="spec">
+          <dt>Content</dt><dd>Star rating · written review · service feedback tags.</dd>
+          <dt>Design</dt><dd>Big tappable stars, warm prompt, optional voice review; review list with breakdown bars.</dd>
+          <dt>States</dt><dd>Empty = "After a visit, you can say thanks here."</dd>
+          <dt>A11y</dt><dd>Stars keyboard/spoken; anonymised where set.</dd>
+        </dl>
+      </article>
+
+      <!-- ACCOUNT & SUPPORT -->
+      <div class="grouphead" id="account"><span>Account &amp; support</span><div class="line"></div></div>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">31</div><h4>Payment history</h4></div>
+        <div class="purpose">Every rupee, clear and downloadable.</div>
+        <dl class="spec">
+          <dt>Content</dt><dd>Past payments · download invoice · subscription history.</dd>
+          <dt>Design</dt><dd>Grouped-by-month list, status pills (paid/refunded), Inter tabular amounts, invoice download.</dd>
+          <dt>States</dt><dd>Empty = "No payments yet."; skeleton rows.</dd>
+          <dt>A11y</dt><dd>Amounts &amp; dates spoken; invoice as accessible PDF.</dd>
+        </dl>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">33</div><h4>Accessibility settings</h4></div>
+        <div class="purpose">The app bends to the person — first-class, not buried.</div>
+        <dl class="spec">
+          <dt>Controls</dt><dd>Text size (live preview) · dark mode · voice commands · high-contrast · simple mode · language.</dd>
+          <dt>Design</dt><dd>Large toggle rows with instant effect &amp; a live preview card.</dd>
+          <dt>Motion</dt><dd>Preview text scales smoothly as slider moves.</dd>
+          <dt>A11y</dt><dd>This screen is the accessibility promise — flawless targets, labels, contrast.</dd>
+        </dl>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">34</div><h4>Profile settings</h4></div>
+        <div class="purpose">Calm control over account, security &amp; privacy.</div>
+        <dl class="spec">
+          <dt>Sections</dt><dd>Account · security · notification preferences · privacy settings.</dd>
+          <dt>Design</dt><dd>Grouped glass setting rows with icons; destructive actions gently gated.</dd>
+          <dt>States</dt><dd>Saved-toast on change; confirm before sign-out/delete.</dd>
+          <dt>A11y</dt><dd>Every row labelled; privacy links plain-language.</dd>
+        </dl>
+      </article>
+
+      <article class="card screen">
+        <div class="top"><div class="idx">35</div><h4>Chat support</h4></div>
+        <div class="purpose">Help that feels like a friend, not a ticket.</div>
+        <dl class="spec">
+          <dt>Content</dt><dd>AI chat support · human support handoff · FAQs · ticket system.</dd>
+          <dt>Design</dt><dd>Warm chat with quick-reply chips; "Talk to a person" always visible; FAQ accordions.</dd>
+          <dt>States</dt><dd>Typing shimmer; offline = leave a message; ticket status chip.</dd>
+          <dt>A11y</dt><dd>Voice input, large send target, readable transcript.</dd>
+        </dl>
+      </article>
+
+    </div>
+  </section>
+
+  <footer>
+    <div class="card">
+      <div class="eyebrow" style="color:var(--lav-ink)">The feeling</div>
+      <p style="font-family:var(--font-display);font-size:1.15rem;color:var(--ink);margin:.4em 0">Safe · Loved · Connected · Calm · Premium · Human.</p>
+      <p style="margin:0 0 14px">Not a hospital app — a home away from home. Every screen chooses warmth over clinical, clarity over clutter, and dignity for the people it serves.</p>
+      <a class="top" href="#">↑ Back to top</a>
+    </div>
+  </footer>
+</main>
+
+<script>
+  (function(){
+    var t=document.getElementById('themeToggle');
+    function cur(){return document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');}
+    t.addEventListener('click',function(){
+      var next=cur()==='dark'?'light':'dark';
+      document.documentElement.setAttribute('data-theme',next);
+    });
+  })();
+</script>
