@@ -53,25 +53,22 @@ class _JobList extends ConsumerWidget {
       ),
       body: bookingsAsync.when(
         data: (bookings) {
-          if (bookings.isEmpty) {
-            return const Center(child: Text('No jobs assigned right now.'));
-          }
-          return ListView.separated(
-            padding: const EdgeInsets.all(SetuSpacing.lg),
-            itemCount: bookings.length,
-            separatorBuilder: (context, index) =>
-                const SizedBox(height: SetuSpacing.sm),
-            itemBuilder: (context, index) {
-              final booking = bookings[index];
-              return Card(
-                child: ListTile(
-                  title: Text(_statusLabel(booking.status)),
-                  subtitle: Text(booking.scheduledAt.toLocal().toString()),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/booking/${booking.id}'),
-                ),
-              );
+          if (bookings.isEmpty) return const _NoJobs();
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(myBookingsProvider);
+              await ref.read(myBookingsProvider.future);
             },
+            child: ListView(
+              padding: const EdgeInsets.all(SetuSpacing.lg),
+              children: [
+                Text('Today\'s visits',
+                    style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: SetuSpacing.md),
+                for (final booking in bookings)
+                  _JobCard(booking: booking),
+              ],
+            ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -80,6 +77,121 @@ class _JobList extends ConsumerWidget {
       ),
     );
   }
+}
+
+class _NoJobs extends StatelessWidget {
+  const _NoJobs();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(SetuSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.event_available_outlined,
+                size: 56, color: SetuColors.mutedLight),
+            const SizedBox(height: SetuSpacing.md),
+            Text('No visits right now',
+                style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: SetuSpacing.xs),
+            const Text('New assignments will show up here.',
+                textAlign: TextAlign.center),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _JobCard extends StatelessWidget {
+  const _JobCard({required this.booking});
+
+  final Booking booking;
+
+  @override
+  Widget build(BuildContext context) {
+    final canStart = booking.status == BookingStatus.matched ||
+        booking.status == BookingStatus.confirmed;
+    final inProgress = booking.status == BookingStatus.inProgress;
+    final color = _statusColor(booking.status);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: SetuSpacing.md),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(SetuSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: SetuSpacing.sm, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(_statusLabel(booking.status),
+                        style: TextStyle(
+                            color: color,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600)),
+                  ),
+                  const Spacer(),
+                  Text(_friendlyTime(booking.scheduledAt.toLocal()),
+                      style: const TextStyle(
+                          color: SetuColors.mutedLight, fontSize: 13)),
+                ],
+              ),
+              const SizedBox(height: SetuSpacing.md),
+              if (canStart || inProgress)
+                FilledButton.icon(
+                  onPressed: () => context.push('/booking/${booking.id}'),
+                  icon: Icon(inProgress
+                      ? Icons.play_arrow
+                      : Icons.login),
+                  label: Text(inProgress ? 'Continue visit' : 'Start visit'),
+                )
+              else
+                OutlinedButton(
+                  onPressed: () => context.push('/booking/${booking.id}'),
+                  child: const Text('View details'),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+Color _statusColor(BookingStatus status) {
+  switch (status) {
+    case BookingStatus.inProgress:
+      return SetuColors.verifiedLight;
+    case BookingStatus.disputed:
+    case BookingStatus.cancelled:
+      return SetuColors.sosLight;
+    case BookingStatus.completed:
+      return SetuColors.verifiedLight;
+    default:
+      return SetuColors.accentLight;
+  }
+}
+
+String _friendlyTime(DateTime dt) {
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final that = DateTime(dt.year, dt.month, dt.day);
+  final h = dt.hour == 0 || dt.hour == 12 ? 12 : dt.hour % 12;
+  final time = '$h:${dt.minute.toString().padLeft(2, '0')} '
+      '${dt.hour < 12 ? 'AM' : 'PM'}';
+  final days = that.difference(today).inDays;
+  if (days == 0) return 'Today, $time';
+  if (days == 1) return 'Tomorrow, $time';
+  return '${dt.day}/${dt.month}, $time';
 }
 
 String _statusLabel(BookingStatus status) {
