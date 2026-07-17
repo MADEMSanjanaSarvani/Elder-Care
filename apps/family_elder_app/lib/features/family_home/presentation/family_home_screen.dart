@@ -22,11 +22,19 @@ class FamilyHomeScreen extends ConsumerWidget {
     return elderProfiles.when(
       data: (elders) {
         if (elders.isEmpty) return const _NoElders();
-        return ListView.separated(
+        return ListView(
           padding: const EdgeInsets.all(SetuSpacing.lg),
-          itemCount: elders.length,
-          separatorBuilder: (_, __) => const SizedBox(height: SetuSpacing.lg),
-          itemBuilder: (context, index) => _ElderCard(elder: elders[index]),
+          children: [
+            for (final elder in elders) ...[
+              _ElderCard(elder: elder),
+              const SizedBox(height: SetuSpacing.lg),
+            ],
+            OutlinedButton.icon(
+              onPressed: () => showAddElderDialog(context, ref),
+              icon: const Icon(Icons.person_add_alt_1_outlined),
+              label: const Text('Add another person'),
+            ),
+          ],
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -35,11 +43,75 @@ class FamilyHomeScreen extends ConsumerWidget {
   }
 }
 
-class _NoElders extends StatelessWidget {
+/// Family onboarding: create the elder you care for and link yourself, via
+/// the family-add-elder function (RLS blocks the direct client path).
+Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
+  final nameController = TextEditingController();
+  final relationshipController = TextEditingController();
+
+  final submitted = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Add someone you care for'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: nameController,
+            decoration: const InputDecoration(
+                labelText: 'Their name', hintText: 'e.g. Lakshmi'),
+          ),
+          const SizedBox(height: SetuSpacing.sm),
+          TextField(
+            controller: relationshipController,
+            decoration: const InputDecoration(
+                labelText: 'Relationship (optional)',
+                hintText: 'e.g. Mother'),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel')),
+        FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Add')),
+      ],
+    ),
+  );
+
+  if (submitted != true || nameController.text.trim().isEmpty) return;
+
+  try {
+    final client = ref.read(supabaseClientProvider);
+    final response = await client.functions.invoke('family-add-elder', body: {
+      'display_name': nameController.text.trim(),
+      'relationship': relationshipController.text.trim(),
+    });
+    if (response.status != 201) {
+      throw StateError('${response.data}');
+    }
+    ref.invalidate(myElderProfilesProvider);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${nameController.text.trim()} added.')),
+      );
+    }
+  } catch (err) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not add: $err')),
+      );
+    }
+  }
+}
+
+class _NoElders extends ConsumerWidget {
   const _NoElders();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(SetuSpacing.xl),
@@ -55,6 +127,12 @@ class _NoElders extends StatelessWidget {
             const Text(
               'Add the parent or elder you care for to see their day at a glance.',
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: SetuSpacing.lg),
+            FilledButton.icon(
+              onPressed: () => showAddElderDialog(context, ref),
+              icon: const Icon(Icons.person_add_alt_1_outlined),
+              label: const Text('Add someone you care for'),
             ),
           ],
         ),
