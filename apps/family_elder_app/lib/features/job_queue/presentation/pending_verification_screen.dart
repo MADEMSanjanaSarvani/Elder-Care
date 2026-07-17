@@ -9,23 +9,14 @@ class PendingVerificationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Padding(
-          padding: EdgeInsets.all(SetuSpacing.lg),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.hourglass_top_outlined, size: 48),
-              SizedBox(height: SetuSpacing.md),
-              Text(
-                "You're signed in, but your caregiver verification hasn't been completed yet. "
-                "Our team will notify you once it's ready.",
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
+    return Scaffold(
+      appBar: AppBar(title: const Text('CareHive Care')),
+      body: const SetuEmptyState(
+        icon: Icons.verified_user_outlined,
+        title: 'Verification in progress',
+        message:
+            "You're signed in. Our team is completing your caregiver "
+            "verification — we'll notify you the moment your jobs are ready.",
       ),
     );
   }
