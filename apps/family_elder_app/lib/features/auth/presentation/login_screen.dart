@@ -287,26 +287,81 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
+  Widget _roleCard({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String subtitle,
+    required String role,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: _busy ? null : () => _chooseRole(role),
+      child: Container(
+        padding: const EdgeInsets.all(SetuSpacing.md),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: color.withValues(alpha: 0.06),
+          border: Border.all(color: color.withValues(alpha: 0.28)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(SetuSpacing.sm),
+              decoration:
+                  BoxDecoration(color: color.withValues(alpha: 0.14), shape: BoxShape.circle),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: SetuSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      style: const TextStyle(
+                          fontSize: 12.5, color: SetuColors.mutedLight)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: SetuColors.mutedLight),
+          ],
+        ),
+      ),
+    );
+  }
+
   List<Widget> _buildFields() {
     if (_step == _LoginStep.chooseRole) {
       return [
         Text('Who is signing in?',
             style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: SetuSpacing.xs),
+        const Text('Pick the one that fits you — we\'ll set up the right home.',
+            style: TextStyle(color: SetuColors.mutedLight)),
         const SizedBox(height: SetuSpacing.md),
-        FilledButton.icon(
-            onPressed: _busy ? null : () => _chooseRole('family_member'),
-            icon: const Icon(Icons.family_restroom),
-            label: const Text("I'm a family member")),
+        _roleCard(
+            icon: Icons.family_restroom,
+            color: SetuColors.accentLight,
+            title: "I'm a family member",
+            subtitle: 'See and manage care for your parent or elder.',
+            role: 'family_member'),
         const SizedBox(height: SetuSpacing.sm),
-        OutlinedButton.icon(
-            onPressed: _busy ? null : () => _chooseRole('elder'),
-            icon: const Icon(Icons.elderly),
-            label: const Text("I'm the senior citizen")),
+        _roleCard(
+            icon: Icons.elderly,
+            color: SetuColors.peachLight,
+            title: "I'm the senior",
+            subtitle: 'A simple, large-text app made just for me.',
+            role: 'elder'),
         const SizedBox(height: SetuSpacing.sm),
-        OutlinedButton.icon(
-            onPressed: _busy ? null : () => _chooseRole('caregiver'),
-            icon: const Icon(Icons.medical_services_outlined),
-            label: const Text("I'm a caregiver")),
+        _roleCard(
+            icon: Icons.medical_services_outlined,
+            color: SetuColors.lavenderLight,
+            title: "I'm a caregiver",
+            subtitle: 'My visits, check-ins and earnings.',
+            role: 'caregiver'),
       ];
     }
     return _mode == _AuthMode.email ? _emailFields() : _phoneFields();
