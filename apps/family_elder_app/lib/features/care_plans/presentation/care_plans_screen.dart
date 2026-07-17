@@ -148,40 +148,84 @@ class _PlanCard extends ConsumerWidget {
     final allocations = (plan['care_plan_allocations'] as List?) ?? [];
     final currency = plan['currency'] as String? ?? 'INR';
     final price = (plan['monthly_price'] as num).toStringAsFixed(0);
+    final code = plan['code'] as String? ?? '';
+    // Middle tier is the "most loved" hero; each tier gets its own tint.
+    final popular = code == 'standard';
+    final tint = code == 'premium'
+        ? SetuColors.lavenderLight
+        : code == 'standard'
+            ? SetuColors.accentLight
+            : SetuColors.peachLight;
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: SetuSpacing.md),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            tint.withValues(alpha: 0.14),
+            tint.withValues(alpha: 0.04),
+          ],
+        ),
+        border: Border.all(
+            color: tint.withValues(alpha: popular ? 0.6 : 0.25),
+            width: popular ? 2 : 1),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(SetuSpacing.md),
+        padding: const EdgeInsets.all(SetuSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(plan['name'] as String, style: Theme.of(context).textTheme.titleLarge),
-                Text('$currency $price/mo', style: Theme.of(context).textTheme.titleMedium),
+                Text(plan['name'] as String,
+                    style: Theme.of(context).textTheme.titleLarge),
+                if (popular) ...[
+                  const SizedBox(width: SetuSpacing.sm),
+                  const SetuStatusPill(
+                      label: 'Most loved', color: SetuColors.accentLight),
+                ],
+              ],
+            ),
+            const SizedBox(height: SetuSpacing.xs),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Text('$currency $price',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: tint, fontWeight: FontWeight.w800)),
+                const Text(' / month',
+                    style: TextStyle(color: SetuColors.mutedLight)),
               ],
             ),
             if (plan['description'] != null)
               Padding(
                 padding: const EdgeInsets.only(top: SetuSpacing.xs),
-                child: Text(plan['description'] as String),
+                child: Text(plan['description'] as String,
+                    style: const TextStyle(
+                        color: SetuColors.mutedLight, height: 1.4)),
               ),
-            const SizedBox(height: SetuSpacing.sm),
+            const SizedBox(height: SetuSpacing.md),
             for (final alloc in allocations)
-              Row(
-                children: [
-                  const Icon(Icons.check, size: 16, color: SetuColors.verifiedLight),
-                  const SizedBox(width: SetuSpacing.xs),
-                  Expanded(
-                    child: Text(
-                        '${alloc['visits_per_period']} × ${(alloc['service_catalog'] as Map<String, dynamic>?)?['name'] ?? ''} per ${alloc['period']}'),
-                  ),
-                ],
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  children: [
+                    Icon(Icons.check_circle, size: 18, color: tint),
+                    const SizedBox(width: SetuSpacing.sm),
+                    Expanded(
+                      child: Text(
+                          '${alloc['visits_per_period']} × ${(alloc['service_catalog'] as Map<String, dynamic>?)?['name'] ?? ''} / ${alloc['period']}'),
+                    ),
+                  ],
+                ),
               ),
-            const SizedBox(height: SetuSpacing.sm),
+            const SizedBox(height: SetuSpacing.md),
             FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: tint),
               onPressed: hasActiveSub
                   ? null
                   : () async {
@@ -200,7 +244,9 @@ class _PlanCard extends ConsumerWidget {
                         }
                       }
                     },
-              child: Text(hasActiveSub ? 'Cancel current plan first' : 'Choose ${plan['name']}'),
+              child: Text(hasActiveSub
+                  ? 'Cancel current plan first'
+                  : 'Choose ${plan['name']}'),
             ),
           ],
         ),

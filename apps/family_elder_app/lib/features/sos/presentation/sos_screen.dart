@@ -93,44 +93,85 @@ class _SosScreenState extends ConsumerState<SosScreen> {
           title: const Text('Emergency'),
           backgroundColor: SetuColors.sosLight,
           foregroundColor: Colors.white),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(SetuSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            FilledButton.icon(
-              style: FilledButton.styleFrom(
-                backgroundColor: SetuColors.sosLight,
-                padding: const EdgeInsets.symmetric(vertical: SetuSpacing.lg),
-              ),
-              onPressed: _call108,
-              icon: const Icon(Icons.call, size: 28),
-              label: const Text('Call 108 (Emergency)',
-                  style: TextStyle(fontSize: 20)),
-            ),
             const SizedBox(height: SetuSpacing.lg),
+            // The pulsing red heart of the screen: one calm, unmissable tap
+            // that dials 108. Everything else is deliberately quieter.
+            Center(child: _PulsingCallButton(onTap: _call108)),
+            const SizedBox(height: SetuSpacing.xl),
             Text(
-              'Calling 108 is the fastest way to get emergency medical help. '
-              'Notifying CareHive alerts your family and our on-call team at the same time — '
-              'it does not replace calling 108.',
-              style: Theme.of(context).textTheme.bodyMedium,
+              'Tap the button to call 108 — the fastest way to get emergency '
+              'medical help.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(height: 1.4),
             ),
-            const SizedBox(height: SetuSpacing.lg),
+            const SizedBox(height: SetuSpacing.xl),
             if (_error != null) ...[
-              Text(_error!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              Container(
+                padding: const EdgeInsets.all(SetuSpacing.md),
+                decoration: BoxDecoration(
+                  color: SetuColors.sosLight.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(_error!,
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.error)),
+              ),
               const SizedBox(height: SetuSpacing.md),
             ],
             if (_notified)
-              const Text('Your family and our on-call team have been notified.')
+              Container(
+                padding: const EdgeInsets.all(SetuSpacing.md),
+                decoration: BoxDecoration(
+                  color: SetuColors.verifiedLight.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.check_circle,
+                        color: SetuColors.verifiedLight),
+                    SizedBox(width: SetuSpacing.sm),
+                    Expanded(
+                      child: Text(
+                          'Your family and our on-call team have been notified.'),
+                    ),
+                  ],
+                ),
+              )
             else
               OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: SetuSpacing.md),
+                ),
                 onPressed: _notifying ? null : _notifyPlatform,
-                icon: const Icon(Icons.notifications_active_outlined),
+                icon: _notifying
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.notifications_active_outlined),
                 label: Text(
                     _notifying ? 'Notifying…' : 'Also notify family & CareHive'),
               ),
-            const Spacer(),
+            const SizedBox(height: SetuSpacing.sm),
+            Text(
+              'Notifying CareHive alerts your family and our on-call team at the '
+              'same time — it does not replace calling 108.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: SetuColors.mutedLight),
+            ),
+            const SizedBox(height: SetuSpacing.xl),
             const Divider(),
             TextButton.icon(
               onPressed: _drilling ? null : _practice,
@@ -140,6 +181,96 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                   : 'Practice this (no real alert)'),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The primary emergency control: a large circular "Call 108" button that
+/// breathes with a soft red halo so it draws the eye without shouting.
+/// Honours reduced-motion (renders a still button with a static ring).
+class _PulsingCallButton extends StatefulWidget {
+  const _PulsingCallButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  State<_PulsingCallButton> createState() => _PulsingCallButtonState();
+}
+
+class _PulsingCallButtonState extends State<_PulsingCallButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 1400))
+    ..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  Widget _button() => Material(
+        color: SetuColors.sosLight,
+        shape: const CircleBorder(),
+        elevation: 6,
+        shadowColor: SetuColors.sosLight.withValues(alpha: 0.6),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: widget.onTap,
+          child: const SizedBox(
+            width: 200,
+            height: 200,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.call, size: 56, color: Colors.white),
+                SizedBox(height: SetuSpacing.sm),
+                Text('Call 108',
+                    style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white)),
+                Text('Emergency',
+                    style: TextStyle(fontSize: 15, color: Colors.white)),
+              ],
+            ),
+          ),
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final reduce = MediaQuery.of(context).disableAnimations;
+    Widget halo(double t) => Container(
+          width: 200 + t * 56,
+          height: 200 + t * 56,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: SetuColors.sosLight.withValues(alpha: 0.18 * (1 - t)),
+          ),
+        );
+    if (reduce) {
+      return SizedBox(
+        width: 256,
+        height: 256,
+        child: Center(
+          child: Stack(
+            alignment: Alignment.center,
+            children: [halo(0.5), _button()],
+          ),
+        ),
+      );
+    }
+    return SizedBox(
+      width: 256,
+      height: 256,
+      child: AnimatedBuilder(
+        animation: _c,
+        builder: (_, __) => Stack(
+          alignment: Alignment.center,
+          children: [halo(_c.value), _button()],
         ),
       ),
     );
