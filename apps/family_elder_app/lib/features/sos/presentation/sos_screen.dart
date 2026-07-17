@@ -111,7 +111,7 @@ class _SosScreenState extends ConsumerState<SosScreen> {
             const SizedBox(height: SetuSpacing.lg),
             Text(
               'Calling 108 is the fastest way to get emergency medical help. '
-              'Notifying Setu alerts your family and our on-call team at the same time — '
+              'Notifying CareHive alerts your family and our on-call team at the same time — '
               'it does not replace calling 108.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
@@ -128,7 +128,7 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                 onPressed: _notifying ? null : _notifyPlatform,
                 icon: const Icon(Icons.notifications_active_outlined),
                 label: Text(
-                    _notifying ? 'Notifying…' : 'Also notify family & Setu'),
+                    _notifying ? 'Notifying…' : 'Also notify family & CareHive'),
               ),
             const Spacer(),
             const Divider(),

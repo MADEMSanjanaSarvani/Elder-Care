@@ -103,7 +103,7 @@ abstract class AppLocalizations {
   /// App name shown in the OS task switcher — not user-facing chrome
   ///
   /// In en, this message translates to:
-  /// **'Setu'**
+  /// **'CareHive'**
   String get appTitle;
 
   /// No description provided for @loginPhoneLabel.
@@ -169,13 +169,13 @@ abstract class AppLocalizations {
   /// No description provided for @sosNotifyPlatform.
   ///
   /// In en, this message translates to:
-  /// **'Also notify family & Setu'**
+  /// **'Also notify family & CareHive'**
   String get sosNotifyPlatform;
 
   /// No description provided for @sosDisclaimer.
   ///
   /// In en, this message translates to:
-  /// **'Calling 108 is the fastest way to get emergency medical help. Notifying Setu alerts your family and our on-call team at the same time — it does not replace calling 108.'**
+  /// **'Calling 108 is the fastest way to get emergency medical help. Notifying CareHive alerts your family and our on-call team at the same time — it does not replace calling 108.'**
   String get sosDisclaimer;
 
   /// No description provided for @sosNotifiedConfirmation.

@@ -187,7 +187,7 @@ class HomeRouterScreen extends ConsumerWidget {
   }
 }
 
-/// The shared family/elder home shell: the Setu app bar (notification bell +
+/// The shared family/elder home shell: the CareHive app bar (notification bell +
 /// settings) over either the elder or family home body.
 class _FamilyElderShell extends ConsumerWidget {
   const _FamilyElderShell({required this.isElder});
@@ -199,7 +199,7 @@ class _FamilyElderShell extends ConsumerWidget {
     final unread = ref.watch(unreadCountProvider).asData?.value ?? 0;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Setu'),
+        title: const Text('CareHive'),
         actions: [
           IconButton(
             tooltip: 'Notifications',

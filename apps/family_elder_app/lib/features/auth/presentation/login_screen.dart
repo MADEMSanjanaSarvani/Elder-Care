@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
 import '../data/auth_repository.dart';
@@ -21,7 +22,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _codeController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  _AuthMode _mode = _AuthMode.phone;
+  _AuthMode _mode = _AuthMode.email;
   _LoginStep _step = _LoginStep.enter;
   String? _error;
   String? _notice;
@@ -62,47 +63,95 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  /// Turns raw Supabase auth errors into plain, reassuring messages.
   String _friendly(Object err) {
-    final s = err.toString().replaceFirst('Exception: ', '');
-    return s.length > 200 ? '${s.substring(0, 200)}…' : s;
+    final s = err.toString();
+    if (s.contains('anonymous')) {
+      return 'Please enter your email and password.';
+    }
+    if (s.contains('phone_provider_disabled') ||
+        s.contains('Unsupported phone provider')) {
+      return "Phone sign-in isn't set up yet. Please use Email to continue.";
+    }
+    if (s.contains('Invalid login credentials')) {
+      return 'Wrong email or password. Try again, or create an account.';
+    }
+    if (s.contains('already registered')) {
+      return 'This email already has an account — use Log in instead.';
+    }
+    if (s.contains('Password should be')) {
+      return 'Password must be at least 6 characters.';
+    }
+    if (s.contains('valid email')) {
+      return 'Please enter a valid email address.';
+    }
+    final m = s
+        .replaceFirst('AuthApiException(message: ', '')
+        .replaceFirst('AuthException(message: ', '')
+        .replaceFirst('Exception: ', '');
+    return m.length > 160 ? '${m.substring(0, 160)}…' : m;
   }
 
   // --- phone ---
-  Future<void> _sendCode() => _run(() async {
-        await _repo.sendOtp(_phoneController.text.trim());
-        setState(() => _step = _LoginStep.enterCode);
-      });
+  Future<void> _sendCode() {
+    if (_phoneController.text.trim().isEmpty) {
+      setState(() => _error = 'Please enter your phone number.');
+      return Future.value();
+    }
+    return _run(() async {
+      await _repo.sendOtp(_phoneController.text.trim());
+      setState(() => _step = _LoginStep.enterCode);
+    });
+  }
 
-  Future<void> _verifyCode() => _run(() async {
-        await _repo.verifyOtp(
-            phone: _phoneController.text.trim(),
-            token: _codeController.text.trim());
-        await _afterAuth();
-      });
+  Future<void> _verifyCode() {
+    if (_codeController.text.trim().isEmpty) {
+      setState(() => _error = 'Enter the code we sent you.');
+      return Future.value();
+    }
+    return _run(() async {
+      await _repo.verifyOtp(
+          phone: _phoneController.text.trim(),
+          token: _codeController.text.trim());
+      await _afterAuth();
+    });
+  }
 
   // --- email ---
-  Future<void> _emailSignIn() => _run(() async {
-        await _repo.signInWithEmail(
-            email: _emailController.text.trim(),
-            password: _passwordController.text);
-        await _afterAuth();
-      });
+  bool _emailFieldsValid() {
+    if (_emailController.text.trim().isEmpty ||
+        _passwordController.text.isEmpty) {
+      setState(() => _error = 'Please enter your email and password.');
+      return false;
+    }
+    return true;
+  }
 
-  Future<void> _emailSignUp() => _run(() async {
-        final res = await _repo.signUpWithEmail(
-            email: _emailController.text.trim(),
-            password: _passwordController.text);
-        if (res.session == null) {
-          // Email confirmation is ON — no session yet.
-          setState(() => _notice =
-              'Check your email to confirm your account, then sign in.');
-          return;
-        }
-        await _afterAuth();
-      });
+  Future<void> _emailSignIn() {
+    if (!_emailFieldsValid()) return Future.value();
+    return _run(() async {
+      await _repo.signInWithEmail(
+          email: _emailController.text.trim(),
+          password: _passwordController.text);
+      await _afterAuth();
+    });
+  }
 
-  /// Shared post-authentication routing: existing profile → home, otherwise
-  /// pick a role first.
+  Future<void> _emailSignUp() {
+    if (!_emailFieldsValid()) return Future.value();
+    return _run(() async {
+      final res = await _repo.signUpWithEmail(
+          email: _emailController.text.trim(),
+          password: _passwordController.text);
+      if (res.session == null) {
+        setState(() => _notice =
+            'Check your email to confirm your account, then log in.');
+        return;
+      }
+      await _afterAuth();
+    });
+  }
+
   Future<void> _afterAuth() async {
     final hasProfile = await _repo.hasProfile();
     if (hasProfile) {
@@ -119,36 +168,75 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Center(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text('Setu',
-                        style: Theme.of(context).textTheme.headlineLarge),
-                    const SizedBox(height: 24),
-                    if (_step != _LoginStep.chooseRole) _modeToggle(),
-                    if (_error != null) ...[
-                      const SizedBox(height: 12),
-                      Text(_error!,
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.error)),
-                    ],
-                    if (_notice != null) ...[
-                      const SizedBox(height: 12),
-                      Text(_notice!),
-                    ],
-                    const SizedBox(height: 16),
-                    ..._buildFields(),
-                  ],
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 12),
+                  Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(22),
+                      child: Image.asset('assets/icon/icon.png',
+                          width: 84, height: 84),
+                    ),
+                  ),
+                  const SizedBox(height: SetuSpacing.lg),
+                  Text('CareHive',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.headlineLarge),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Care, coordinated — for the ones who raised us.',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(color: SetuColors.mutedLight),
+                  ),
+                  const SizedBox(height: SetuSpacing.xl),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(SetuSpacing.lg),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (_step != _LoginStep.chooseRole) ...[
+                            SizedBox(
+                              width: double.infinity,
+                              child: SegmentedButton<_AuthMode>(
+                                segments: const [
+                                  ButtonSegment(
+                                      value: _AuthMode.email,
+                                      label: Text('Email'),
+                                      icon: Icon(Icons.mail_outline)),
+                                  ButtonSegment(
+                                      value: _AuthMode.phone,
+                                      label: Text('Phone'),
+                                      icon: Icon(Icons.phone_outlined)),
+                                ],
+                                selected: {_mode},
+                                onSelectionChanged:
+                                    _busy ? null : (s) => _setMode(s.first),
+                              ),
+                            ),
+                            const SizedBox(height: SetuSpacing.md),
+                          ],
+                          if (_error != null) _banner(_error!, isError: true),
+                          if (_notice != null) _banner(_notice!),
+                          ..._buildFields(),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: SetuSpacing.lg),
+                ],
               ),
             ),
           ),
@@ -157,68 +245,50 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  Widget _modeToggle() {
-    return SegmentedButton<_AuthMode>(
-      segments: const [
-        ButtonSegment(value: _AuthMode.phone, label: Text('Phone')),
-        ButtonSegment(value: _AuthMode.email, label: Text('Email')),
-      ],
-      selected: {_mode},
-      onSelectionChanged: _busy ? null : (s) => _setMode(s.first),
+  Widget _banner(String text, {bool isError = false}) {
+    final color = isError ? SetuColors.sosLight : SetuColors.verifiedLight;
+    return Container(
+      margin: const EdgeInsets.only(bottom: SetuSpacing.md),
+      padding: const EdgeInsets.all(SetuSpacing.sm),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          Icon(isError ? Icons.error_outline : Icons.info_outline,
+              size: 18, color: color),
+          const SizedBox(width: SetuSpacing.sm),
+          Expanded(child: Text(text, style: TextStyle(color: color))),
+        ],
+      ),
     );
   }
 
   List<Widget> _buildFields() {
     if (_step == _LoginStep.chooseRole) {
       return [
-        const Text('Who is signing in?'),
-        const SizedBox(height: 16),
-        FilledButton(
+        Text('Who is signing in?',
+            style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: SetuSpacing.md),
+        FilledButton.icon(
+            onPressed: _busy ? null : () => _chooseRole('family_member'),
+            icon: const Icon(Icons.family_restroom),
+            label: const Text("I'm a family member")),
+        const SizedBox(height: SetuSpacing.sm),
+        OutlinedButton.icon(
             onPressed: _busy ? null : () => _chooseRole('elder'),
-            child: const Text("I'm the senior citizen")),
-        const SizedBox(height: 8),
-        OutlinedButton(
-          onPressed: _busy ? null : () => _chooseRole('family_member'),
-          child: const Text("I'm a family member"),
-        ),
-        const SizedBox(height: 8),
-        OutlinedButton(
-          onPressed: _busy ? null : () => _chooseRole('caregiver'),
-          child: const Text("I'm a caregiver"),
-        ),
+            icon: const Icon(Icons.elderly),
+            label: const Text("I'm the senior citizen")),
+        const SizedBox(height: SetuSpacing.sm),
+        OutlinedButton.icon(
+            onPressed: _busy ? null : () => _chooseRole('caregiver'),
+            icon: const Icon(Icons.medical_services_outlined),
+            label: const Text("I'm a caregiver")),
       ];
     }
-    return _mode == _AuthMode.phone ? _phoneFields() : _emailFields();
-  }
-
-  List<Widget> _phoneFields() {
-    if (_step == _LoginStep.enterCode) {
-      return [
-        Text('Enter the code sent to ${_phoneController.text}'),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _codeController,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: 'Code'),
-        ),
-        const SizedBox(height: 16),
-        FilledButton(
-            onPressed: _busy ? null : _verifyCode,
-            child: const Text('Verify code')),
-      ];
-    }
-    return [
-      TextField(
-        controller: _phoneController,
-        keyboardType: TextInputType.phone,
-        decoration: const InputDecoration(
-            labelText: 'Phone number', hintText: '+91XXXXXXXXXX'),
-      ),
-      const SizedBox(height: 16),
-      FilledButton(
-          onPressed: _busy ? null : _sendCode,
-          child: const Text('Send code')),
-    ];
+    return _mode == _AuthMode.email ? _emailFields() : _phoneFields();
   }
 
   List<Widget> _emailFields() {
@@ -227,22 +297,58 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         controller: _emailController,
         keyboardType: TextInputType.emailAddress,
         autofillHints: const [AutofillHints.email],
-        decoration: const InputDecoration(labelText: 'Email'),
+        decoration: const InputDecoration(
+            labelText: 'Email', prefixIcon: Icon(Icons.mail_outline)),
       ),
-      const SizedBox(height: 12),
+      const SizedBox(height: SetuSpacing.md),
       TextField(
         controller: _passwordController,
         obscureText: true,
-        decoration: const InputDecoration(labelText: 'Password'),
+        decoration: const InputDecoration(
+            labelText: 'Password', prefixIcon: Icon(Icons.lock_outline)),
       ),
-      const SizedBox(height: 16),
+      const SizedBox(height: SetuSpacing.lg),
       FilledButton(
           onPressed: _busy ? null : _emailSignIn,
-          child: const Text('Log in')),
-      const SizedBox(height: 8),
+          child: Text(_busy ? 'Please wait…' : 'Log in')),
+      const SizedBox(height: SetuSpacing.sm),
       OutlinedButton(
           onPressed: _busy ? null : _emailSignUp,
           child: const Text('Create account')),
+    ];
+  }
+
+  List<Widget> _phoneFields() {
+    if (_step == _LoginStep.enterCode) {
+      return [
+        Text('Enter the code sent to ${_phoneController.text}',
+            style: Theme.of(context).textTheme.bodyMedium),
+        const SizedBox(height: SetuSpacing.md),
+        TextField(
+          controller: _codeController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+              labelText: 'Code', prefixIcon: Icon(Icons.pin_outlined)),
+        ),
+        const SizedBox(height: SetuSpacing.lg),
+        FilledButton(
+            onPressed: _busy ? null : _verifyCode,
+            child: Text(_busy ? 'Please wait…' : 'Verify code')),
+      ];
+    }
+    return [
+      TextField(
+        controller: _phoneController,
+        keyboardType: TextInputType.phone,
+        decoration: const InputDecoration(
+            labelText: 'Phone number',
+            hintText: '+91XXXXXXXXXX',
+            prefixIcon: Icon(Icons.phone_outlined)),
+      ),
+      const SizedBox(height: SetuSpacing.lg),
+      FilledButton(
+          onPressed: _busy ? null : _sendCode,
+          child: Text(_busy ? 'Please wait…' : 'Send code')),
     ];
   }
 }

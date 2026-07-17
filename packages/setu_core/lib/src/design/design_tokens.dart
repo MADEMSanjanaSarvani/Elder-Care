@@ -59,6 +59,10 @@ class SetuTheme {
     final Color ink = isDark ? SetuColors.inkDark : SetuColors.inkLight;
     final Color accent =
         isDark ? SetuColors.accentDark : SetuColors.accentLight;
+    final Color border =
+        isDark ? SetuColors.borderDark : SetuColors.borderLight;
+    final Color surface =
+        isDark ? SetuColors.paperRaisedDark : SetuColors.paperRaisedLight;
 
     final ColorScheme colorScheme = ColorScheme(
       brightness: brightness,
@@ -73,6 +77,15 @@ class SetuTheme {
       onSurface: ink,
     );
 
+    final buttonShape =
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(14));
+
+    OutlineInputBorder inputBorder(Color c, [double w = 1.2]) =>
+        OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: c, width: w),
+        );
+
     return ThemeData(
       brightness: brightness,
       scaffoldBackgroundColor: paper,
@@ -80,7 +93,56 @@ class SetuTheme {
       useMaterial3: true,
       textTheme: _textTheme(ink),
       appBarTheme: AppBarTheme(
-          backgroundColor: paper, foregroundColor: ink, elevation: 0),
+          backgroundColor: paper,
+          foregroundColor: ink,
+          elevation: 0,
+          centerTitle: false,
+          titleTextStyle: TextStyle(
+              fontSize: 20, fontWeight: FontWeight.w700, color: ink)),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: surface,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        border: inputBorder(border),
+        enabledBorder: inputBorder(border),
+        focusedBorder: inputBorder(accent, 2),
+        floatingLabelStyle: TextStyle(color: accent),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(52),
+          shape: buttonShape,
+          textStyle:
+              const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size.fromHeight(52),
+          shape: buttonShape,
+          side: BorderSide(color: border, width: 1.4),
+          foregroundColor: accent,
+          textStyle:
+              const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: surface,
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(color: border),
+        ),
+      ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30))),
+          side: WidgetStatePropertyAll(BorderSide(color: border)),
+        ),
+      ),
     );
   }
 

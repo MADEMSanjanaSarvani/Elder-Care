@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "Setu",
+  "appTitle": "CareHive",
   "@appTitle": {"description": "App name shown in the OS task switcher — not user-facing chrome"},
 
   "loginPhoneLabel": "Phone number",
@@ -16,8 +16,8 @@
 
   "sosScreenTitle": "Emergency",
   "sosCall108": "Call 108 (Emergency)",
-  "sosNotifyPlatform": "Also notify family & Setu",
-  "sosDisclaimer": "Calling 108 is the fastest way to get emergency medical help. Notifying Setu alerts your family and our on-call team at the same time — it does not replace calling 108.",
+  "sosNotifyPlatform": "Also notify family & CareHive",
+  "sosDisclaimer": "Calling 108 is the fastest way to get emergency medical help. Notifying CareHive alerts your family and our on-call team at the same time — it does not replace calling 108.",
   "sosNotifiedConfirmation": "Your family and our on-call team have been notified.",
 
   "familyDashboardTitle": "Family Dashboard",
