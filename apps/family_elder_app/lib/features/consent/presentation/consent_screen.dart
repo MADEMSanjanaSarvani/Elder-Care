@@ -109,7 +109,11 @@ class _FamilyMemberConsentEditor extends ConsumerWidget {
     return familyLinksAsync.when(
       data: (links) {
         if (links.isEmpty) {
-          return const Center(child: Text('No linked family members yet.'));
+          return const SetuEmptyState(
+            icon: Icons.group_outlined,
+            title: 'No family linked yet',
+            message: 'Once you link a family member, you can choose what they see.',
+          );
         }
         return ListView.builder(
           padding: const EdgeInsets.all(SetuSpacing.lg),

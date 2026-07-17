@@ -46,8 +46,10 @@ class RateVisitsScreen extends ConsumerWidget {
               final at = DateTime.parse(booking['scheduled_at'] as String).toLocal();
               return Card(
                 child: ListTile(
+                  leading: const SetuIconChip(
+                      icon: Icons.volunteer_activism_outlined),
                   title: Text(service),
-                  subtitle: Text('${at.year}-${at.month.toString().padLeft(2, '0')}-${at.day.toString().padLeft(2, '0')}'),
+                  subtitle: Text(SetuFormat.friendlyDate(at)),
                   trailing: const Icon(Icons.star_outline),
                   onTap: () => _showRatingDialog(context, ref, booking),
                 ),
