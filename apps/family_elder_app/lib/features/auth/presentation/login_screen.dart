@@ -307,7 +307,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         decoration: const InputDecoration(
             labelText: 'Password', prefixIcon: Icon(Icons.lock_outline)),
       ),
-      const SizedBox(height: SetuSpacing.lg),
+      const SizedBox(height: SetuSpacing.xs),
+      const Text('New here? Tap "Create account". Password must be 6+ characters.',
+          style: TextStyle(fontSize: 12, color: SetuColors.mutedLight)),
+      const SizedBox(height: SetuSpacing.md),
       FilledButton(
           onPressed: _busy ? null : _emailSignIn,
           child: Text(_busy ? 'Please wait…' : 'Log in')),
@@ -337,6 +340,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ];
     }
     return [
+      _banner('Phone sign-in needs SMS setup. If you don\'t receive a code, '
+          'use the Email tab.'),
       TextField(
         controller: _phoneController,
         keyboardType: TextInputType.phone,
