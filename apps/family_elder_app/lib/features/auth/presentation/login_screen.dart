@@ -8,7 +8,7 @@ import '../data/auth_repository.dart';
 
 enum _AuthMode { phone, email }
 
-enum _LoginStep { enter, enterCode, chooseRole }
+enum _LoginStep { enter, enterCode }
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -153,18 +153,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _afterAuth() async {
-    final hasProfile = await _repo.hasProfile();
-    if (hasProfile) {
-      if (mounted) context.go('/home');
-    } else {
-      setState(() => _step = _LoginStep.chooseRole);
-    }
+    // Whether or not a profile exists yet, land on /home; the home router
+    // gates brand-new accounts into role selection (ChooseRoleScreen).
+    if (mounted) context.go('/home');
   }
-
-  Future<void> _chooseRole(String role) => _run(() async {
-        await _repo.ensureProfile(role: role, preferredLanguage: 'en');
-        if (mounted) context.go('/home');
-      });
 
   @override
   Widget build(BuildContext context) {
@@ -228,27 +220,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          if (_step != _LoginStep.chooseRole) ...[
-                            SizedBox(
-                              width: double.infinity,
-                              child: SegmentedButton<_AuthMode>(
-                                segments: const [
-                                  ButtonSegment(
-                                      value: _AuthMode.email,
-                                      label: Text('Email'),
-                                      icon: Icon(Icons.mail_outline)),
-                                  ButtonSegment(
-                                      value: _AuthMode.phone,
-                                      label: Text('Phone'),
-                                      icon: Icon(Icons.phone_outlined)),
-                                ],
-                                selected: {_mode},
-                                onSelectionChanged:
-                                    _busy ? null : (s) => _setMode(s.first),
-                              ),
+                          SizedBox(
+                            width: double.infinity,
+                            child: SegmentedButton<_AuthMode>(
+                              segments: const [
+                                ButtonSegment(
+                                    value: _AuthMode.email,
+                                    label: Text('Email'),
+                                    icon: Icon(Icons.mail_outline)),
+                                ButtonSegment(
+                                    value: _AuthMode.phone,
+                                    label: Text('Phone'),
+                                    icon: Icon(Icons.phone_outlined)),
+                              ],
+                              selected: {_mode},
+                              onSelectionChanged:
+                                  _busy ? null : (s) => _setMode(s.first),
                             ),
-                            const SizedBox(height: SetuSpacing.md),
-                          ],
+                          ),
+                          const SizedBox(height: SetuSpacing.md),
                           if (_error != null) _banner(_error!, isError: true),
                           if (_notice != null) _banner(_notice!),
                           ..._buildFields(),
@@ -287,83 +277,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  Widget _roleCard({
-    required IconData icon,
-    required Color color,
-    required String title,
-    required String subtitle,
-    required String role,
-  }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: _busy ? null : () => _chooseRole(role),
-      child: Container(
-        padding: const EdgeInsets.all(SetuSpacing.md),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: color.withValues(alpha: 0.06),
-          border: Border.all(color: color.withValues(alpha: 0.28)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(SetuSpacing.sm),
-              decoration:
-                  BoxDecoration(color: color.withValues(alpha: 0.14), shape: BoxShape.circle),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(width: SetuSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 2),
-                  Text(subtitle,
-                      style: const TextStyle(
-                          fontSize: 12.5, color: SetuColors.mutedLight)),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right, color: SetuColors.mutedLight),
-          ],
-        ),
-      ),
-    );
-  }
-
   List<Widget> _buildFields() {
-    if (_step == _LoginStep.chooseRole) {
-      return [
-        Text('Who is signing in?',
-            style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: SetuSpacing.xs),
-        const Text('Pick the one that fits you — we\'ll set up the right home.',
-            style: TextStyle(color: SetuColors.mutedLight)),
-        const SizedBox(height: SetuSpacing.md),
-        _roleCard(
-            icon: Icons.family_restroom,
-            color: SetuColors.accentLight,
-            title: "I'm a family member",
-            subtitle: 'See and manage care for your parent or elder.',
-            role: 'family_member'),
-        const SizedBox(height: SetuSpacing.sm),
-        _roleCard(
-            icon: Icons.elderly,
-            color: SetuColors.peachLight,
-            title: "I'm the senior",
-            subtitle: 'A simple, large-text app made just for me.',
-            role: 'elder'),
-        const SizedBox(height: SetuSpacing.sm),
-        _roleCard(
-            icon: Icons.medical_services_outlined,
-            color: SetuColors.lavenderLight,
-            title: "I'm a caregiver",
-            subtitle: 'My visits, check-ins and earnings.',
-            role: 'caregiver'),
-      ];
-    }
     return _mode == _AuthMode.email ? _emailFields() : _phoneFields();
   }
 

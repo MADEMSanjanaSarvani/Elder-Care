@@ -5,6 +5,7 @@ import 'package:setu_core/setu_core.dart';
 
 import '../features/appointments/presentation/appointments_screen.dart';
 import '../features/assistant/presentation/assistant_screen.dart';
+import '../features/auth/presentation/choose_role_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/booking/presentation/booking_screen.dart';
 import '../features/care_plans/presentation/care_plans_screen.dart';
@@ -183,7 +184,12 @@ class HomeRouterScreen extends ConsumerWidget {
 
     return profileAsync.when(
       data: (profile) {
-        final role = profile?['role'] as String?;
+        // Brand-new account with no profile row yet: gate on role selection
+        // before showing any home. This is where sign-up lands (the router
+        // redirects away from /login the instant a session exists, so the
+        // role picker can't live on the login screen and be reliable).
+        if (profile == null) return const ChooseRoleScreen();
+        final role = profile['role'] as String?;
         // Caregivers get their own screen (which brings its own Scaffold and
         // work-focused app bar), not the family/elder shell.
         if (role == 'caregiver') return const JobQueueScreen();
