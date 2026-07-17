@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
+import '../../payments/presentation/demo_payment_sheet.dart';
 import '../data/care_plans_repository.dart';
 
 final _plansProvider =
@@ -229,18 +230,27 @@ class _PlanCard extends ConsumerWidget {
               onPressed: hasActiveSub
                   ? null
                   : () async {
+                      // Payment first — a plan only activates once it's paid
+                      // for. (Demo checkout until the live gateway is wired.)
+                      final paid = await DemoPaymentSheet.show(
+                        context,
+                        title: '${plan['name']} — monthly plan',
+                        amountLabel: '$currency $price',
+                        subtitle: 'Billed every month. Cancel anytime.',
+                      );
+                      if (!paid) return;
                       try {
                         await CarePlansRepository(ref.read(supabaseClientProvider))
                             .subscribe(elderId: elderId, carePlanId: plan['id'] as String);
                         ref.invalidate(_subscriptionProvider(elderId));
                         if (context.mounted) {
                           ScaffoldMessenger.of(context)
-                              .showSnackBar(SnackBar(content: Text('Subscribed to ${plan['name']}')));
+                              .showSnackBar(SnackBar(content: Text('${plan['name']} is now active.')));
                         }
                       } catch (err) {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context)
-                              .showSnackBar(SnackBar(content: Text('Could not subscribe: $err')));
+                              .showSnackBar(SnackBar(content: Text('Payment succeeded but activation failed: $err')));
                         }
                       }
                     },
