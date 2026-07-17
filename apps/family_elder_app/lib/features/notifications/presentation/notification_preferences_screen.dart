@@ -70,12 +70,12 @@ class NotificationPreferencesScreen extends ConsumerWidget {
               );
             },
           ),
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const SetuLoading(),
           error: (err, stack) =>
-              Center(child: Text('Something went wrong: $err')),
+              const SetuErrorState(),
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Something went wrong: $err')),
+        loading: () => const SetuLoading(),
+        error: (err, stack) => const SetuErrorState(),
       ),
     );
   }

@@ -78,7 +78,7 @@ class _CaregiverProfileScreenState extends ConsumerState<CaregiverProfileScreen>
     if (!_loaded) {
       return Scaffold(
         appBar: AppBar(title: const Text('Profile')),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const SetuLoading(),
       );
     }
     final avg = (_summary?['average_stars'] as num?)?.toDouble();

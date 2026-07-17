@@ -83,7 +83,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
             future: _repo.fetchServices(regionId),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator());
+                return const SetuLoading();
               }
               final services = snapshot.data!;
               return Column(
@@ -138,9 +138,9 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const SetuLoading(),
         error: (err, stack) =>
-            Center(child: Text('Something went wrong: $err')),
+            const SetuErrorState(),
       ),
     );
   }

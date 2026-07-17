@@ -66,12 +66,12 @@ class CarePlansScreen extends ConsumerWidget {
                   ),
               ],
             ),
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Center(child: Text('Something went wrong: $err')),
+            loading: () => const SetuLoading(),
+            error: (err, stack) => const SetuErrorState(),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Something went wrong: $err')),
+        loading: () => const SetuLoading(),
+        error: (err, stack) => const SetuErrorState(),
       ),
     );
   }

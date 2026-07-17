@@ -47,9 +47,9 @@ class TimelineScreen extends ConsumerWidget {
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const SetuLoading(),
         error: (err, stack) =>
-            Center(child: Text('Something went wrong: $err')),
+            const SetuErrorState(),
       ),
     );
   }

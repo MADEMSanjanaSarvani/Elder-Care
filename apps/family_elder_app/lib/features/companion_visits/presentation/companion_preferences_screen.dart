@@ -77,7 +77,7 @@ class _CompanionPreferencesScreenState
     if (!_loaded) {
       return Scaffold(
         appBar: AppBar(title: const Text('Companion preferences')),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const SetuLoading(),
       );
     }
     return Scaffold(

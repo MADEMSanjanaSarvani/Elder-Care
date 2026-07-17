@@ -71,6 +71,85 @@ class SetuEmptyState extends StatelessWidget {
   }
 }
 
+/// A calm branded loading state — a soft sage spinner centred with a little
+/// breathing room, so every screen waits the same gentle way.
+class SetuLoading extends StatelessWidget {
+  const SetuLoading({this.label, super.key});
+
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(
+            width: 34,
+            height: 34,
+            child: CircularProgressIndicator(
+                strokeWidth: 3, color: SetuColors.accentLight),
+          ),
+          if (label != null) ...[
+            const SizedBox(height: SetuSpacing.md),
+            Text(label!, style: const TextStyle(color: SetuColors.mutedLight)),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// A friendly error state — never a raw exception dumped on screen. Shows a
+/// soft icon, a reassuring line, and an optional "Try again" button wired to
+/// whatever refresh the caller provides.
+class SetuErrorState extends StatelessWidget {
+  const SetuErrorState({
+    this.title = "That didn't load",
+    this.message = 'Please check your connection and try again.',
+    this.onRetry,
+    super.key,
+  });
+
+  final String title;
+  final String message;
+  final VoidCallback? onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(SetuSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SetuIconChip(
+                icon: Icons.cloud_off_outlined,
+                color: SetuColors.peachLight,
+                size: 34),
+            const SizedBox(height: SetuSpacing.md),
+            Text(title,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: SetuSpacing.xs),
+            Text(message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: SetuColors.mutedLight)),
+            if (onRetry != null) ...[
+              const SizedBox(height: SetuSpacing.lg),
+              OutlinedButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Try again'),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// A small status pill (coloured text on a soft tinted background).
 class SetuStatusPill extends StatelessWidget {
   const SetuStatusPill({

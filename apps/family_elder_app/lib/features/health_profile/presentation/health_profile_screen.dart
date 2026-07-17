@@ -121,7 +121,7 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
     if (!_loaded) {
       return Scaffold(
         appBar: AppBar(title: const Text('Health profile')),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const SetuLoading(),
       );
     }
     return Scaffold(

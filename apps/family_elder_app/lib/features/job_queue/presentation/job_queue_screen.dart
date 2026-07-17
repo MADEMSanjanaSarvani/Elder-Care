@@ -21,9 +21,9 @@ class JobQueueScreen extends ConsumerWidget {
         return _JobList(caregiver: caregiver);
       },
       loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
+          const Scaffold(body: SetuLoading()),
       error: (err, stack) =>
-          Scaffold(body: Center(child: Text('Something went wrong: $err'))),
+          const Scaffold(body: SetuErrorState()),
     );
   }
 }
@@ -71,9 +71,9 @@ class _JobList extends ConsumerWidget {
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const SetuLoading(),
         error: (err, stack) =>
-            Center(child: Text('Something went wrong: $err')),
+            const SetuErrorState(),
       ),
     );
   }

@@ -68,7 +68,7 @@ class PrivacyScreen extends ConsumerWidget {
                     ),
               loading: () => const Padding(
                 padding: EdgeInsets.all(SetuSpacing.md),
-                child: Center(child: CircularProgressIndicator()),
+                child: SetuLoading(),
               ),
               error: (err, _) => _EmptyNote('Could not load history: $err'),
             ),
@@ -94,7 +94,7 @@ class PrivacyScreen extends ConsumerWidget {
               ),
               loading: () => const Padding(
                 padding: EdgeInsets.all(SetuSpacing.md),
-                child: Center(child: CircularProgressIndicator()),
+                child: SetuLoading(),
               ),
               error: (err, _) => _EmptyNote('Could not load requests: $err'),
             ),

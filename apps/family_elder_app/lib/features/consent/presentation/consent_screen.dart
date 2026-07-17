@@ -51,9 +51,9 @@ class ConsentScreen extends ConsumerWidget {
             familyUserId: currentUserId!,
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const SetuLoading(),
         error: (err, stack) =>
-            Center(child: Text('Something went wrong: $err')),
+            const SetuErrorState(),
       ),
     );
   }
@@ -76,7 +76,7 @@ class _ReadOnlyConsentView extends ConsumerWidget {
       future: repo.fetchGrants(elderId: elderId, familyUserId: familyUserId),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
+          return const SetuLoading();
         }
         final gate = ConsentGate(snapshot.data!);
         return ListView(
@@ -125,8 +125,8 @@ class _FamilyMemberConsentEditor extends ConsumerWidget {
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, stack) => Center(child: Text('Something went wrong: $err')),
+      loading: () => const SetuLoading(),
+      error: (err, stack) => const SetuErrorState(),
     );
   }
 }
