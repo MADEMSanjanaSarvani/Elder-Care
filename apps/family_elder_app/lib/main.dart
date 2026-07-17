@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:setu_core/setu_core.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/env.dart';
 import 'core/preferences.dart';
 import 'core/router.dart';
+import 'features/onboarding/presentation/onboarding_screen.dart';
 import 'l10n/generated/app_localizations.dart';
 
 Future<void> main() async {
@@ -15,7 +17,12 @@ Future<void> main() async {
     supabaseUrl: Env.supabaseUrl,
     supabaseAnonKey: Env.supabaseAnonKey,
   );
-  runApp(const ProviderScope(child: SetuFamilyElderApp()));
+  final prefs = await SharedPreferences.getInstance();
+  final onboardingSeen = prefs.getBool(onboardingSeenKey) ?? false;
+  runApp(ProviderScope(
+    overrides: [onboardingSeenProvider.overrideWith((ref) => onboardingSeen)],
+    child: const SetuFamilyElderApp(),
+  ));
 }
 
 class SetuFamilyElderApp extends ConsumerWidget {

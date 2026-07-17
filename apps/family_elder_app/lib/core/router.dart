@@ -22,6 +22,7 @@ import '../features/otp_visit/presentation/otp_visit_screen.dart';
 import '../features/profile/presentation/caregiver_profile_screen.dart';
 import '../features/notifications/presentation/notification_inbox_screen.dart';
 import '../features/notifications/presentation/notification_preferences_screen.dart';
+import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../features/privacy/presentation/privacy_screen.dart';
 import '../features/rating/presentation/rate_visits_screen.dart';
 import '../features/reminders/presentation/reminders_screen.dart';
@@ -39,12 +40,21 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: GoRouterRefreshStream(client.auth.onAuthStateChange),
     redirect: (context, state) {
       final signedIn = client.auth.currentUser != null;
-      final goingToLogin = state.matchedLocation == '/login';
-      if (!signedIn && !goingToLogin) return '/login';
-      if (signedIn && goingToLogin) return '/home';
+      final seenOnboarding = ref.read(onboardingSeenProvider);
+      final loc = state.matchedLocation;
+      if (!signedIn) {
+        // First-time (not yet onboarded) users see the intro carousel first.
+        if (!seenOnboarding && loc != '/onboarding') return '/onboarding';
+        if (seenOnboarding && loc != '/login') return '/login';
+        return null;
+      }
+      if (loc == '/login' || loc == '/onboarding') return '/home';
       return null;
     },
     routes: [
+      GoRoute(
+          path: '/onboarding',
+          builder: (context, state) => const OnboardingScreen()),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
           path: '/home', builder: (context, state) => const HomeRouterScreen()),
