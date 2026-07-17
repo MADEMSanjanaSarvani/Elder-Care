@@ -41,7 +41,11 @@ class HospitalStaysScreen extends ConsumerWidget {
       body: staysAsync.when(
         data: (stays) {
           if (stays.isEmpty) {
-            return const Center(child: Text('No hospital stays tracked.'));
+            return const SetuEmptyState(
+              icon: Icons.local_hospital_outlined,
+              title: 'No hospital stays',
+              message: 'If a stay comes up, track it here to arrange companions.',
+            );
           }
           return ListView.separated(
             padding: const EdgeInsets.all(SetuSpacing.lg),

@@ -57,7 +57,11 @@ class NotificationInboxScreen extends ConsumerWidget {
       body: inboxAsync.when(
         data: (notifications) {
           if (notifications.isEmpty) {
-            return const Center(child: Text('No notifications yet.'));
+            return const SetuEmptyState(
+              icon: Icons.notifications_none_outlined,
+              title: 'No notifications',
+              message: 'Updates about visits, medicines and check-ins land here.',
+            );
           }
           return ListView.separated(
             padding: const EdgeInsets.all(SetuSpacing.lg),
@@ -70,9 +74,11 @@ class NotificationInboxScreen extends ConsumerWidget {
               final createdAt = DateTime.parse(n['created_at'] as String).toLocal();
               return Card(
                 child: ListTile(
-                  leading: Icon(
-                    _iconFor(n['type'] as String),
-                    color: unread ? SetuColors.accentLight : null,
+                  leading: SetuIconChip(
+                    icon: _iconFor(n['type'] as String),
+                    color: unread
+                        ? SetuColors.accentLight
+                        : SetuColors.mutedLight,
                   ),
                   title: Text(
                     _labelFor(n['type'] as String),
@@ -80,7 +86,7 @@ class NotificationInboxScreen extends ConsumerWidget {
                         ? const TextStyle(fontWeight: FontWeight.bold)
                         : null,
                   ),
-                  subtitle: Text(_formatTimestamp(createdAt)),
+                  subtitle: Text(SetuFormat.friendlyTime(createdAt)),
                   trailing: unread
                       ? const Icon(Icons.circle, size: 10, color: SetuColors.accentLight)
                       : null,
@@ -174,10 +180,3 @@ String? _deepLinkFor(String type, Map<String, dynamic>? payload) {
       return null;
   }
 }
-
-String _formatTimestamp(DateTime dt) {
-  return '${dt.year}-${_twoDigits(dt.month)}-${_twoDigits(dt.day)} '
-      '${_twoDigits(dt.hour)}:${_twoDigits(dt.minute)}';
-}
-
-String _twoDigits(int n) => n.toString().padLeft(2, '0');

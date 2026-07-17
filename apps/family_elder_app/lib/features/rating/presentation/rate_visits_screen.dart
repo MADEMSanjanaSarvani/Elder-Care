@@ -29,7 +29,11 @@ class RateVisitsScreen extends ConsumerWidget {
       body: unratedAsync.when(
         data: (bookings) {
           if (bookings.isEmpty) {
-            return const Center(child: Text('No visits waiting to be rated.'));
+            return const SetuEmptyState(
+              icon: Icons.star_outline,
+              title: 'Nothing to rate',
+              message: 'After a completed visit, you can rate it here.',
+            );
           }
           return ListView.separated(
             padding: const EdgeInsets.all(SetuSpacing.lg),

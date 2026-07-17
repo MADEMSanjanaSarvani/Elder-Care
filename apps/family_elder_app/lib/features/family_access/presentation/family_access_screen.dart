@@ -43,7 +43,11 @@ class FamilyAccessScreen extends ConsumerWidget {
           return familyAsync.when(
             data: (rows) {
               if (rows.isEmpty) {
-                return const Center(child: Text('No family members yet.'));
+                return const SetuEmptyState(
+                  icon: Icons.group_outlined,
+                  title: 'No family linked yet',
+                  message: 'Invite a family member to share care access.',
+                );
               }
               return ListView.separated(
                 padding: const EdgeInsets.all(SetuSpacing.lg),

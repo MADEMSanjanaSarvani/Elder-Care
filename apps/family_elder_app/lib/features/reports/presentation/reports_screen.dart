@@ -29,7 +29,11 @@ class ReportsScreen extends ConsumerWidget {
       body: reportsAsync.when(
         data: (reports) {
           if (reports.isEmpty) {
-            return const Center(child: Text('No reports yet.'));
+            return const SetuEmptyState(
+              icon: Icons.summarize_outlined,
+              title: 'No reports yet',
+              message: 'A gentle weekly summary of care will appear here.',
+            );
           }
           return ListView.separated(
             padding: const EdgeInsets.all(SetuSpacing.lg),
@@ -45,8 +49,16 @@ class ReportsScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('${_formatDate(start)} – ${_formatDate(end)}',
-                          style: Theme.of(context).textTheme.labelMedium),
+                      Row(
+                        children: [
+                          const SetuIconChip(
+                              icon: Icons.summarize_outlined, size: 16),
+                          const SizedBox(width: SetuSpacing.sm),
+                          Text(
+                              '${SetuFormat.friendlyDate(start)} – ${SetuFormat.friendlyDate(end)}',
+                              style: Theme.of(context).textTheme.labelMedium),
+                        ],
+                      ),
                       const SizedBox(height: SetuSpacing.sm),
                       Text(report['report_text'] as String),
                     ],
@@ -62,9 +74,3 @@ class ReportsScreen extends ConsumerWidget {
     );
   }
 }
-
-String _formatDate(DateTime dt) {
-  return '${dt.year}-${_twoDigits(dt.month)}-${_twoDigits(dt.day)}';
-}
-
-String _twoDigits(int n) => n.toString().padLeft(2, '0');
