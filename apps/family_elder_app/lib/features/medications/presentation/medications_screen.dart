@@ -39,7 +39,11 @@ class MedicationsScreen extends ConsumerWidget {
       body: medicationsAsync.when(
         data: (medications) {
           if (medications.isEmpty) {
-            return const Center(child: Text('No medications added yet.'));
+            return const SetuEmptyState(
+              icon: Icons.medication_outlined,
+              title: 'No medicines yet',
+              message: 'Add a medicine to track doses and refills.',
+            );
           }
           return ListView.separated(
             padding: const EdgeInsets.all(SetuSpacing.lg),
@@ -183,6 +187,8 @@ class _MedicationCardState extends ConsumerState<_MedicationCard> {
           children: [
             Row(
               children: [
+                const SetuIconChip(icon: Icons.medication_outlined),
+                const SizedBox(width: SetuSpacing.sm),
                 Expanded(
                   child: Text('${widget.medication['name']} — ${widget.medication['dosage']}',
                       style: Theme.of(context).textTheme.titleMedium),

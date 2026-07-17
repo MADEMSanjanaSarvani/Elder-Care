@@ -16,6 +16,7 @@ export 'src/supabase/setu_supabase_client.dart';
 export 'src/routing/go_router_refresh_stream.dart';
 
 export 'src/design/design_tokens.dart';
+export 'src/design/ui_helpers.dart';
 
 export 'src/models/elder_profile.dart';
 export 'src/models/caregiver.dart';

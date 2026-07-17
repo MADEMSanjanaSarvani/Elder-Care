@@ -30,7 +30,11 @@ class RemindersScreen extends ConsumerWidget {
       body: remindersAsync.when(
         data: (reminders) {
           if (reminders.isEmpty) {
-            return const Center(child: Text('Nothing pending.'));
+            return const SetuEmptyState(
+              icon: Icons.notifications_none_outlined,
+              title: 'Nothing pending',
+              message: 'Medicine and appointment reminders will appear here.',
+            );
           }
           return ListView.separated(
             padding: const EdgeInsets.all(SetuSpacing.lg),
@@ -41,9 +45,10 @@ class RemindersScreen extends ConsumerWidget {
               final remindAt = DateTime.parse(reminder['remind_at'] as String).toLocal();
               return Card(
                 child: ListTile(
-                  leading: Icon(_iconFor(reminder['source_type'] as String)),
+                  leading: SetuIconChip(
+                      icon: _iconFor(reminder['source_type'] as String)),
                   title: Text(_labelFor(reminder['source_type'] as String)),
-                  subtitle: Text(_formatTimestamp(remindAt)),
+                  subtitle: Text(SetuFormat.friendlyTime(remindAt)),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -101,9 +106,3 @@ String _labelFor(String sourceType) {
   }
 }
 
-String _formatTimestamp(DateTime dt) {
-  return '${dt.year}-${_twoDigits(dt.month)}-${_twoDigits(dt.day)} '
-      '${_twoDigits(dt.hour)}:${_twoDigits(dt.minute)}';
-}
-
-String _twoDigits(int n) => n.toString().padLeft(2, '0');

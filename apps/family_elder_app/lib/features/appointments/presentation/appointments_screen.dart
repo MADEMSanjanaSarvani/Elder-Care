@@ -35,7 +35,11 @@ class AppointmentsScreen extends ConsumerWidget {
       body: appointmentsAsync.when(
         data: (appointments) {
           if (appointments.isEmpty) {
-            return const Center(child: Text('No appointments tracked yet.'));
+            return const SetuEmptyState(
+              icon: Icons.event_outlined,
+              title: 'No appointments yet',
+              message: 'Add a doctor visit to track it and book a companion.',
+            );
           }
           return ListView.separated(
             padding: const EdgeInsets.all(SetuSpacing.lg),
@@ -47,17 +51,21 @@ class AppointmentsScreen extends ConsumerWidget {
               final status = appt['status'] as String;
               return Card(
                 child: ListTile(
-                  leading: Icon(
-                    status == 'completed'
+                  leading: SetuIconChip(
+                    icon: status == 'completed'
                         ? Icons.check_circle_outline
                         : status == 'cancelled'
                             ? Icons.cancel_outlined
                             : Icons.event_outlined,
-                    color: status == 'cancelled' ? SetuColors.mutedLight : null,
+                    color: status == 'completed'
+                        ? SetuColors.verifiedLight
+                        : status == 'cancelled'
+                            ? SetuColors.mutedLight
+                            : SetuColors.accentLight,
                   ),
                   title: Text(appt['title'] as String),
                   subtitle: Text([
-                    _formatDate(scheduledAt),
+                    SetuFormat.friendlyDate(scheduledAt),
                     if (appt['location'] != null) appt['location'] as String,
                   ].join(' · ')),
                   trailing: appt['related_booking_id'] != null
@@ -149,7 +157,7 @@ class AppointmentsScreen extends ConsumerWidget {
               const SizedBox(height: SetuSpacing.sm),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                title: Text(_formatDate(scheduledAt)),
+                title: Text(SetuFormat.friendlyDate(scheduledAt)),
                 trailing: const Icon(Icons.calendar_today, size: 18),
                 onTap: () async {
                   final picked = await showDatePicker(
@@ -192,9 +200,3 @@ class AppointmentsScreen extends ConsumerWidget {
     }
   }
 }
-
-String _formatDate(DateTime dt) {
-  return '${dt.year}-${_twoDigits(dt.month)}-${_twoDigits(dt.day)}';
-}
-
-String _twoDigits(int n) => n.toString().padLeft(2, '0');
