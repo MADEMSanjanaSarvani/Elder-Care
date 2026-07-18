@@ -167,6 +167,20 @@ export default async function VerificationQueuePage() {
 
               <div className="flex flex-wrap items-end gap-4">
                 <label className="text-sm">
+                  <span className="mb-1 block text-muted">Background verification</span>
+                  <select
+                    name="bgv_status"
+                    defaultValue={caregiver.bgv_status}
+                    className="rounded border border-border bg-paper px-2 py-1.5"
+                  >
+                    <option value="not_started">Not started</option>
+                    <option value="submitted">Submitted</option>
+                    <option value="in_progress">In progress</option>
+                    <option value="cleared">Cleared</option>
+                    <option value="failed">Failed</option>
+                  </select>
+                </label>
+                <label className="text-sm">
                   <span className="mb-1 block text-muted">Police verification</span>
                   <select
                     name="police_verification_status"
@@ -197,6 +211,15 @@ export default async function VerificationQueuePage() {
                     </label>
                   </>
                 )}
+
+                <label className="flex items-center gap-2 text-sm font-medium">
+                  <input
+                    type="checkbox"
+                    name="active"
+                    defaultChecked={caregiver.active}
+                  />
+                  Active (visible &amp; bookable by families)
+                </label>
 
                 <button type="submit" className="rounded bg-accent px-4 py-1.5 text-sm font-medium text-white">
                   Save

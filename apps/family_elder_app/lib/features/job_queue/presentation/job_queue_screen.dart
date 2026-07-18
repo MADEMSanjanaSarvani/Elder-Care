@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
+import '../../caregiver_onboarding/presentation/caregiver_registration_screen.dart';
 import 'pending_verification_screen.dart';
 
 /// A job list first, everything else second (PRD Part 3 §17) — this is
@@ -17,7 +18,11 @@ class JobQueueScreen extends ConsumerWidget {
 
     return caregiverAsync.when(
       data: (caregiver) {
-        if (caregiver == null) return const PendingVerificationScreen();
+        // No caregiver record yet -> they haven't applied: show the
+        // professional registration form. Applied but not yet activated by an
+        // admin -> pending verification. Active -> their job list.
+        if (caregiver == null) return const CaregiverRegistrationScreen();
+        if (!caregiver.active) return const PendingVerificationScreen();
         return _JobList(caregiver: caregiver);
       },
       loading: () =>

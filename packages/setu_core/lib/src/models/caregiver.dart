@@ -36,12 +36,17 @@ class Caregiver {
     required this.id,
     required this.caregiverType,
     required this.trustTier,
+    this.active = true,
     this.displayName,
   });
 
   final String id;
   final CaregiverType caregiverType;
   final TrustTier trustTier;
+
+  /// Whether the caregiver has been activated by an admin. A freshly
+  /// self-registered caregiver is inactive until verification completes.
+  final bool active;
   final String? displayName;
 
   factory Caregiver.fromJson(Map<String, dynamic> json) {
@@ -49,6 +54,7 @@ class Caregiver {
       id: json['id'] as String,
       caregiverType: CaregiverType.fromWire(json['caregiver_type'] as String),
       trustTier: TrustTier.fromWire(json['trust_tier'] as String),
+      active: json['active'] as bool? ?? true,
       displayName: json['display_name'] as String?,
     );
   }
