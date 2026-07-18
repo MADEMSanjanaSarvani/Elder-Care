@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
@@ -37,6 +38,9 @@ class _CaregiverRegistrationScreenState
   final _emergencyName = TextEditingController();
   final _emergencyPhone = TextEditingController();
 
+  double? _latitude;
+  double? _longitude;
+  bool _locating = false;
   String _type = 'non_clinical';
   String _subRole = 'companion';
   bool _busy = false;
@@ -76,6 +80,39 @@ class _CaregiverRegistrationScreenState
   List<String> _split(String s) =>
       s.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
 
+  /// Captures the caregiver's base location so families can find them by
+  /// distance. Consent-based; if denied, they can still register (no distance).
+  Future<void> _captureLocation() async {
+    setState(() => _locating = true);
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.always ||
+          permission == LocationPermission.whileInUse) {
+        final pos = await Geolocator.getCurrentPosition(
+          locationSettings:
+              const LocationSettings(accuracy: LocationAccuracy.medium),
+        ).timeout(const Duration(seconds: 8));
+        setState(() {
+          _latitude = pos.latitude;
+          _longitude = pos.longitude;
+        });
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Location permission denied.')));
+      }
+    } catch (err) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Could not get location: $err')));
+      }
+    } finally {
+      if (mounted) setState(() => _locating = false);
+    }
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_type == 'clinical' && _councilReg.text.trim().isEmpty) {
@@ -106,6 +143,8 @@ class _CaregiverRegistrationScreenState
         'expected_charge': num.tryParse(_charge.text.trim()),
         'emergency_contact_name': _emergencyName.text.trim(),
         'emergency_contact_phone': _emergencyPhone.text.trim(),
+        'latitude': _latitude,
+        'longitude': _longitude,
       });
       // The caregiver row now exists (inactive) — refreshing sends the app to
       // the pending-verification screen.
@@ -172,6 +211,28 @@ class _CaregiverRegistrationScreenState
                 keyboard: TextInputType.number),
             _field(_charge, 'Expected charge (₹ per visit)',
                 keyboard: TextInputType.number),
+            const SizedBox(height: SetuSpacing.sm),
+            OutlinedButton.icon(
+              onPressed: _locating ? null : _captureLocation,
+              icon: _locating
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2))
+                  : Icon(_latitude != null
+                      ? Icons.check_circle_outline
+                      : Icons.my_location),
+              label: Text(_latitude != null
+                  ? 'Location captured — tap to update'
+                  : 'Use my current location'),
+            ),
+            const Padding(
+              padding: EdgeInsets.only(top: 4),
+              child: Text(
+                'Helps families near you find you. Optional.',
+                style: TextStyle(fontSize: 12, color: SetuColors.mutedLight),
+              ),
+            ),
             const SizedBox(height: SetuSpacing.lg),
             _section('Emergency contact'),
             _field(_emergencyName, 'Contact name'),

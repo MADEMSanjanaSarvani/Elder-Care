@@ -82,8 +82,16 @@ Deno.serve(async (req) => {
 
     const bio = (b.bio ?? "").toString().trim() || null;
     const serviceRadius = b.service_radius_km != null ? Number(b.service_radius_km) : null;
+    const latitude = b.latitude != null ? Number(b.latitude) : null;
+    const longitude = b.longitude != null ? Number(b.longitude) : null;
     await admin.from("caregiver_profile_details").upsert(
-      { caregiver_id: caregiverId, bio, service_radius_km: serviceRadius },
+      {
+        caregiver_id: caregiverId,
+        bio,
+        service_radius_km: serviceRadius,
+        // Base location so families can find this caregiver by distance.
+        ...(latitude != null && longitude != null ? { latitude, longitude } : {}),
+      },
       { onConflict: "caregiver_id" },
     );
 
