@@ -557,7 +557,7 @@ class _TodayGlance extends ConsumerWidget {
             // SETU Memories entry.
             InkWell(
               borderRadius: BorderRadius.circular(16),
-              onTap: () => context.push('/elder/$elderId/reports'),
+              onTap: () => context.push('/elder/$elderId/memories'),
               child: Container(
                 padding: const EdgeInsets.all(SetuSpacing.md),
                 decoration: BoxDecoration(

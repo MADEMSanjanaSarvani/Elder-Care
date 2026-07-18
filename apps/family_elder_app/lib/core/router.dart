@@ -17,6 +17,7 @@ import '../features/earnings/presentation/earnings_screen.dart';
 import '../features/hospital_stays/presentation/hospital_stays_screen.dart';
 import '../features/medical_documents/presentation/medical_documents_screen.dart';
 import '../features/medications/presentation/medications_screen.dart';
+import '../features/memories/presentation/memories_screen.dart';
 import '../features/otp_visit/presentation/otp_visit_screen.dart';
 import '../features/profile/presentation/caregiver_profile_screen.dart';
 import '../features/notifications/presentation/notification_inbox_screen.dart';
@@ -144,6 +145,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/elder/:elderId/reports',
         builder: (context, state) =>
             ReportsScreen(elderId: state.pathParameters['elderId']!),
+      ),
+      GoRoute(
+        path: '/elder/:elderId/memories',
+        builder: (context, state) =>
+            MemoriesScreen(elderId: state.pathParameters['elderId']!),
       ),
       GoRoute(
         path: '/elder/:elderId/care-plans',
