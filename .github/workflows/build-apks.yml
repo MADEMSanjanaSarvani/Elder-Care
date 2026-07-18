@@ -48,18 +48,23 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
-            echo "::error::Missing SUPABASE_URL or SUPABASE_ANON_KEY repository secret. Add them under Settings -> Secrets and variables -> Actions."
-            exit 1
+          # The app now has the pilot project's public URL + anon key as
+          # compiled-in defaults (lib/core/env.dart), so a build works with no
+          # secrets. If repo secrets ARE set they override the defaults via
+          # --dart-define (use this to point a build at a different project).
+          DEFINES=""
+          if [ -n "$SUPABASE_URL" ]; then
+            DEFINES="$DEFINES --dart-define=SUPABASE_URL=$SUPABASE_URL"
+          fi
+          if [ -n "$SUPABASE_ANON_KEY" ]; then
+            DEFINES="$DEFINES --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY"
           fi
           # Gradle occasionally gets a transient 403 from Maven while
           # downloading dependencies. Retry the build a few times so a
           # network blip doesn't fail the whole run.
           n=0
           until [ "$n" -ge 3 ]; do
-            flutter build apk --release \
-              --dart-define=SUPABASE_URL="$SUPABASE_URL" \
-              --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" && break
+            flutter build apk --release $DEFINES && break
             n=$((n+1))
             echo "::warning::Build attempt $n failed (often a transient network error). Retrying in 20s…"
             sleep 20
