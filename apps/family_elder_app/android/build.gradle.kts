@@ -27,17 +27,32 @@ subprojects {
 subprojects {
     afterEvaluate {
         val androidExt = extensions.findByName("android") ?: return@afterEvaluate
-        try {
-            androidExt.javaClass
-                .getMethod("compileSdkVersion", Int::class.javaPrimitiveType)
-                .invoke(androidExt, 36)
-        } catch (_: Throwable) {
-            try {
+        // Try, in order: the classic compileSdkVersion(int), the newer
+        // compileSdk property setter (AGP 8/9), then the String form. One of
+        // these exists on every AGP version we might run under.
+        val attempts: List<() -> Unit> = listOf(
+            {
+                androidExt.javaClass
+                    .getMethod("compileSdkVersion", Int::class.javaPrimitiveType)
+                    .invoke(androidExt, 36)
+            },
+            {
+                androidExt.javaClass
+                    .getMethod("setCompileSdk", Integer::class.java)
+                    .invoke(androidExt, Integer.valueOf(36))
+            },
+            {
                 androidExt.javaClass
                     .getMethod("compileSdkVersion", String::class.java)
                     .invoke(androidExt, "android-36")
+            },
+        )
+        for (attempt in attempts) {
+            try {
+                attempt()
+                break
             } catch (_: Throwable) {
-                // Leave as-is if neither setter exists.
+                // try the next form
             }
         }
     }
