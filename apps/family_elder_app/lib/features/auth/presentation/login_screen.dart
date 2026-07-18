@@ -20,10 +20,14 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _phoneController = TextEditingController();
   final _codeController = TextEditingController();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmController = TextEditingController();
   _AuthMode _mode = _AuthMode.email;
   _LoginStep _step = _LoginStep.enter;
+  bool _signUp = false; // false = log in, true = create account
+  bool _obscure = true;
   String? _error;
   String? _notice;
   bool _busy = false;
@@ -34,8 +38,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void dispose() {
     _phoneController.dispose();
     _codeController.dispose();
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmController.dispose();
     super.dispose();
   }
 
@@ -118,17 +124,41 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   // --- email ---
-  bool _emailFieldsValid() {
-    if (_emailController.text.trim().isEmpty ||
-        _passwordController.text.isEmpty) {
-      setState(() => _error = 'Please enter your email and password.');
-      return false;
+  static final _emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+
+  /// Validates the visible email fields for the current intent (log in vs
+  /// create account). Returns an error string, or null when everything's ok.
+  String? _validateEmailForm() {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    if (_signUp && name.isEmpty) return 'Please enter your full name.';
+    if (email.isEmpty) return 'Please enter your email address.';
+    if (!_emailRegex.hasMatch(email)) {
+      return 'Please enter a valid email address.';
     }
-    return true;
+    if (password.isEmpty) return 'Please enter a password.';
+    if (_signUp) {
+      if (password.length < 6) {
+        return 'Password must be at least 6 characters.';
+      }
+      if (password != _confirmController.text) {
+        return 'Passwords do not match.';
+      }
+    }
+    return null;
+  }
+
+  Future<void> _submitEmail() {
+    final problem = _validateEmailForm();
+    if (problem != null) {
+      setState(() => _error = problem);
+      return Future.value();
+    }
+    return _signUp ? _emailSignUp() : _emailSignIn();
   }
 
   Future<void> _emailSignIn() {
-    if (!_emailFieldsValid()) return Future.value();
     return _run(() async {
       await _repo.signInWithEmail(
           email: _emailController.text.trim(),
@@ -138,17 +168,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _emailSignUp() {
-    if (!_emailFieldsValid()) return Future.value();
     return _run(() async {
       final res = await _repo.signUpWithEmail(
-          email: _emailController.text.trim(),
-          password: _passwordController.text);
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        fullName: _nameController.text.trim(),
+      );
       if (res.session == null) {
         setState(() => _notice =
-            'Check your email to confirm your account, then log in.');
+            'Almost there — check your email to confirm your account, then log in.');
         return;
       }
       await _afterAuth();
+    });
+  }
+
+  Future<void> _forgotPassword() {
+    final email = _emailController.text.trim();
+    if (email.isEmpty || !_emailRegex.hasMatch(email)) {
+      setState(() =>
+          _error = 'Enter your email above first, then tap "Forgot password".');
+      return Future.value();
+    }
+    return _run(() async {
+      await _repo.sendPasswordReset(email);
+      setState(() => _notice =
+          'If an account exists for $email, a reset link is on its way.');
     });
   }
 
@@ -283,6 +328,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   List<Widget> _emailFields() {
     return [
+      // Intent first: Log in vs Create account — one obvious primary button,
+      // so a first-time user is never guessing which action is theirs.
+      SizedBox(
+        width: double.infinity,
+        child: SegmentedButton<bool>(
+          segments: const [
+            ButtonSegment(value: false, label: Text('Log in')),
+            ButtonSegment(value: true, label: Text('Create account')),
+          ],
+          selected: {_signUp},
+          onSelectionChanged: _busy
+              ? null
+              : (s) => setState(() {
+                    _signUp = s.first;
+                    _error = null;
+                    _notice = null;
+                  }),
+        ),
+      ),
+      const SizedBox(height: SetuSpacing.md),
+      if (_signUp) ...[
+        TextField(
+          controller: _nameController,
+          textCapitalization: TextCapitalization.words,
+          autofillHints: const [AutofillHints.name],
+          decoration: const InputDecoration(
+              labelText: 'Full name', prefixIcon: Icon(Icons.person_outline)),
+        ),
+        const SizedBox(height: SetuSpacing.md),
+      ],
       TextField(
         controller: _emailController,
         keyboardType: TextInputType.emailAddress,
@@ -293,21 +368,48 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       const SizedBox(height: SetuSpacing.md),
       TextField(
         controller: _passwordController,
-        obscureText: true,
-        decoration: const InputDecoration(
-            labelText: 'Password', prefixIcon: Icon(Icons.lock_outline)),
+        obscureText: _obscure,
+        autofillHints:
+            _signUp ? const [AutofillHints.newPassword] : const [AutofillHints.password],
+        decoration: InputDecoration(
+          labelText: 'Password',
+          prefixIcon: const Icon(Icons.lock_outline),
+          suffixIcon: IconButton(
+            icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+            onPressed: () => setState(() => _obscure = !_obscure),
+          ),
+        ),
       ),
-      const SizedBox(height: SetuSpacing.xs),
-      const Text('New here? Tap "Create account". Password must be 6+ characters.',
-          style: TextStyle(fontSize: 12, color: SetuColors.mutedLight)),
+      if (_signUp) ...[
+        const SizedBox(height: SetuSpacing.md),
+        TextField(
+          controller: _confirmController,
+          obscureText: _obscure,
+          decoration: const InputDecoration(
+              labelText: 'Confirm password',
+              prefixIcon: Icon(Icons.lock_outline)),
+        ),
+        const SizedBox(height: SetuSpacing.xs),
+        const Text('Password must be at least 6 characters.',
+            style: TextStyle(fontSize: 12, color: SetuColors.mutedLight)),
+      ] else ...[
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: _busy ? null : _forgotPassword,
+            child: const Text('Forgot password?'),
+          ),
+        ),
+      ],
       const SizedBox(height: SetuSpacing.md),
       FilledButton(
-          onPressed: _busy ? null : _emailSignIn,
-          child: Text(_busy ? 'Please wait…' : 'Log in')),
-      const SizedBox(height: SetuSpacing.sm),
-      OutlinedButton(
-          onPressed: _busy ? null : _emailSignUp,
-          child: const Text('Create account')),
+        onPressed: _busy ? null : _submitEmail,
+        child: Text(_busy
+            ? 'Please wait…'
+            : _signUp
+                ? 'Create account'
+                : 'Log in'),
+      ),
     ];
   }
 
