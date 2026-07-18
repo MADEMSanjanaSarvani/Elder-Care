@@ -8,14 +8,19 @@ name: Build APK
 # caregiver, and the app shows the matching home. (The old separate caregiver
 # app is superseded and no longer built.)
 #
-# This is a RELEASE build signed with the default debug key — installable on
-# any phone for testing, but NOT the key you'll publish to the Play Store
-# with. See docs/BUILD-ANDROID.md for the Play Store signing setup.
+# RELEASE build. If the upload-keystore secrets below are set, it is signed
+# with YOUR key (stable, known SHA-1 — the one to register with Firebase /
+# Google Sign-In / Play Store, and uploadable to the Play Console). If they
+# are absent, it falls back to the debug key so test builds still work.
 #
-# Requires two repository secrets (Settings -> Secrets and variables ->
-# Actions): SUPABASE_URL and SUPABASE_ANON_KEY. Both are the public
-# client-side values from your Supabase project's API settings — the anon
-# key is safe to embed in a client app.
+# Optional repository secrets (Settings -> Secrets and variables -> Actions):
+#   SUPABASE_URL, SUPABASE_ANON_KEY  — public client values; override the
+#     compiled-in defaults to point a build at a different project.
+#   ANDROID_KEYSTORE_BASE64          — `base64` of your upload keystore (.jks)
+#   ANDROID_KEYSTORE_PASSWORD        — the keystore (store) password
+#   ANDROID_KEY_ALIAS                — the key alias inside the keystore
+#   ANDROID_KEY_PASSWORD             — the key password for that alias
+# The four ANDROID_* secrets together enable stable release signing.
 
 on:
   workflow_dispatch:
@@ -47,6 +52,31 @@ jobs:
       - name: Fetch dependencies
         working-directory: apps/family_elder_app
         run: flutter pub get
+
+      # If the upload-keystore secrets are configured, sign the release build
+      # with your own key so the APK has a stable, known SHA-1 (matches
+      # Firebase / Google Sign-In / Play Store). If they're absent, this step
+      # is a no-op and the build falls back to the debug key as before.
+      - name: Configure release signing
+        working-directory: apps/family_elder_app/android
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "No upload keystore configured — building with the debug key."
+            exit 0
+          fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > app/upload-keystore.jks
+          cat > key.properties <<PROPS
+          storeFile=upload-keystore.jks
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          keyPassword=$ANDROID_KEY_PASSWORD
+          PROPS
+          echo "Release signing configured from secrets."
 
       - name: Build release APK
         working-directory: apps/family_elder_app
