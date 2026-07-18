@@ -77,6 +77,15 @@ jobs:
           keyPassword=$ANDROID_KEY_PASSWORD
           PROPS
           echo "Release signing configured from secrets."
+          # Print the SHA-1/SHA-256 of the signing key so you can register it
+          # in Firebase / Google Cloud without needing keytool locally.
+          echo "===== SIGNING CERTIFICATE FINGERPRINTS (register these) ====="
+          keytool -list -v \
+            -keystore app/upload-keystore.jks \
+            -alias "$ANDROID_KEY_ALIAS" \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" 2>/dev/null \
+            | grep -E "SHA1:|SHA256:" || echo "Could not read fingerprints."
+          echo "============================================================="
 
       - name: Build release APK
         working-directory: apps/family_elder_app
