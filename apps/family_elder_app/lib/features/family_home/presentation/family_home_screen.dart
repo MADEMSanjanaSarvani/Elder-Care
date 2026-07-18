@@ -299,6 +299,7 @@ class _ElderCardState extends ConsumerState<_ElderCard> {
       _Action(Icons.notifications_outlined, 'Reminders', 'reminders', peach),
       _Action(Icons.local_hospital_outlined, 'Hospital stays', 'hospital-stays', sage),
       _Action(Icons.favorite_outline, 'Health profile', 'health-profile', peach),
+      _Action(Icons.folder_shared_outlined, 'Medical records', 'documents', lav),
       _Action(Icons.diversity_1_outlined, 'Companion', 'companion-preferences', lav),
       _Action(Icons.summarize_outlined, 'Weekly reports', 'reports', sage),
       _Action(Icons.star_outline, 'Rate a visit', 'rate', peach),
