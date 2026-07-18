@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:setu_core/setu_core.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/providers.dart';
 import '../../payments/presentation/demo_payment_sheet.dart';
@@ -229,31 +231,8 @@ class _PlanCard extends ConsumerWidget {
               style: FilledButton.styleFrom(backgroundColor: tint),
               onPressed: hasActiveSub
                   ? null
-                  : () async {
-                      // Payment first — a plan only activates once it's paid
-                      // for. (Demo checkout until the live gateway is wired.)
-                      final paid = await DemoPaymentSheet.show(
-                        context,
-                        title: '${plan['name']} — monthly plan',
-                        amountLabel: '$currency $price',
-                        subtitle: 'Billed every month. Cancel anytime.',
-                      );
-                      if (!paid) return;
-                      try {
-                        await CarePlansRepository(ref.read(supabaseClientProvider))
-                            .subscribe(elderId: elderId, carePlanId: plan['id'] as String);
-                        ref.invalidate(_subscriptionProvider(elderId));
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context)
-                              .showSnackBar(SnackBar(content: Text('${plan['name']} is now active.')));
-                        }
-                      } catch (err) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context)
-                              .showSnackBar(SnackBar(content: Text('Payment succeeded but activation failed: $err')));
-                        }
-                      }
-                    },
+                  : () => _subscribe(context, ref,
+                      currencyLabel: '$currency $price'),
               child: Text(hasActiveSub
                   ? 'Cancel current plan first'
                   : 'Choose ${plan['name']}'),
@@ -262,5 +241,82 @@ class _PlanCard extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  /// A plan only activates after a verified payment. Tries the real Razorpay
+  /// hosted checkout; if payments aren't configured yet (503) it falls back to
+  /// the clearly-labelled demo checkout so the flow is still demonstrable.
+  Future<void> _subscribe(BuildContext context, WidgetRef ref,
+      {required String currencyLabel}) async {
+    final repo = CarePlansRepository(ref.read(supabaseClientProvider));
+    final planId = plan['id'] as String;
+    final messenger = ScaffoldMessenger.of(context);
+
+    try {
+      final link = await repo.createPlanPaymentLink(
+          elderId: elderId, carePlanId: planId);
+      final url = link['short_url'] as String;
+      final linkId = link['link_id'] as String;
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      if (!context.mounted) return;
+
+      final done = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Finish your payment'),
+          content: const Text(
+              'Complete the payment in your browser, then come back and tap '
+              '"I\'ve paid" to activate the plan.'),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel')),
+            FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text("I've paid")),
+          ],
+        ),
+      );
+      if (done != true) return;
+
+      final activated = await repo.confirmPlanPayment(
+          linkId: linkId, elderId: elderId, carePlanId: planId);
+      if (activated) {
+        ref.invalidate(_subscriptionProvider(elderId));
+        messenger.showSnackBar(
+            SnackBar(content: Text('${plan['name']} is now active.')));
+      } else {
+        messenger.showSnackBar(const SnackBar(
+            content: Text(
+                "We couldn't confirm the payment yet. If you paid, try again "
+                'in a moment.')));
+      }
+    } on FunctionException catch (e) {
+      if (e.status == 503) {
+        // Payments not configured — fall back to the demo checkout.
+        if (!context.mounted) return;
+        final paid = await DemoPaymentSheet.show(
+          context,
+          title: '${plan['name']} — monthly plan',
+          amountLabel: currencyLabel,
+          subtitle: 'Billed every month. Cancel anytime.',
+        );
+        if (!paid) return;
+        try {
+          await repo.subscribe(elderId: elderId, carePlanId: planId);
+          ref.invalidate(_subscriptionProvider(elderId));
+          messenger.showSnackBar(
+              SnackBar(content: Text('${plan['name']} is now active.')));
+        } catch (err) {
+          messenger.showSnackBar(
+              SnackBar(content: Text('Could not activate: $err')));
+        }
+      } else {
+        messenger.showSnackBar(
+            SnackBar(content: Text('Payment error: ${e.details ?? e.status}')));
+      }
+    } catch (err) {
+      messenger.showSnackBar(SnackBar(content: Text('Could not start payment: $err')));
+    }
   }
 }

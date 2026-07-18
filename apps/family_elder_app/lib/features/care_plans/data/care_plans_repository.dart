@@ -48,6 +48,33 @@ class CarePlansRepository {
     }).eq('id', subscriptionId);
   }
 
+  /// Creates a Razorpay hosted payment link for a plan. Throws a
+  /// FunctionException with status 503 when payments aren't configured yet
+  /// (the UI then falls back to the demo checkout).
+  Future<Map<String, dynamic>> createPlanPaymentLink({
+    required String elderId,
+    required String carePlanId,
+  }) async {
+    final res = await _client.functions.invoke('payments-plan-link',
+        body: {'elder_id': elderId, 'care_plan_id': carePlanId});
+    return (res.data as Map).cast<String, dynamic>();
+  }
+
+  /// Verifies the payment with Razorpay server-side and activates the plan.
+  /// Returns true once activated, false if the payment isn't confirmed yet.
+  Future<bool> confirmPlanPayment({
+    required String linkId,
+    required String elderId,
+    required String carePlanId,
+  }) async {
+    final res = await _client.functions.invoke('payments-plan-confirm', body: {
+      'link_id': linkId,
+      'elder_id': elderId,
+      'care_plan_id': carePlanId,
+    });
+    return (res.data as Map)['activated'] == true;
+  }
+
   Future<List<Map<String, dynamic>>> fetchCharges(String subscriptionId) async {
     return _client
         .from('care_plan_charges')
