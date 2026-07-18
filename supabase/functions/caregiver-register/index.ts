@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
 
     // Profile (caregiver role) — self-heal / set the name.
     await admin.from("profiles").upsert(
-      { id: user.id, role: "caregiver", phone: user.phone ?? null, display_name: fullName },
+      { id: user.id, role: "caregiver", phone: user.phone ? user.phone : null, display_name: fullName },
       { onConflict: "id" },
     );
 

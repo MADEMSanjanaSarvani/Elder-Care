@@ -49,7 +49,9 @@ Deno.serve(async (req) => {
       {
         id: user.id,
         role: "family_member",
-        phone: user.phone ?? null,
+        // Email accounts have no phone; store null (not "") — profiles.phone
+        // is UNIQUE and Postgres allows many nulls but only one empty string.
+        phone: user.phone ? user.phone : null,
       },
       { onConflict: "id", ignoreDuplicates: true },
     );

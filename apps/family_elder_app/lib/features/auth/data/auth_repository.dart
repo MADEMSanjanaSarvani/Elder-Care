@@ -52,10 +52,15 @@ class AuthRepository {
     if (user == null) throw StateError('Not signed in');
     // Seed display_name from the name captured at sign-up, if any.
     final metaName = user.userMetadata?['full_name'] as String?;
+    // Email accounts have no phone; Supabase returns "" (not null). The
+    // profiles.phone column is UNIQUE, so store null for "no phone" — Postgres
+    // allows many nulls but only one empty string.
+    final phone =
+        (user.phone != null && user.phone!.isNotEmpty) ? user.phone : null;
     await _client.from('profiles').upsert({
       'id': user.id,
       'role': role,
-      'phone': user.phone,
+      'phone': phone,
       'preferred_language': preferredLanguage,
       if (metaName != null && metaName.isNotEmpty) 'display_name': metaName,
     });
