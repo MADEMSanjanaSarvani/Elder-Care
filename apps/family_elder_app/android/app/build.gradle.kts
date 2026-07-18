@@ -30,8 +30,10 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.projectsetu.family_elder_app"
+        // CareHive's unique Play Store / Google Sign-In / Firebase identity.
+        // (The Kotlin `namespace` above is an internal code package and can
+        // stay different from this applicationId.)
+        applicationId = "in.carehive.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
