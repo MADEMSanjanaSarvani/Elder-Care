@@ -6,7 +6,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/providers.dart';
 import '../../suggestions/presentation/suggestions_card.dart';
+import '../../trips/data/trips_repository.dart';
 import '../data/home_summary_repository.dart';
+
+/// Live "your caregiver is on the way" state for an elder (null when idle).
+final activeTripProvider =
+    StreamProvider.family<CaregiverTrip?, String>((ref, elderId) {
+  ref.watch(authStateProvider);
+  return TripsRepository(ref.watch(supabaseClientProvider))
+      .watchActiveForElder(elderId);
+});
 
 /// Today-at-a-glance summary for an elder (medicines, mood, check-in).
 final homeSummaryProvider =
@@ -341,6 +350,7 @@ class _ElderCardState extends ConsumerState<_ElderCard> {
               ],
             ),
             const SizedBox(height: SetuSpacing.md),
+            _LiveTripBanner(elderId: id),
             // Today at a glance (family_dashboard design).
             _TodayGlance(elderId: id, name: elder.displayName),
             const SizedBox(height: SetuSpacing.md),
@@ -447,6 +457,65 @@ class _ActionTile extends StatelessWidget {
               style: const TextStyle(fontSize: 12, height: 1.15),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Live "caregiver on the way" banner — appears only while a trip is active,
+/// tapping through to the full real-time tracking view.
+class _LiveTripBanner extends ConsumerWidget {
+  const _LiveTripBanner({required this.elderId});
+  final String elderId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final trip = ref.watch(activeTripProvider(elderId)).asData?.value;
+    if (trip == null) return const SizedBox.shrink();
+    final arrived = trip.status == TripStatus.arrived;
+    final color =
+        arrived ? SetuColors.verifiedLight : SetuColors.accentLight;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: SetuSpacing.md),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => context.push('/track/${trip.bookingId}'),
+        child: Container(
+          padding: const EdgeInsets.all(SetuSpacing.md),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withValues(alpha: 0.30)),
+          ),
+          child: Row(
+            children: [
+              SetuIconChip(
+                  icon: arrived
+                      ? Icons.doorbell_outlined
+                      : Icons.directions_car_filled_outlined,
+                  color: color),
+              const SizedBox(width: SetuSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(arrived ? 'Caregiver has arrived' : 'Caregiver on the way',
+                        style: const TextStyle(fontWeight: FontWeight.w700)),
+                    Text(
+                        arrived
+                            ? 'At the door now'
+                            : trip.etaMinutes != null
+                                ? 'About ${trip.etaMinutes} min away · tap to track'
+                                : 'Tap to track live',
+                        style: const TextStyle(
+                            color: SetuColors.mutedLight, fontSize: 12.5)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: SetuColors.mutedLight),
+            ],
+          ),
         ),
       ),
     );

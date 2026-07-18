@@ -151,6 +151,15 @@ class _JobCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: SetuSpacing.md),
+              if (canStart) ...[
+                OutlinedButton.icon(
+                  onPressed: () =>
+                      context.push('/caregiver/trip/${booking.id}'),
+                  icon: const Icon(Icons.directions_car_filled_outlined),
+                  label: const Text('On my way'),
+                ),
+                const SizedBox(height: SetuSpacing.sm),
+              ],
               if (canStart || inProgress)
                 FilledButton.icon(
                   onPressed: () => context.push('/booking/${booking.id}'),

@@ -30,6 +30,8 @@ import '../features/reports/presentation/reports_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/sos/presentation/sos_screen.dart';
 import '../features/timeline/presentation/timeline_screen.dart';
+import '../features/trips/presentation/caregiver_trip_screen.dart';
+import '../features/trips/presentation/trip_tracking_screen.dart';
 import 'app_shells.dart';
 import 'providers.dart';
 
@@ -175,6 +177,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/profile/:caregiverId',
         builder: (context, state) => CaregiverProfileScreen(
             caregiverId: state.pathParameters['caregiverId']!),
+      ),
+      // Live caregiver trips (Uber-style "on the way").
+      GoRoute(
+        path: '/caregiver/trip/:bookingId',
+        builder: (context, state) =>
+            CaregiverTripScreen(bookingId: state.pathParameters['bookingId']!),
+      ),
+      GoRoute(
+        path: '/track/:bookingId',
+        builder: (context, state) => TripTrackingScreen(
+          bookingId: state.pathParameters['bookingId']!,
+          caregiverName: state.uri.queryParameters['name'],
+        ),
       ),
     ],
   );
