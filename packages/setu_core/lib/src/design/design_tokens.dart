@@ -11,39 +11,40 @@ import 'package:flutter/material.dart';
 class SetuColors {
   const SetuColors._();
 
-  // "A Home Away From Home" — warm, pastel, reassuring. Ground tones are a
-  // warm cream/beige; text is a warm brown-charcoal, not a cold grey.
-  static const Color paperLight = Color(0xFFFFF8F0); // warm cream
+  // "Warmth & Connection" (final SETU design system). Warm-white ground,
+  // warm-orange primary, lavender for calm/AI, peach for warmth, pastel green
+  // for success, brick red for emergencies.
+  static const Color paperLight = Color(0xFFFAF9F6); // warm white surface
   static const Color paperRaisedLight = Color(0xFFFFFFFF);
-  static const Color inkLight = Color(0xFF463D34); // warm brown-charcoal
-  static const Color mutedLight = Color(0xFF7C6F62);
-  static const Color borderLight = Color(0xFFEBE2D6);
+  static const Color inkLight = Color(0xFF1A1C1A); // on-surface
+  static const Color mutedLight = Color(0xFF54433A); // on-surface-variant
+  static const Color borderLight = Color(0xFFE6E3DF); // subtle warm border
 
-  static const Color paperDark = Color(0xFF211E1B); // warm charcoal
-  static const Color paperRaisedDark = Color(0xFF2A2622);
-  static const Color inkDark = Color(0xFFF1EAE0);
-  static const Color mutedDark = Color(0xFFBEB2A4);
+  static const Color paperDark = Color(0xFF1B1A18); // warm charcoal
+  static const Color paperRaisedDark = Color(0xFF262320);
+  static const Color inkDark = Color(0xFFF2F1EE);
+  static const Color mutedDark = Color(0xFFD5C4AB);
   static const Color borderDark = Color(0xFF3A342E);
 
-  /// Soft Sage — primary action & "all good". Deep tints keep text AA.
-  static const Color accentLight = Color(0xFF5E9E7C);
-  static const Color accentDark = Color(0xFF8CC6A6);
+  /// Primary — deep warm orange (#944a18); container is pastel orange #ff9f66.
+  static const Color accentLight = Color(0xFF944A18);
+  static const Color accentDark = Color(0xFFFFB68D); // inverse-primary
 
-  /// Verified / success — sage family, a touch deeper than the accent.
+  /// Verified / success — soft pastel green.
   static const Color verifiedLight = Color(0xFF4E8F70);
   static const Color verifiedDark = Color(0xFF8CC6A6);
 
-  /// SOS / critical — a warm coral, the only alarming colour, used only here.
-  static const Color sosLight = Color(0xFFD46A4E);
-  static const Color sosDark = Color(0xFFEF9377);
+  /// SOS / critical — brick red (design `error`), used only for emergencies.
+  static const Color sosLight = Color(0xFFBA1A1A);
+  static const Color sosDark = Color(0xFFFFB4AB);
 
-  /// Lavender — calm & the AI companion.
-  static const Color lavenderLight = Color(0xFF8B76CF);
-  static const Color lavenderDark = Color(0xFFB7A6EC);
+  /// Lavender (secondary) — calm, mindfulness & the AI companion.
+  static const Color lavenderLight = Color(0xFF62549B);
+  static const Color lavenderDark = Color(0xFFCBBEFF);
 
-  /// Peach — warmth & human touch (attention states).
-  static const Color peachLight = Color(0xFFE0885A);
-  static const Color peachDark = Color(0xFFF0A778);
+  /// Peach / pastel orange — warmth & human touch (primary-container family).
+  static const Color peachLight = Color(0xFFF08A3C);
+  static const Color peachDark = Color(0xFFFFB68D);
 }
 
 class SetuSpacing {
@@ -88,11 +89,11 @@ class SetuTheme {
     );
 
     final buttonShape =
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(14));
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(16));
 
-    OutlineInputBorder inputBorder(Color c, [double w = 1.2]) =>
+    OutlineInputBorder inputBorder(Color c, [double w = 1.4]) =>
         OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: c, width: w),
         );
 
@@ -121,7 +122,7 @@ class SetuTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size.fromHeight(52),
+          minimumSize: const Size.fromHeight(56),
           shape: buttonShape,
           textStyle:
               const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
@@ -129,7 +130,7 @@ class SetuTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          minimumSize: const Size.fromHeight(52),
+          minimumSize: const Size.fromHeight(56),
           shape: buttonShape,
           side: BorderSide(color: border, width: 1.4),
           foregroundColor: accent,
@@ -142,7 +143,7 @@ class SetuTheme {
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(20),
           side: BorderSide(color: border),
         ),
       ),
@@ -165,8 +166,8 @@ class SetuTheme {
       titleLarge:
           TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: ink),
       bodyLarge: TextStyle(
-          fontSize: 18, color: ink), // elder-mode default per Section 17
-      bodyMedium: TextStyle(fontSize: 15, color: ink),
+          fontSize: 18, color: ink), // large, legible base (Warmth system)
+      bodyMedium: TextStyle(fontSize: 16, color: ink),
       labelSmall: TextStyle(fontSize: 11, letterSpacing: 0.4, color: ink),
     );
   }
