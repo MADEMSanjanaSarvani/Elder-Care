@@ -11,13 +11,10 @@ import '../features/booking/presentation/booking_screen.dart';
 import '../features/care_plans/presentation/care_plans_screen.dart';
 import '../features/companion_visits/presentation/companion_preferences_screen.dart';
 import '../features/consent/presentation/consent_screen.dart';
-import '../features/elder_home/presentation/elder_home_screen.dart';
 import '../features/family_access/presentation/family_access_screen.dart';
-import '../features/family_home/presentation/family_home_screen.dart';
 import '../features/health_profile/presentation/health_profile_screen.dart';
 import '../features/earnings/presentation/earnings_screen.dart';
 import '../features/hospital_stays/presentation/hospital_stays_screen.dart';
-import '../features/job_queue/presentation/job_queue_screen.dart';
 import '../features/medical_documents/presentation/medical_documents_screen.dart';
 import '../features/medications/presentation/medications_screen.dart';
 import '../features/otp_visit/presentation/otp_visit_screen.dart';
@@ -32,6 +29,7 @@ import '../features/reports/presentation/reports_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/sos/presentation/sos_screen.dart';
 import '../features/timeline/presentation/timeline_screen.dart';
+import 'app_shells.dart';
 import 'providers.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -196,52 +194,13 @@ class HomeRouterScreen extends ConsumerWidget {
         // role picker can't live on the login screen and be reliable).
         if (profile == null) return const ChooseRoleScreen();
         final role = profile['role'] as String?;
-        // Caregivers get their own screen (which brings its own Scaffold and
-        // work-focused app bar), not the family/elder shell.
-        if (role == 'caregiver') return const JobQueueScreen();
-        return _FamilyElderShell(isElder: role == 'elder');
+        // Each role gets its own bottom-navigation shell (SETU navigation).
+        if (role == 'caregiver') return const CaregiverGate();
+        if (role == 'elder') return const ElderShell();
+        return const FamilyShell();
       },
-      loading: () => const Scaffold(
-          body: Center(child: CircularProgressIndicator())),
-      error: (err, stack) => Scaffold(
-          body: Center(child: Text('Failed to load profile: $err'))),
-    );
-  }
-}
-
-/// The shared family/elder home shell: the CareHive app bar (notification bell +
-/// settings) over either the elder or family home body.
-class _FamilyElderShell extends ConsumerWidget {
-  const _FamilyElderShell({required this.isElder});
-
-  final bool isElder;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final unread = ref.watch(unreadCountProvider).asData?.value ?? 0;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('CareHive'),
-        actions: [
-          IconButton(
-            tooltip: 'Notifications',
-            icon: Badge(
-              isLabelVisible: unread > 0,
-              label: Text('$unread'),
-              child: const Icon(Icons.notifications_outlined),
-            ),
-            onPressed: () => context.push('/notifications'),
-          ),
-          IconButton(
-            tooltip: 'Settings',
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () => context.push('/settings'),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: isElder ? const ElderHomeScreen() : const FamilyHomeScreen(),
-      ),
+      loading: () => const Scaffold(body: SetuLoading()),
+      error: (err, stack) => const Scaffold(body: SetuErrorState()),
     );
   }
 }
