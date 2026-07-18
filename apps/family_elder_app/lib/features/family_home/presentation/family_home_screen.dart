@@ -5,8 +5,15 @@ import 'package:setu_core/setu_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/providers.dart';
-import '../../checkins/data/checkin_repository.dart';
 import '../../suggestions/presentation/suggestions_card.dart';
+import '../data/home_summary_repository.dart';
+
+/// Today-at-a-glance summary for an elder (medicines, mood, check-in).
+final homeSummaryProvider =
+    FutureProvider.family<HomeSummary, String>((ref, elderId) async {
+  ref.watch(authStateProvider);
+  return HomeSummaryRepository(ref.watch(supabaseClientProvider)).fetch(elderId);
+});
 
 /// Timeline-first dashboard (PRD Part 3 §17). Redesigned to the CareHive
 /// design system: an avatar header, a friendly "Today" status card, a clean
@@ -334,45 +341,8 @@ class _ElderCardState extends ConsumerState<_ElderCard> {
               ],
             ),
             const SizedBox(height: SetuSpacing.md),
-            // Today card: check-in status
-            FutureBuilder<DateTime?>(
-              future: CheckInRepository(ref.read(supabaseClientProvider))
-                  .lastCheckInToday(id),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const SizedBox(height: 4);
-                }
-                final checkedIn = snapshot.data != null;
-                final color = checkedIn
-                    ? SetuColors.verifiedLight
-                    : SetuColors.accentLight;
-                return Container(
-                  padding: const EdgeInsets.all(SetuSpacing.md),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                          checkedIn
-                              ? Icons.check_circle
-                              : Icons.wb_sunny_outlined,
-                          color: color),
-                      const SizedBox(width: SetuSpacing.sm),
-                      Expanded(
-                        child: Text(
-                          checkedIn
-                              ? 'Checked in today — all good.'
-                              : "Hasn't checked in today yet.",
-                          style: const TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+            // Today at a glance (family_dashboard design).
+            _TodayGlance(elderId: id, name: elder.displayName),
             const SizedBox(height: SetuSpacing.md),
             SuggestionsCard(elderId: id),
             const SizedBox(height: SetuSpacing.md),
@@ -478,6 +448,187 @@ class _ActionTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// "Today at a glance" — the emotional heart of the family dashboard: a "safe"
+/// reassurance line, medicines taken today, mood, and a SETU Memories entry.
+class _TodayGlance extends ConsumerWidget {
+  const _TodayGlance({required this.elderId, required this.name});
+
+  final String elderId;
+  final String name;
+
+  String get _first => name.trim().split(' ').first;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(homeSummaryProvider(elderId));
+    return async.when(
+      loading: () => const SizedBox(
+          height: 96, child: Center(child: SetuLoading())),
+      error: (e, s) => const SizedBox.shrink(),
+      data: (s) {
+        final safe = s.isSafe;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(safe ? Icons.verified_user : Icons.info_outline,
+                    size: 18,
+                    color: safe
+                        ? SetuColors.verifiedLight
+                        : SetuColors.peachLight),
+                const SizedBox(width: 6),
+                Text('$_first is safe',
+                    style: TextStyle(
+                        color: safe
+                            ? SetuColors.verifiedLight
+                            : SetuColors.peachLight,
+                        fontWeight: FontWeight.w700)),
+              ],
+            ),
+            const SizedBox(height: SetuSpacing.md),
+            // Medicines taken today (peach "daily task" card).
+            Container(
+              padding: const EdgeInsets.all(SetuSpacing.md),
+              decoration: BoxDecoration(
+                color: SetuColors.peachLight.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  const SetuIconChip(
+                      icon: Icons.medication_outlined,
+                      color: SetuColors.peachLight),
+                  const SizedBox(width: SetuSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Medicines today',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: SetuColors.mutedLight,
+                                fontSize: 13)),
+                        Text(
+                          s.medsTotal == 0
+                              ? 'None scheduled'
+                              : '${s.medsTaken} / ${s.medsTotal} taken',
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineMedium
+                              ?.copyWith(color: SetuColors.peachLight),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: SetuSpacing.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: _MiniStat(
+                    icon: Icons.sentiment_satisfied_alt_outlined,
+                    color: SetuColors.lavenderLight,
+                    label: 'Mood',
+                    value: s.mood == null
+                        ? '—'
+                        : s.mood![0].toUpperCase() + s.mood!.substring(1),
+                  ),
+                ),
+                const SizedBox(width: SetuSpacing.sm),
+                Expanded(
+                  child: _MiniStat(
+                    icon: Icons.check_circle_outline,
+                    color: SetuColors.verifiedLight,
+                    label: 'Check-in',
+                    value: s.checkedIn ? 'Done' : 'Pending',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: SetuSpacing.sm),
+            // SETU Memories entry.
+            InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => context.push('/elder/$elderId/reports'),
+              child: Container(
+                padding: const EdgeInsets.all(SetuSpacing.md),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [
+                    SetuColors.lavenderLight.withValues(alpha: 0.16),
+                    SetuColors.accentLight.withValues(alpha: 0.10),
+                  ]),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Row(
+                  children: [
+                    SetuIconChip(
+                        icon: Icons.auto_awesome,
+                        color: SetuColors.lavenderLight),
+                    SizedBox(width: SetuSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('SETU Memories',
+                              style: TextStyle(fontWeight: FontWeight.w700)),
+                          Text('Warm moments from their day',
+                              style: TextStyle(
+                                  color: SetuColors.mutedLight, fontSize: 12.5)),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_right, color: SetuColors.mutedLight),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _MiniStat extends StatelessWidget {
+  const _MiniStat(
+      {required this.icon,
+      required this.color,
+      required this.label,
+      required this.value});
+
+  final IconData icon;
+  final Color color;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(SetuSpacing.md),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(height: SetuSpacing.sm),
+          Text(label,
+              style: const TextStyle(
+                  color: SetuColors.mutedLight, fontSize: 12.5)),
+          Text(value,
+              style: const TextStyle(
+                  fontWeight: FontWeight.w700, fontSize: 16)),
+        ],
       ),
     );
   }
