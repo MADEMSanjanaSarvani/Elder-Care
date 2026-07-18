@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:setu_core/setu_core.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/providers.dart';
 import '../data/booking_repository.dart';
@@ -107,12 +109,17 @@ class _CaregiverSelectScreenState extends ConsumerState<CaregiverSelectScreen> {
     if (_submitting) return;
     setState(() => _submitting = true);
     try {
-      await _repo.createBooking(
+      final booking = await _repo.createBooking(
         elderId: widget.elderId,
         serviceId: widget.service.id,
         scheduledAt: widget.scheduledAt,
         caregiverId: caregiverId,
       );
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      // Offer to pay for the visit now (Razorpay). Optional — the booking is
+      // already placed; paying just confirms it up front.
+      await _offerPayment(booking.id);
       if (!mounted) return;
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -125,6 +132,71 @@ class _CaregiverSelectScreenState extends ConsumerState<CaregiverSelectScreen> {
       setState(() => _submitting = false);
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Could not request: $err')));
+    }
+  }
+
+  /// Optional pay-now step. Silently no-ops if payments aren't configured
+  /// (503) so booking still works without a gateway.
+  Future<void> _offerPayment(String bookingId) async {
+    final amount =
+        '${widget.service.currency} ${widget.service.basePrice.toStringAsFixed(0)}';
+    final payNow = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Pay for this visit?'),
+        content: Text(
+            'Your request is placed. Pay $amount now to confirm the visit, '
+            'or pay later.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Pay later')),
+          FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text('Pay $amount')),
+        ],
+      ),
+    );
+    if (payNow != true || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final link = await _repo.createBookingPaymentLink(bookingId: bookingId);
+      await launchUrl(Uri.parse(link['short_url'] as String),
+          mode: LaunchMode.externalApplication);
+      if (!mounted) return;
+      final done = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Finish your payment'),
+          content: const Text(
+              'Complete the payment in your browser, then tap "I\'ve paid".'),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Later')),
+            FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text("I've paid")),
+          ],
+        ),
+      );
+      if (done != true) return;
+      final paid = await _repo.confirmBookingPayment(
+          linkId: link['link_id'] as String, bookingId: bookingId);
+      messenger.showSnackBar(SnackBar(
+          content: Text(paid
+              ? 'Payment received — visit confirmed.'
+              : "We couldn't confirm the payment yet.")));
+    } on FunctionException catch (e) {
+      if (e.status != 503) {
+        messenger.showSnackBar(
+            SnackBar(content: Text('Payment error: ${e.details ?? e.status}')));
+      }
+      // 503 → payments not configured; skip silently.
+    } catch (err) {
+      messenger
+          .showSnackBar(SnackBar(content: Text('Could not start payment: $err')));
     }
   }
 

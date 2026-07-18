@@ -50,6 +50,24 @@ class BookingRepository {
     return Booking.fromJson(response.data as Map<String, dynamic>);
   }
 
+  /// Creates a Razorpay hosted payment link to pay for a booked visit. Throws
+  /// a FunctionException with status 503 when payments aren't configured.
+  Future<Map<String, dynamic>> createBookingPaymentLink(
+      {required String bookingId}) async {
+    final res = await _client.functions
+        .invoke('payments-booking-link', body: {'booking_id': bookingId});
+    return (res.data as Map).cast<String, dynamic>();
+  }
+
+  /// Verifies the visit payment with Razorpay and marks it captured. Returns
+  /// true once paid.
+  Future<bool> confirmBookingPayment(
+      {required String linkId, required String bookingId}) async {
+    final res = await _client.functions.invoke('payments-booking-confirm',
+        body: {'link_id': linkId, 'booking_id': bookingId});
+    return (res.data as Map)['paid'] == true;
+  }
+
   /// The caregivers a family can choose from for a given service, curated
   /// server-side (`caregivers-for-service`): only active, verified caregivers
   /// in the elder's region whose trust tier meets the service, with the
