@@ -74,10 +74,19 @@ begin
       );
     end if;
 
-    -- 4. public profile (bio) + rating summary shown to families
-    insert into caregiver_profile_details (caregiver_id, bio, service_radius_km)
-      select id, rec.bio, 12 from caregivers where user_id = v_uid
-      on conflict (caregiver_id) do update set bio = excluded.bio;
+    -- 4. public profile (bio, location) + rating summary shown to families.
+    -- Locations are scattered a few km around central Visakhapatnam so the
+    -- "distance away" sort has something to work with.
+    insert into caregiver_profile_details
+      (caregiver_id, bio, service_radius_km, latitude, longitude)
+      select id, rec.bio, 12,
+             17.7042 + (random() - 0.5) * 0.08,
+             83.3005 + (random() - 0.5) * 0.08
+      from caregivers where user_id = v_uid
+      on conflict (caregiver_id) do update
+        set bio = excluded.bio,
+            latitude = excluded.latitude,
+            longitude = excluded.longitude;
 
     insert into caregiver_rating_summary (caregiver_id, average_stars, rating_count)
       select id, rec.stars, rec.cnt from caregivers where user_id = v_uid

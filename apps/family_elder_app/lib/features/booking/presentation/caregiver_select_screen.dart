@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
@@ -69,9 +70,36 @@ class _CaregiverSelectScreenState extends ConsumerState<CaregiverSelectScreen> {
   @override
   void initState() {
     super.initState();
-    _future = _repo.fetchCaregiversForService(
+    _future = _load();
+  }
+
+  /// Asks (once) for location so we can sort caregivers by how near they are.
+  /// If permission is denied or unavailable, we simply fall back to the
+  /// best-rated ordering — location is a nicety, never a blocker.
+  Future<List<Map<String, dynamic>>> _load() async {
+    double? lat, lng;
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.always ||
+          permission == LocationPermission.whileInUse) {
+        final pos = await Geolocator.getCurrentPosition(
+          locationSettings:
+              const LocationSettings(accuracy: LocationAccuracy.medium),
+        ).timeout(const Duration(seconds: 6));
+        lat = pos.latitude;
+        lng = pos.longitude;
+      }
+    } catch (_) {
+      // Ignore — proceed without distance.
+    }
+    return _repo.fetchCaregiversForService(
       elderId: widget.elderId,
       serviceId: widget.service.id,
+      lat: lat,
+      lng: lng,
     );
   }
 
@@ -251,6 +279,7 @@ class _CaregiverCard extends StatelessWidget {
     final photoUrl = caregiver['photo_url'] as String?;
     final stars = (caregiver['average_stars'] as num?)?.toDouble() ?? 0;
     final count = (caregiver['rating_count'] as num?)?.toInt() ?? 0;
+    final distance = (caregiver['distance_km'] as num?)?.toDouble();
     final bio = caregiver['bio'] as String?;
 
     return Container(
@@ -317,6 +346,22 @@ class _CaregiverCard extends StatelessWidget {
                           const Text('New to CareHive',
                               style: TextStyle(
                                   color: SetuColors.mutedLight, fontSize: 12.5)),
+                        if (distance != null)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.near_me_outlined,
+                                  size: 14, color: SetuColors.accentLight),
+                              const SizedBox(width: 2),
+                              Text(
+                                  distance < 1
+                                      ? '${(distance * 1000).round()} m away'
+                                      : '${distance.toStringAsFixed(1)} km away',
+                                  style: const TextStyle(
+                                      fontSize: 12.5,
+                                      color: SetuColors.mutedLight)),
+                            ],
+                          ),
                       ],
                     ),
                   ],

@@ -20,16 +20,31 @@ const TIER_RANK: Record<string, number> = {
   clinical_verified: 2,
 };
 
+/// Great-circle distance in km between two lat/lng points.
+function haversineKm(
+  lat1: number, lng1: number, lat2: number, lng2: number,
+): number {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
   try {
     const user = await requireUser(req);
-    const { elder_id, service_id } = await req.json();
+    const { elder_id, service_id, lat, lng } = await req.json();
     if (!elder_id || !service_id) {
       return errorResponse("elder_id and service_id are required");
     }
+    const originLat = typeof lat === "number" ? lat : null;
+    const originLng = typeof lng === "number" ? lng : null;
 
     const admin = supabaseAdmin();
 
@@ -85,7 +100,7 @@ Deno.serve(async (req) => {
         admin.from("profiles").select("id, display_name").in("id", userIds),
         admin
           .from("caregiver_profile_details")
-          .select("caregiver_id, bio, photo_storage_path")
+          .select("caregiver_id, bio, photo_storage_path, latitude, longitude")
           .in("caregiver_id", ids),
         admin
           .from("caregiver_rating_summary")
@@ -108,6 +123,14 @@ Deno.serve(async (req) => {
           .createSignedUrl(path, 60 * 60);
         photoUrl = signed?.signedUrl ?? null;
       }
+      // Distance from the family's current location, when shared.
+      let distanceKm: number | null = null;
+      if (originLat != null && originLng != null &&
+          detail?.latitude != null && detail?.longitude != null) {
+        distanceKm = haversineKm(
+          originLat, originLng,
+          Number(detail.latitude), Number(detail.longitude));
+      }
       return {
         id: c.id,
         name: nameById.get(c.user_id) ?? "CareHive caregiver",
@@ -118,13 +141,20 @@ Deno.serve(async (req) => {
         photo_url: photoUrl,
         average_stars: rating ? Number(rating.average_stars) : 0,
         rating_count: rating ? rating.rating_count : 0,
+        distance_km: distanceKm,
         member_since: c.created_at,
       };
     }));
 
-    // Best-presented first: higher trust tier, then higher rating, then more
-    // reviews.
+    // When a location was shared, nearest first; otherwise best-presented
+    // first (trust tier, then rating, then review count).
+    const haveDistances = cards.some((c) => c.distance_km != null);
     cards.sort((a, b) => {
+      if (haveDistances) {
+        const da = a.distance_km ?? Number.MAX_VALUE;
+        const db = b.distance_km ?? Number.MAX_VALUE;
+        if (da !== db) return da - db;
+      }
       const t = (TIER_RANK[b.trust_tier] ?? 0) - (TIER_RANK[a.trust_tier] ?? 0);
       if (t !== 0) return t;
       if (b.average_stars !== a.average_stars) {

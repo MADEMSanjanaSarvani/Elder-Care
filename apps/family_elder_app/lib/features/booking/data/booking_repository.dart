@@ -57,10 +57,17 @@ class BookingRepository {
   Future<List<Map<String, dynamic>>> fetchCaregiversForService({
     required String elderId,
     required String serviceId,
+    double? lat,
+    double? lng,
   }) async {
     final response = await _client.functions.invoke(
       'caregivers-for-service',
-      body: {'elder_id': elderId, 'service_id': serviceId},
+      body: {
+        'elder_id': elderId,
+        'service_id': serviceId,
+        if (lat != null && lng != null) 'lat': lat,
+        if (lat != null && lng != null) 'lng': lng,
+      },
     );
     final data = response.data as Map<String, dynamic>?;
     return ((data?['caregivers'] as List?) ?? []).cast<Map<String, dynamic>>();
