@@ -36,9 +36,41 @@ class BookingScreen extends ConsumerStatefulWidget {
 
 class _BookingScreenState extends ConsumerState<BookingScreen> {
   SetuService? _selected;
+  late DateTime _when = _defaultSlot();
 
   BookingRepository get _repo =>
       BookingRepository(ref.read(supabaseClientProvider));
+
+  /// A sensible first suggestion: the next morning at 10:00.
+  static DateTime _defaultSlot() {
+    final t = DateTime.now().add(const Duration(days: 1));
+    return DateTime(t.year, t.month, t.day, 10);
+  }
+
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _when,
+      firstDate: DateTime(now.year, now.month, now.day),
+      lastDate: now.add(const Duration(days: 60)),
+    );
+    if (picked != null) {
+      setState(() => _when =
+          DateTime(picked.year, picked.month, picked.day, _when.hour, _when.minute));
+    }
+  }
+
+  Future<void> _pickTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_when),
+    );
+    if (picked != null) {
+      setState(() => _when = DateTime(
+          _when.year, _when.month, _when.day, picked.hour, picked.minute));
+    }
+  }
 
   void _chooseCaregiver() {
     if (_selected == null) return;
@@ -46,6 +78,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
       builder: (_) => CaregiverSelectScreen(
         elderId: widget.elderId,
         service: _selected!,
+        scheduledAt: _when,
       ),
     ));
   }
@@ -89,6 +122,32 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                             selected: _selected?.id == service.id,
                             onTap: () => setState(() => _selected = service),
                           ),
+                        if (_selected != null) ...[
+                          const SizedBox(height: SetuSpacing.lg),
+                          Text('When do you need help?',
+                              style: Theme.of(context).textTheme.titleMedium),
+                          const SizedBox(height: SetuSpacing.sm),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _WhenTile(
+                                  icon: Icons.calendar_today_outlined,
+                                  label: SetuFormat.friendlyDate(_when),
+                                  onTap: _pickDate,
+                                ),
+                              ),
+                              const SizedBox(width: SetuSpacing.sm),
+                              Expanded(
+                                child: _WhenTile(
+                                  icon: Icons.access_time,
+                                  label: TimeOfDay.fromDateTime(_when)
+                                      .format(context),
+                                  onTap: _pickTime,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -113,6 +172,43 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
         loading: () => const SetuLoading(),
         error: (err, stack) =>
             const SetuErrorState(),
+      ),
+    );
+  }
+}
+
+class _WhenTile extends StatelessWidget {
+  const _WhenTile(
+      {required this.icon, required this.label, required this.onTap});
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+            vertical: SetuSpacing.md, horizontal: SetuSpacing.md),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: SetuColors.borderLight),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: SetuColors.accentLight),
+            const SizedBox(width: SetuSpacing.sm),
+            Expanded(
+              child: Text(label,
+                  maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
+            const Icon(Icons.edit_outlined,
+                size: 15, color: SetuColors.mutedLight),
+          ],
+        ),
       ),
     );
   }

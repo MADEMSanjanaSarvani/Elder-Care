@@ -46,11 +46,13 @@ class CaregiverSelectScreen extends ConsumerStatefulWidget {
   const CaregiverSelectScreen({
     required this.elderId,
     required this.service,
+    required this.scheduledAt,
     super.key,
   });
 
   final String elderId;
   final SetuService service;
+  final DateTime scheduledAt;
 
   @override
   ConsumerState<CaregiverSelectScreen> createState() =>
@@ -80,8 +82,7 @@ class _CaregiverSelectScreenState extends ConsumerState<CaregiverSelectScreen> {
       await _repo.createBooking(
         elderId: widget.elderId,
         serviceId: widget.service.id,
-        // MVP: "as soon as possible"; a slot picker is a later refinement.
-        scheduledAt: DateTime.now().add(const Duration(hours: 2)),
+        scheduledAt: widget.scheduledAt,
         caregiverId: caregiverId,
       );
       if (!mounted) return;
@@ -117,7 +118,21 @@ class _CaregiverSelectScreenState extends ConsumerState<CaregiverSelectScreen> {
                 children: [
                   Text('For ${widget.service.name}',
                       style: Theme.of(context).textTheme.titleLarge),
-                  const SizedBox(height: SetuSpacing.xs),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.event_outlined,
+                          size: 16, color: SetuColors.accentLight),
+                      const SizedBox(width: 6),
+                      Text(
+                          '${SetuFormat.friendlyDate(widget.scheduledAt)} · '
+                          '${TimeOfDay.fromDateTime(widget.scheduledAt).format(context)}',
+                          style: const TextStyle(
+                              color: SetuColors.accentLight,
+                              fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                  const SizedBox(height: SetuSpacing.sm),
                   const Text(
                     'Pick someone you trust from their profile below, or let '
                     'CareHive match the best available.',
