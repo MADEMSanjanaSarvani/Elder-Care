@@ -203,6 +203,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (mounted) context.go('/home');
   }
 
+  Future<void> _google() {
+    return _run(() async {
+      final res = await _repo.signInWithGoogle();
+      if (res == null) return; // user cancelled the Google chooser
+      await _afterAuth();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -287,6 +295,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           if (_error != null) _banner(_error!, isError: true),
                           if (_notice != null) _banner(_notice!),
                           ..._buildFields(),
+                          const SizedBox(height: SetuSpacing.md),
+                          Row(children: const [
+                            Expanded(child: Divider()),
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: SetuSpacing.sm),
+                              child: Text('or',
+                                  style:
+                                      TextStyle(color: SetuColors.mutedLight)),
+                            ),
+                            Expanded(child: Divider()),
+                          ]),
+                          const SizedBox(height: SetuSpacing.md),
+                          OutlinedButton.icon(
+                            onPressed: _busy ? null : _google,
+                            icon: const Icon(Icons.g_mobiledata, size: 28),
+                            label: const Text('Continue with Google'),
+                          ),
                         ],
                       ),
                     ),

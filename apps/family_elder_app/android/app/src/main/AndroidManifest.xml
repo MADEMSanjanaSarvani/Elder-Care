@@ -6,6 +6,9 @@
          when notifying family + ops). Coarse is an acceptable fallback. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- Android 13+ requires an explicit runtime permission to show
+         notifications (FCM push). Older versions grant it implicitly. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <application
         android:label="CareHive"

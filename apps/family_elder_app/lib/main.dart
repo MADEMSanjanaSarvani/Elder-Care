@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/env.dart';
 import 'core/preferences.dart';
+import 'core/push_service.dart';
 import 'core/router.dart';
 import 'features/onboarding/presentation/onboarding_screen.dart';
 import 'l10n/generated/app_localizations.dart';
@@ -17,6 +20,9 @@ Future<void> main() async {
     supabaseUrl: Env.supabaseUrl,
     supabaseAnonKey: Env.supabaseAnonKey,
   );
+  // Push notifications (fail-soft — never blocks startup if Firebase is
+  // absent or offline).
+  unawaited(PushService(SetuSupabaseClient.instance).init());
   final prefs = await SharedPreferences.getInstance();
   final onboardingSeen = prefs.getBool(onboardingSeenKey) ?? false;
   runApp(ProviderScope(

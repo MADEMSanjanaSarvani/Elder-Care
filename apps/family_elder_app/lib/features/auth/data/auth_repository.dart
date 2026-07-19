@@ -1,4 +1,7 @@
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../../core/env.dart';
 
 /// Auth via Supabase Auth. Phone OTP is the primary path — a phone number is
 /// something the elder persona (PRD Part 1 §05) already has memorized and
@@ -45,6 +48,25 @@ class AuthRepository {
   /// needed — Supabase's own mailer delivers it).
   Future<void> sendPasswordReset(String email) =>
       _client.auth.resetPasswordForEmail(email);
+
+  /// Native Google Sign-In → Supabase. We ask Google for an idToken audienced
+  /// to our Web (server) client, then hand it to Supabase's Google provider.
+  /// Returns null if the user cancels the Google chooser.
+  Future<AuthResponse?> signInWithGoogle() async {
+    final google = GoogleSignIn(serverClientId: Env.googleWebClientId);
+    final account = await google.signIn();
+    if (account == null) return null; // user dismissed the picker
+    final auth = await account.authentication;
+    final idToken = auth.idToken;
+    if (idToken == null) {
+      throw const AuthException('Google sign-in did not return an ID token.');
+    }
+    return _client.auth.signInWithIdToken(
+      provider: OAuthProvider.google,
+      idToken: idToken,
+      accessToken: auth.accessToken,
+    );
+  }
 
   Future<void> ensureProfile(
       {required String role, required String preferredLanguage}) async {

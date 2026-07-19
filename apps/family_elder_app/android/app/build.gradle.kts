@@ -5,6 +5,8 @@ plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    // Firebase (FCM push + Google Sign-In). Reads android/app/google-services.json.
+    id("com.google.gms.google-services")
 }
 
 // Release signing. If android/key.properties exists (your own upload key — see
@@ -36,7 +38,9 @@ android {
         applicationId = "in.carehive.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // Firebase (firebase_core/messaging) requires minSdk 23; pin it so the
+        // Flutter default (21) doesn't fail the Firebase dependency resolution.
+        minSdk = maxOf(flutter.minSdkVersion, 23)
         targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName

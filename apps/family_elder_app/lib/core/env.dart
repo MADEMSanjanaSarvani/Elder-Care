@@ -22,6 +22,22 @@ class Env {
     defaultValue: 'vizag-ap-in',
   );
 
+  // Google Sign-In server (Web) client ID — a public OAuth client identifier,
+  // safe to ship. Used as google_sign_in's serverClientId so the returned
+  // idToken is audienced for Supabase's Google provider.
+  static const String googleWebClientId = String.fromEnvironment(
+    'GOOGLE_WEB_CLIENT_ID',
+    defaultValue:
+        '870720833565-cgkuqb7lsupbhjnpvggp5s7fcjk1p2qa.apps.googleusercontent.com',
+  );
+
+  // Agora RTC App ID — a public identifier (the App Certificate stays a
+  // server secret). Empty means video calling stays in its scaffolded state.
+  static const String agoraAppId = String.fromEnvironment(
+    'AGORA_APP_ID',
+    defaultValue: 'b85c1a1c62d240bebc91698e23a9fa41',
+  );
+
   static void assertConfigured() {
     if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
       throw StateError(
