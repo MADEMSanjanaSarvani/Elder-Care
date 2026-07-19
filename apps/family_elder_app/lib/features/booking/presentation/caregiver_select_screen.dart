@@ -255,6 +255,8 @@ class _CaregiverSelectScreenState extends ConsumerState<CaregiverSelectScreen> {
                             caregiverName: c['name'] as String?),
                       ),
                   ],
+                  const SizedBox(height: SetuSpacing.lg),
+                  const _SetuStandard(),
                   const SizedBox(height: 80),
                 ],
               );
@@ -265,6 +267,65 @@ class _CaregiverSelectScreenState extends ConsumerState<CaregiverSelectScreen> {
               color: Color(0x66000000),
               child: SetuLoading(label: 'Requesting…'),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "The SETU Standard" — the verification trust footer (matches the Stitch
+/// caregiver-marketplace design): every caregiver is BG-checked, skill-tested
+/// and interviewed.
+class _SetuStandard extends StatelessWidget {
+  const _SetuStandard();
+
+  @override
+  Widget build(BuildContext context) {
+    Widget badge(IconData icon, String label) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                  color: SetuColors.accentLight.withValues(alpha: 0.14),
+                  shape: BoxShape.circle),
+              child: Icon(icon, color: SetuColors.accentLight, size: 22),
+            ),
+            const SizedBox(height: 6),
+            Text(label,
+                style: const TextStyle(
+                    fontSize: 12, color: SetuColors.mutedLight)),
+          ],
+        );
+    return Container(
+      padding: const EdgeInsets.all(SetuSpacing.lg),
+      decoration: BoxDecoration(
+        color: SetuColors.peachDark.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          Text('The SETU Standard',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.w800)),
+          const SizedBox(height: SetuSpacing.xs),
+          const Text(
+            'Every caregiver undergoes a multi-step verification process to '
+            'ensure safety and quality care.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: SetuColors.mutedLight, height: 1.4),
+          ),
+          const SizedBox(height: SetuSpacing.lg),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              badge(Icons.verified_user_outlined, 'BG Check'),
+              badge(Icons.psychology_outlined, 'Skills Test'),
+              badge(Icons.record_voice_over_outlined, 'Interviewed'),
+            ],
+          ),
         ],
       ),
     );
