@@ -307,6 +307,7 @@ class _ElderCardState extends ConsumerState<_ElderCard> {
       _Action(Icons.add_circle_outline, 'Book help', 'booking', sage),
       _Action(Icons.timeline_outlined, 'Timeline', 'timeline', lav),
       _Action(Icons.medication_outlined, 'Medicines', 'medications', peach),
+      _Action(Icons.medical_services_outlined, 'Consult doctor', 'doctors', sage),
       _Action(Icons.event_outlined, 'Appointments', 'appointments', sage),
       _Action(Icons.card_membership_outlined, 'Care plans', 'care-plans', lav),
       _Action(Icons.chat_bubble_outline, 'Ask assistant', 'assistant', lav),

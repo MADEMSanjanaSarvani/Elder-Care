@@ -29,6 +29,9 @@ import '../features/reminders/presentation/reminders_screen.dart';
 import '../features/reports/presentation/reports_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/sos/presentation/sos_screen.dart';
+import '../features/doctors/presentation/consultations_screen.dart';
+import '../features/doctors/presentation/doctors_screen.dart';
+import '../features/doctors/presentation/video_consult_screen.dart';
 import '../features/timeline/presentation/timeline_screen.dart';
 import '../features/trips/presentation/caregiver_trip_screen.dart';
 import '../features/trips/presentation/trip_tracking_screen.dart';
@@ -189,6 +192,24 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => TripTrackingScreen(
           bookingId: state.pathParameters['bookingId']!,
           caregiverName: state.uri.queryParameters['name'],
+        ),
+      ),
+      // Doctor consultations.
+      GoRoute(
+        path: '/elder/:elderId/doctors',
+        builder: (context, state) =>
+            DoctorsScreen(elderId: state.pathParameters['elderId']!),
+      ),
+      GoRoute(
+        path: '/elder/:elderId/consultations',
+        builder: (context, state) =>
+            ConsultationsScreen(elderId: state.pathParameters['elderId']!),
+      ),
+      GoRoute(
+        path: '/elder/:elderId/consult/:consultId/video',
+        builder: (context, state) => VideoConsultScreen(
+          consultationId: state.pathParameters['consultId']!,
+          channel: state.uri.queryParameters['channel'],
         ),
       ),
     ],
