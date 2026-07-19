@@ -42,6 +42,8 @@ class FamilyHomeScreen extends ConsumerWidget {
         return ListView(
           padding: const EdgeInsets.all(SetuSpacing.lg),
           children: [
+            const _GreetingHeader(),
+            const SizedBox(height: SetuSpacing.md),
             for (final elder in elders) ...[
               _ElderCard(elder: elder),
               const SizedBox(height: SetuSpacing.lg),
@@ -56,6 +58,32 @@ class FamilyHomeScreen extends ConsumerWidget {
       },
       loading: () => const SetuLoading(),
       error: (err, stack) => const SetuErrorState(),
+    );
+  }
+}
+
+/// A warm, personalised greeting at the top of the dashboard (matches the
+/// Stitch "Good evening, {name}" header).
+class _GreetingHeader extends ConsumerWidget {
+  const _GreetingHeader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(currentProfileProvider).asData?.value;
+    final name = (profile?['display_name'] as String?)?.trim();
+    final first = (name != null && name.isNotEmpty) ? name.split(' ').first : null;
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12
+        ? 'Good morning'
+        : hour < 17
+            ? 'Good afternoon'
+            : 'Good evening';
+    return Text(
+      first != null ? '$greeting, $first.' : '$greeting.',
+      style: Theme.of(context)
+          .textTheme
+          .headlineSmall
+          ?.copyWith(fontWeight: FontWeight.w800),
     );
   }
 }
@@ -352,6 +380,8 @@ class _ElderCardState extends ConsumerState<_ElderCard> {
             ),
             const SizedBox(height: SetuSpacing.md),
             _LiveTripBanner(elderId: id),
+            const _LocationCard(),
+            const SizedBox(height: SetuSpacing.md),
             // Today at a glance (family_dashboard design).
             _TodayGlance(elderId: id, name: elder.displayName),
             const SizedBox(height: SetuSpacing.md),
@@ -521,6 +551,91 @@ class _LiveTripBanner extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// A soft map-style "safe zone" card (matches the Stitch dashboard's location
+/// panel). A calm reassurance band rather than a live GPS claim.
+class _LocationCard extends StatelessWidget {
+  const _LocationCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 108,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            SetuColors.verifiedLight.withValues(alpha: 0.16),
+            SetuColors.accentLight.withValues(alpha: 0.10),
+          ],
+        ),
+        border: Border.all(color: SetuColors.borderLight),
+      ),
+      child: Stack(
+        children: [
+          // Subtle "map grid" texture.
+          Positioned.fill(
+            child: CustomPaint(painter: _GridPainter()),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: const EdgeInsets.all(SetuSpacing.lg),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: const BoxDecoration(
+                        color: SetuColors.verifiedLight,
+                        shape: BoxShape.circle),
+                    child: const Icon(Icons.home_rounded,
+                        color: Colors.white, size: 22),
+                  ),
+                  const SizedBox(width: SetuSpacing.md),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('At home',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w800)),
+                      const Text('Safe zone',
+                          style: TextStyle(
+                              color: SetuColors.mutedLight, fontSize: 12.5)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = SetuColors.borderLight.withValues(alpha: 0.5)
+      ..strokeWidth = 1;
+    const step = 26.0;
+    for (double x = 0; x < size.width; x += step) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+    for (double y = 0; y < size.height; y += step) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 /// "Today at a glance" — the emotional heart of the family dashboard: a "safe"

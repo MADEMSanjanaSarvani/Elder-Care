@@ -6,9 +6,9 @@ import 'package:setu_core/setu_core.dart';
 import '../../../core/providers.dart';
 import '../../checkins/presentation/checkin_button.dart';
 
-/// Big, kind, one-tap (PRD Part 3 §17). The whole home screen for the elder
-/// persona — a warm time-of-day greeting and large, calm action tiles, not a
-/// shrunken family dashboard.
+/// Big, kind, one-tap (PRD Part 3 §17), matched to the Stitch "Elder Home"
+/// design: a warm peach greeting, a prominent lavender AI companion card, a
+/// gentle medicines reminder, and the unmissable red SOS button.
 class ElderHomeScreen extends ConsumerWidget {
   const ElderHomeScreen({super.key});
 
@@ -33,59 +33,72 @@ class ElderHomeScreen extends ConsumerWidget {
             : hour < 17
                 ? 'Good afternoon'
                 : 'Good evening';
-        final greetIcon = hour < 17
-            ? Icons.wb_sunny_outlined
-            : Icons.nightlight_outlined;
+        final firstName = elder.displayName.trim().split(' ').first;
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(SetuSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Warm greeting
-              Row(
-                children: [
-                  Icon(greetIcon, color: SetuColors.peachLight, size: 30),
-                  const SizedBox(width: SetuSpacing.sm),
-                  Expanded(
-                    child: Text('$greeting,\n${elder.displayName}',
-                        style: textTheme.headlineMedium),
-                  ),
-                ],
+              // Warm peach greeting card.
+              Container(
+                padding: const EdgeInsets.all(SetuSpacing.xl),
+                decoration: BoxDecoration(
+                  color: SetuColors.peachLight.withValues(alpha: 0.30),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('$greeting,\n$firstName.',
+                        style: textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w800, height: 1.15)),
+                    const SizedBox(height: SetuSpacing.sm),
+                    Text("It's a beautiful day.",
+                        style: textTheme.titleMedium
+                            ?.copyWith(color: SetuColors.mutedLight)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: SetuSpacing.lg),
+
+              // Big lavender "Talk to AI Assistant" card.
+              _AiCompanionCard(
+                onTap: () => context.push('/elder/${elder.id}/assistant'),
+                textTheme: textTheme,
+              ),
+              const SizedBox(height: SetuSpacing.lg),
+
+              // Gentle daily check-in.
+              DailyCheckInButton(elderId: elder.id),
+              const SizedBox(height: SetuSpacing.md),
+
+              // Medicines reminder card.
+              _TileCard(
+                icon: Icons.medication_rounded,
+                tint: SetuColors.accentLight,
+                title: 'My medicines',
+                subtitle: 'See what to take and when',
+                textTheme: textTheme,
+                onTap: () => context.push('/elder/${elder.id}/medications'),
+              ),
+              const SizedBox(height: SetuSpacing.md),
+              _TileCard(
+                icon: Icons.event_available_outlined,
+                tint: SetuColors.verifiedLight,
+                title: "Today's visit",
+                subtitle: 'Your caregiver and appointments',
+                textTheme: textTheme,
+                onTap: () => context.push('/elder/${elder.id}/booking'),
               ),
               const SizedBox(height: SetuSpacing.xl),
 
-              // SOS is the tallest, boldest, filled tile.
-              _BigActionButton(
-                icon: Icons.sos_rounded,
-                label: 'Call for Help',
-                color: SetuColors.sosLight,
-                filled: true,
+              // The unmissable SOS pill.
+              _SosButton(
                 onTap: () => context.push('/elder/${elder.id}/sos'),
+                textTheme: textTheme,
               ),
               const SizedBox(height: SetuSpacing.md),
-              _BigActionButton(
-                icon: Icons.add_circle_outline,
-                label: 'Book Help',
-                color: SetuColors.accentLight,
-                onTap: () => context.push('/elder/${elder.id}/booking'),
-              ),
-              const SizedBox(height: SetuSpacing.md),
-              _BigActionButton(
-                icon: Icons.event_available_outlined,
-                label: "Today's Visit",
-                color: SetuColors.verifiedLight,
-                onTap: () => context.push('/elder/${elder.id}/booking'),
-              ),
-              const SizedBox(height: SetuSpacing.md),
-              DailyCheckInButton(elderId: elder.id),
-              const SizedBox(height: SetuSpacing.md),
-              _BigActionButton(
-                icon: Icons.chat_bubble_outline,
-                label: 'Talk to CareHive',
-                color: SetuColors.lavenderLight,
-                onTap: () => context.push('/elder/${elder.id}/assistant'),
-              ),
             ],
           ),
         );
@@ -96,49 +109,138 @@ class ElderHomeScreen extends ConsumerWidget {
   }
 }
 
-class _BigActionButton extends StatelessWidget {
-  const _BigActionButton({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-    this.filled = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final Color color;
+class _AiCompanionCard extends StatelessWidget {
+  const _AiCompanionCard({required this.onTap, required this.textTheme});
   final VoidCallback onTap;
-  final bool filled;
+  final TextTheme textTheme;
 
   @override
   Widget build(BuildContext context) {
-    final fg = filled ? Colors.white : color;
     return Material(
-      color: filled ? color : color.withValues(alpha: 0.12),
+      color: SetuColors.lavenderLight.withValues(alpha: 0.30),
+      borderRadius: BorderRadius.circular(24),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(SetuSpacing.xl),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Align(
+                alignment: Alignment.topRight,
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: SetuColors.paperLight.withValues(alpha: 0.7),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.mic_none_rounded,
+                      color: SetuColors.lavenderLight, size: 26),
+                ),
+              ),
+              const SizedBox(height: SetuSpacing.lg),
+              Text('Talk to AI Assistant',
+                  style: textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: SetuColors.inkLight)),
+              const SizedBox(height: 4),
+              Text('"How are you feeling today?"',
+                  style: textTheme.titleMedium
+                      ?.copyWith(color: SetuColors.mutedLight)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TileCard extends StatelessWidget {
+  const _TileCard({
+    required this.icon,
+    required this.tint,
+    required this.title,
+    required this.subtitle,
+    required this.textTheme,
+    required this.onTap,
+  });
+  final IconData icon;
+  final Color tint;
+  final String title;
+  final String subtitle;
+  final TextTheme textTheme;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: SetuColors.paperRaisedLight,
       borderRadius: BorderRadius.circular(20),
-      elevation: filled ? 2 : 0,
-      shadowColor: color.withValues(alpha: 0.4),
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: onTap,
         child: Padding(
-          padding: EdgeInsets.symmetric(
-              vertical: filled ? SetuSpacing.xxl : SetuSpacing.xl,
-              horizontal: SetuSpacing.lg),
+          padding: const EdgeInsets.all(SetuSpacing.lg),
           child: Row(
             children: [
-              Icon(icon, size: filled ? 46 : 40, color: fg),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                    color: tint.withValues(alpha: 0.14),
+                    shape: BoxShape.circle),
+                child: Icon(icon, color: tint, size: 30),
+              ),
               const SizedBox(width: SetuSpacing.md),
               Expanded(
-                child: Text(
-                  label,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontSize: filled ? 26 : 22,
-                      fontWeight: FontWeight.w700,
-                      color: fg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: textTheme.titleLarge
+                            ?.copyWith(fontWeight: FontWeight.w700)),
+                    Text(subtitle,
+                        style: textTheme.bodyMedium
+                            ?.copyWith(color: SetuColors.mutedLight)),
+                  ],
                 ),
               ),
+              const Icon(Icons.chevron_right, color: SetuColors.mutedLight),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SosButton extends StatelessWidget {
+  const _SosButton({required this.onTap, required this.textTheme});
+  final VoidCallback onTap;
+  final TextTheme textTheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: SetuColors.sosLight,
+      borderRadius: BorderRadius.circular(999),
+      elevation: 3,
+      shadowColor: SetuColors.sosLight.withValues(alpha: 0.5),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: SetuSpacing.xl),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.sos_rounded, color: Colors.white, size: 36),
+              const SizedBox(width: SetuSpacing.md),
+              Text('SOS',
+                  style: textTheme.headlineMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2)),
             ],
           ),
         ),
