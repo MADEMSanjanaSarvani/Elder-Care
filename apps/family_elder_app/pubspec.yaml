@@ -31,7 +31,10 @@ dependencies:
   firebase_messaging: ">=15.1.0 <16.0.0"
   google_sign_in: ">=6.2.0 <7.0.0"
   # Video consultations (Agora) + runtime camera/mic permissions.
-  agora_rtc_engine: ">=6.3.0 <6.6.0"
+  # Pinned to 6.3.2: later 6.5.x ship split native AARs (iris-rtc +
+  # agora-special-full) that declare the same io.agora.rtc namespace, which
+  # AGP 9's manifest merger rejects ("namespace used in multiple modules").
+  agora_rtc_engine: "6.3.2"
   permission_handler: ">=11.3.0 <12.0.0"
 
 dev_dependencies:
