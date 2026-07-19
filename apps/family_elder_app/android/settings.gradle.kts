@@ -19,7 +19,11 @@ pluginManagement {
 
 plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
-    id("com.android.application") version "9.0.1" apply false
+    // AGP 8.7.x (last AGP 8) instead of 9.x: AGP 9's manifest merger hard-fails
+    // on libraries that share a namespace, which every Agora AAR does
+    // (io.agora.rtc across iris-rtc + full-sdk). AGP 8 tolerates it. 8.7.x
+    // still supports compileSdk 36, so nothing else regresses.
+    id("com.android.application") version "8.7.3" apply false
     id("org.jetbrains.kotlin.android") version "2.3.20" apply false
     // Firebase: processes google-services.json to wire FCM + Google Sign-In.
     id("com.google.gms.google-services") version "4.4.2" apply false
