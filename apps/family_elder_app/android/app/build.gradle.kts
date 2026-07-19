@@ -63,6 +63,13 @@ android {
                 signingConfigs.getByName("release")
             else
                 signingConfigs.getByName("debug")
+            // Disable R8 code shrinking for release: the Agora SDK references
+            // a desugar class R8 can't resolve (io.agora.base.internal.Logging
+            // -> ThrowableExtension), failing minifyReleaseWithR8. Shrinking
+            // isn't needed for the pilot/test APK, so turn it off rather than
+            // chase per-library keep rules.
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }
