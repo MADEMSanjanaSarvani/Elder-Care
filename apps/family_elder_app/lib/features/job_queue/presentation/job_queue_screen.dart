@@ -67,9 +67,27 @@ class _JobList extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.all(SetuSpacing.lg),
               children: [
-                Text('Today\'s visits',
-                    style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: SetuSpacing.md),
+                Builder(builder: (context) {
+                  final name = (ref.watch(currentProfileProvider).asData?.value?[
+                          'display_name'] as String?)
+                      ?.trim()
+                      .split(' ')
+                      .first;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name != null && name.isNotEmpty ? 'Hello, $name.' : 'Hello.',
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.w800)),
+                      Text(
+                          'You have ${bookings.length} visit${bookings.length == 1 ? '' : 's'} today.',
+                          style: const TextStyle(color: SetuColors.mutedLight)),
+                    ],
+                  );
+                }),
+                const SizedBox(height: SetuSpacing.lg),
                 for (final booking in bookings)
                   _JobCard(booking: booking),
               ],

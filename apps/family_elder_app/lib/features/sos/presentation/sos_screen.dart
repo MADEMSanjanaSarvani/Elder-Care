@@ -126,26 +126,70 @@ class _SosScreenState extends ConsumerState<SosScreen> {
               ),
               const SizedBox(height: SetuSpacing.md),
             ],
-            if (_notified)
+            if (_notified) ...[
+              Text('Emergency Mode Activated',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: SetuColors.sosLight, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 4),
+              const Text('Help is on the way. Please stay calm.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: SetuColors.mutedLight)),
+              const SizedBox(height: SetuSpacing.lg),
               Container(
-                padding: const EdgeInsets.all(SetuSpacing.md),
+                padding: const EdgeInsets.all(SetuSpacing.lg),
                 decoration: BoxDecoration(
-                  color: SetuColors.verifiedLight.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
+                  color: SetuColors.paperRaisedLight,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Active actions',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800)),
+                    const SizedBox(height: SetuSpacing.md),
+                    _ActiveAction(
+                        icon: Icons.family_restroom_outlined,
+                        tint: SetuColors.lavenderLight,
+                        title: 'Family notified',
+                        subtitle: 'Your care circle has been alerted'),
+                    _ActiveAction(
+                        icon: Icons.support_agent_outlined,
+                        tint: SetuColors.peachLight,
+                        title: 'On-call team alerted',
+                        subtitle: 'CareHive is coordinating help'),
+                    _ActiveAction(
+                        icon: Icons.my_location_outlined,
+                        tint: SetuColors.accentLight,
+                        title: 'Location shared',
+                        subtitle: 'Responders can find you'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: SetuSpacing.md),
+              Container(
+                padding: const EdgeInsets.all(SetuSpacing.lg),
+                decoration: BoxDecoration(
+                  color: SetuColors.accentLight,
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.check_circle,
-                        color: SetuColors.verifiedLight),
-                    SizedBox(width: SetuSpacing.sm),
+                    Icon(Icons.headset_mic_outlined, color: Colors.white),
+                    SizedBox(width: SetuSpacing.md),
                     Expanded(
                       child: Text(
-                          'Your family and our on-call team have been notified.'),
+                        'We\'re keeping your line open. If you can speak, tell us '
+                        'what happened. Otherwise, just keep breathing deeply.',
+                        style: TextStyle(color: Colors.white, height: 1.4),
+                      ),
                     ),
                   ],
                 ),
-              )
-            else
+              ),
+            ] else
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
                   padding:
@@ -182,6 +226,52 @@ class _SosScreenState extends ConsumerState<SosScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// One row in the active-emergency "Active actions" checklist.
+class _ActiveAction extends StatelessWidget {
+  const _ActiveAction({
+    required this.icon,
+    required this.tint,
+    required this.title,
+    required this.subtitle,
+  });
+  final IconData icon;
+  final Color tint;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: SetuSpacing.sm),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration:
+                BoxDecoration(color: tint.withValues(alpha: 0.16), shape: BoxShape.circle),
+            child: Icon(icon, color: tint, size: 20),
+          ),
+          const SizedBox(width: SetuSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(fontWeight: FontWeight.w700)),
+                Text(subtitle,
+                    style: const TextStyle(
+                        color: SetuColors.mutedLight, fontSize: 12.5)),
+              ],
+            ),
+          ),
+          const Icon(Icons.check_circle,
+              color: SetuColors.verifiedLight, size: 22),
+        ],
       ),
     );
   }
