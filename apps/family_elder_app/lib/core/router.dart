@@ -34,6 +34,7 @@ import '../features/doctors/presentation/doctors_screen.dart';
 import '../features/doctors/presentation/video_consult_screen.dart';
 import '../features/timeline/presentation/timeline_screen.dart';
 import '../features/trips/presentation/caregiver_trip_screen.dart';
+import '../features/wellness/presentation/wellness_activities_screen.dart';
 import '../features/trips/presentation/trip_tracking_screen.dart';
 import 'app_shells.dart';
 import 'providers.dart';
@@ -160,6 +161,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/elder/:elderId/care-plans',
         builder: (context, state) =>
             CarePlansScreen(elderId: state.pathParameters['elderId']!),
+      ),
+      GoRoute(
+        path: '/elder/:elderId/wellness',
+        builder: (context, state) => WellnessActivitiesScreen(
+            elderId: state.pathParameters['elderId']!),
       ),
       GoRoute(
         path: '/elder/:elderId/privacy',

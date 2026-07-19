@@ -91,6 +91,15 @@ class ElderHomeScreen extends ConsumerWidget {
                 textTheme: textTheme,
                 onTap: () => context.push('/elder/${elder.id}/booking'),
               ),
+              const SizedBox(height: SetuSpacing.md),
+              _TileCard(
+                icon: Icons.spa_outlined,
+                tint: SetuColors.lavenderLight,
+                title: 'Wellness & activities',
+                subtitle: 'Games, meditation, stories and your day',
+                textTheme: textTheme,
+                onTap: () => context.push('/elder/${elder.id}/wellness'),
+              ),
               const SizedBox(height: SetuSpacing.xl),
 
               // The unmissable SOS pill.

@@ -341,6 +341,7 @@ class _ElderCardState extends ConsumerState<_ElderCard> {
       _Action(Icons.chat_bubble_outline, 'Ask assistant', 'assistant', lav),
     ];
     const more = <_Action>[
+      _Action(Icons.spa_outlined, 'Wellness', 'wellness', peach),
       _Action(Icons.notifications_outlined, 'Reminders', 'reminders', peach),
       _Action(Icons.local_hospital_outlined, 'Hospital stays', 'hospital-stays', sage),
       _Action(Icons.favorite_outline, 'Health profile', 'health-profile', peach),

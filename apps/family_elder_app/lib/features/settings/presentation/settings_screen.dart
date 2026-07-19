@@ -33,6 +33,15 @@ class SettingsScreen extends ConsumerWidget {
         data: (prefs) => ListView(
           padding: const EdgeInsets.all(SetuSpacing.lg),
           children: [
+            Text('Settings',
+                style: Theme.of(context)
+                    .textTheme
+                    .headlineSmall
+                    ?.copyWith(fontWeight: FontWeight.w800)),
+            const SizedBox(height: 4),
+            const Text('Customize your experience and manage your care circle.',
+                style: TextStyle(color: SetuColors.mutedLight)),
+            const SizedBox(height: SetuSpacing.xl),
             Text('Text size', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: SetuSpacing.sm),
             SegmentedButton<String>(
@@ -117,6 +126,12 @@ class SettingsScreen extends ConsumerWidget {
               label: const Text('Sign out'),
             ),
             const SizedBox(height: SetuSpacing.xl),
+            const Center(
+              child: Text('CareHive · Version 1.0',
+                  style:
+                      TextStyle(color: SetuColors.mutedLight, fontSize: 12.5)),
+            ),
+            const SizedBox(height: SetuSpacing.lg),
           ],
         ),
         loading: () => const SetuLoading(),
