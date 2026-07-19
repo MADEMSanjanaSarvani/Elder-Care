@@ -5,6 +5,7 @@ import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
 import '../data/doctors_repository.dart';
+import 'consultations_screen.dart';
 
 final doctorsProvider =
     FutureProvider.family<List<Doctor>, String?>((ref, specialty) async {
