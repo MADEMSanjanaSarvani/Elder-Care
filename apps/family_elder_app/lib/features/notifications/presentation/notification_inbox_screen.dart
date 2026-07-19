@@ -70,41 +70,69 @@ class NotificationInboxScreen extends ConsumerWidget {
                 const SizedBox(height: SetuSpacing.sm),
             itemBuilder: (context, index) {
               final n = notifications[index];
+              final type = n['type'] as String;
               final unread = n['read_at'] == null;
               final createdAt = DateTime.parse(n['created_at'] as String).toLocal();
-              return Card(
-                child: ListTile(
-                  leading: SetuIconChip(
-                    icon: _iconFor(n['type'] as String),
+              final tint = _categoryColor(type);
+              return InkWell(
+                borderRadius: BorderRadius.circular(18),
+                onTap: () async {
+                  final client = ref.read(supabaseClientProvider);
+                  await NotificationsRepository(client).markRead(n['id'] as String);
+                  ref.invalidate(notificationInboxProvider);
+                  ref.invalidate(unreadCountProvider);
+                  if (!context.mounted) return;
+                  final route = _deepLinkFor(
+                      type, n['payload'] as Map<String, dynamic>?);
+                  if (route != null) {
+                    context.push(route);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('This is no longer available.')));
+                  }
+                },
+                child: Container(
+                  decoration: BoxDecoration(
                     color: unread
-                        ? SetuColors.accentLight
-                        : SetuColors.mutedLight,
+                        ? tint.withValues(alpha: 0.08)
+                        : SetuColors.paperRaisedLight,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border(
+                        left: BorderSide(color: tint, width: 4)),
                   ),
-                  title: Text(
-                    _labelFor(n['type'] as String),
-                    style: unread
-                        ? const TextStyle(fontWeight: FontWeight.bold)
-                        : null,
+                  padding: const EdgeInsets.all(SetuSpacing.md),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SetuIconChip(icon: _iconFor(type), color: tint),
+                      const SizedBox(width: SetuSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(_labelFor(type),
+                                style: TextStyle(
+                                    fontWeight: unread
+                                        ? FontWeight.w800
+                                        : FontWeight.w600)),
+                            const SizedBox(height: 2),
+                            Text(SetuFormat.friendlyTime(createdAt),
+                                style: const TextStyle(
+                                    color: SetuColors.mutedLight,
+                                    fontSize: 12.5)),
+                          ],
+                        ),
+                      ),
+                      if (unread)
+                        Container(
+                          margin: const EdgeInsets.only(top: 4),
+                          width: 9,
+                          height: 9,
+                          decoration:
+                              BoxDecoration(color: tint, shape: BoxShape.circle),
+                        ),
+                    ],
                   ),
-                  subtitle: Text(SetuFormat.friendlyTime(createdAt)),
-                  trailing: unread
-                      ? const Icon(Icons.circle, size: 10, color: SetuColors.accentLight)
-                      : null,
-                  onTap: () async {
-                    final client = ref.read(supabaseClientProvider);
-                    await NotificationsRepository(client).markRead(n['id'] as String);
-                    ref.invalidate(notificationInboxProvider);
-                    ref.invalidate(unreadCountProvider);
-                    if (!context.mounted) return;
-                    final route = _deepLinkFor(
-                        n['type'] as String, n['payload'] as Map<String, dynamic>?);
-                    if (route != null) {
-                      context.push(route);
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text('This is no longer available.')));
-                    }
-                  },
                 ),
               );
             },
@@ -114,6 +142,25 @@ class NotificationInboxScreen extends ConsumerWidget {
         error: (err, stack) => const SetuErrorState(),
       ),
     );
+  }
+}
+
+/// Category tint for a notification's left border (matches the Stitch
+/// notification-center grouping: emergency red, health, family/wellness).
+Color _categoryColor(String type) {
+  switch (type) {
+    case 'sos_triggered':
+    case 'sos_ops_alert':
+    case 'checkin_missed_escalation':
+    case 'reminder_hospital_stay_gap':
+      return SetuColors.sosLight;
+    case 'reminder_medication_dose':
+    case 'reminder_appointment':
+      return SetuColors.peachLight;
+    case 'family_invite_sent':
+      return SetuColors.lavenderLight;
+    default:
+      return SetuColors.accentLight;
   }
 }
 

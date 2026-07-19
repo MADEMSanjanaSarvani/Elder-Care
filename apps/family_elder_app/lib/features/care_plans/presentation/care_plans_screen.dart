@@ -47,6 +47,20 @@ class CarePlansScreen extends ConsumerWidget {
             data: (plans) => ListView(
               padding: const EdgeInsets.all(SetuSpacing.lg),
               children: [
+                Text('Choose the right care for your loved ones',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineSmall
+                        ?.copyWith(fontWeight: FontWeight.w800, height: 1.2)),
+                const SizedBox(height: SetuSpacing.sm),
+                const Text(
+                  'Gentle, empathetic technology designed to keep your family '
+                  'connected and safe, every step of the way.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: SetuColors.mutedLight, height: 1.45),
+                ),
+                const SizedBox(height: SetuSpacing.lg),
                 subAsync.when(
                   data: (sub) => sub == null
                       ? const SizedBox.shrink()
@@ -54,19 +68,42 @@ class CarePlansScreen extends ConsumerWidget {
                   loading: () => const SizedBox.shrink(),
                   error: (e, s) => const SizedBox.shrink(),
                 ),
-                const Padding(
-                  padding: EdgeInsets.only(bottom: SetuSpacing.sm),
-                  child: Text(
-                    'A plan covers its included visits each month. Anything beyond the plan is billed per visit, as usual.',
-                    style: TextStyle(fontStyle: FontStyle.italic),
-                  ),
-                ),
                 for (final plan in plans)
                   _PlanCard(
                     elderId: elderId,
                     plan: plan,
                     hasActiveSub: subAsync.asData?.value != null,
                   ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: SetuSpacing.sm),
+                  child: Text(
+                    'A plan covers its included visits each month. Anything beyond the plan is billed per visit, as usual.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: SetuColors.mutedLight,
+                        fontStyle: FontStyle.italic,
+                        fontSize: 12.5),
+                  ),
+                ),
+                const SizedBox(height: SetuSpacing.md),
+                const _TrustBlock(
+                    icon: Icons.lock_outline,
+                    tint: SetuColors.peachLight,
+                    title: 'Privacy First',
+                    body:
+                        'Your family\'s health data is encrypted and never shared. You own your data.'),
+                const _TrustBlock(
+                    icon: Icons.favorite_outline,
+                    tint: SetuColors.lavenderLight,
+                    title: 'Human Touch',
+                    body:
+                        'Our AI is backed by a team of certified health caregivers available 24/7.'),
+                const _TrustBlock(
+                    icon: Icons.accessibility_new_outlined,
+                    tint: SetuColors.accentLight,
+                    title: 'Elder-Centric',
+                    body:
+                        'Interfaces designed with high contrast and simple flows for every generation.'),
               ],
             ),
             loading: () => const SetuLoading(),
@@ -75,6 +112,61 @@ class CarePlansScreen extends ConsumerWidget {
         },
         loading: () => const SetuLoading(),
         error: (err, stack) => const SetuErrorState(),
+      ),
+    );
+  }
+}
+
+/// A reassurance block below the plans (Privacy First / Human Touch /
+/// Elder-Centric), matching the Stitch premium-plans page.
+class _TrustBlock extends StatelessWidget {
+  const _TrustBlock({
+    required this.icon,
+    required this.tint,
+    required this.title,
+    required this.body,
+  });
+  final IconData icon;
+  final Color tint;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: SetuSpacing.sm),
+      padding: const EdgeInsets.all(SetuSpacing.lg),
+      decoration: BoxDecoration(
+        color: SetuColors.paperRaisedLight,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+                color: tint.withValues(alpha: 0.16), shape: BoxShape.circle),
+            child: Icon(icon, color: tint, size: 22),
+          ),
+          const SizedBox(width: SetuSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w800)),
+                const SizedBox(height: 2),
+                Text(body,
+                    style: const TextStyle(
+                        color: SetuColors.mutedLight, height: 1.4)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
