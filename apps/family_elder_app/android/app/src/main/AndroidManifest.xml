@@ -9,6 +9,12 @@
     <!-- Android 13+ requires an explicit runtime permission to show
          notifications (FCM push). Older versions grant it implicitly. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Video consultations (Agora): camera, microphone and audio routing. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
 
     <application
         android:label="CareHive"

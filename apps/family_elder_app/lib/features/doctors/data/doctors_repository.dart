@@ -172,6 +172,17 @@ class DoctorsRepository {
         .toList();
   }
 
+  /// Fetches an Agora RTC token for a video consult's room. Returns the
+  /// app id, channel, uid and a (possibly null, for testing-mode) token.
+  Future<Map<String, dynamic>> videoToken(String consultationId) async {
+    final res = await _client.functions.invoke('agora-rtc-token', body: {
+      'consultation_id': consultationId,
+    });
+    final data = res.data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    throw Exception('Could not get a video token');
+  }
+
   Future<List<Prescription>> prescriptions(String elderId) async {
     final rows = await _client
         .from('consultation_prescriptions')
