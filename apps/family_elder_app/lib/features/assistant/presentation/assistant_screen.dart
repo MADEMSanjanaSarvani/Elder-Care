@@ -33,10 +33,11 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
   bool _busy = false;
 
   static const _suggestions = [
+    'Tell me a story',
+    'Check my health',
+    'Morning routine',
     'When is the next visit?',
     'What medications are due today?',
-    'Show me recent activity',
-    'What can I see for this person?',
   ];
 
   Future<void> _send(String text) async {
@@ -92,14 +93,26 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
           const SizedBox(height: SetuSpacing.xl),
           const _BreathingOrb(),
           const SizedBox(height: SetuSpacing.xl),
-          Text('Hello, I\'m here whenever you\'d like to talk',
+          Builder(builder: (context) {
+            final elder =
+                ref.watch(elderProfileByIdProvider(widget.elderId)).asData?.value;
+            final name = (elder?['display_name'] as String?)?.trim().split(' ').first;
+            return Text(
+              name != null && name.isNotEmpty
+                  ? 'How are you feeling today, $name?'
+                  : 'How are you feeling today?',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: SetuSpacing.xs),
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineSmall
+                  ?.copyWith(fontWeight: FontWeight.w800),
+            );
+          }),
+          const SizedBox(height: SetuSpacing.sm),
           const Text(
-            'Ask about visits, medicines, appointments or your care team.',
+            "I'm here to listen, chat, or help with your daily wellness.",
             textAlign: TextAlign.center,
-            style: TextStyle(color: SetuColors.mutedLight),
+            style: TextStyle(color: SetuColors.mutedLight, height: 1.4),
           ),
           const SizedBox(height: SetuSpacing.lg),
           Wrap(
