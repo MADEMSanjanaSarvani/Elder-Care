@@ -4,7 +4,7 @@ description: >
   (PRD Part 3 §17/§18): family mode (dashboard, booking, consent
   management) and elder mode (large-text, voice-first, three-action home).
 publish_to: "none"
-version: 0.1.2+4
+version: 0.1.2+5
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -25,6 +25,10 @@ dependencies:
   url_launcher: ^6.3.0
   shared_preferences: ^2.3.0
   file_picker: ^8.1.2
+  # Charts / data-visualisation (pure Dart — no native code, safe for the
+  # Android build). Powers the health trends, activity bars and adherence
+  # graphs across the dashboard, wellness and reports screens.
+  fl_chart: ^0.69.0
   # Push notifications (FCM) and Google Sign-In. Bounded below the next major
   # so a CI resolve never silently pulls a breaking API change.
   firebase_core: ">=3.6.0 <4.0.0"

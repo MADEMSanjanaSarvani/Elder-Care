@@ -4,6 +4,7 @@ import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
 import '../../family_home/presentation/family_home_screen.dart' show homeSummaryProvider;
+import 'weekly_activity_chart.dart';
 
 /// Family-facing Wellness Summary (Stitch `wellness_summary`): a big wellness
 /// ring, an AI daily-insight line, and stat tiles. The score and every tile
@@ -54,6 +55,8 @@ class WellnessSummaryScreen extends ConsumerWidget {
               _RingCard(score: score, label: label),
               const SizedBox(height: SetuSpacing.lg),
               _InsightCard(insight: insight),
+              const SizedBox(height: SetuSpacing.lg),
+              WeeklyActivityChart(elderId: elderId),
               const SizedBox(height: SetuSpacing.lg),
               Row(
                 children: [

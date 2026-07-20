@@ -8,6 +8,7 @@ import '../../../core/action_success.dart';
 import '../../../core/providers.dart';
 import '../../suggestions/presentation/suggestions_card.dart';
 import '../../trips/data/trips_repository.dart';
+import '../../wellness/presentation/weekly_activity_chart.dart';
 import '../data/home_summary_repository.dart';
 
 /// Live "your caregiver is on the way" state for an elder (null when idle).
@@ -455,6 +456,9 @@ class _ElderCardState extends ConsumerState<_ElderCard> {
             const _AiInsightCard(),
             const SizedBox(height: SetuSpacing.md),
             _HealthScoreCard(elderId: id),
+            const SizedBox(height: SetuSpacing.md),
+            // Weekly activity graph (real timeline data).
+            WeeklyActivityChart(elderId: id),
             const SizedBox(height: SetuSpacing.md),
             // Today at a glance (family_dashboard design).
             _TodayGlance(elderId: id, name: elder.displayName),
