@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
+import '../../wellness/presentation/weekly_activity_chart.dart';
 import '../data/medications_repository.dart';
 
 final _medicationsProvider =
@@ -45,14 +46,16 @@ class MedicationsScreen extends ConsumerWidget {
               message: 'Add a medicine to track doses and refills.',
             );
           }
-          return ListView.separated(
+          return ListView(
             padding: const EdgeInsets.all(SetuSpacing.lg),
-            itemCount: medications.length,
-            separatorBuilder: (context, index) => const SizedBox(height: SetuSpacing.md),
-            itemBuilder: (context, index) => _MedicationCard(
-              elderId: elderId,
-              medication: medications[index],
-            ),
+            children: [
+              MedicationAdherenceChart(elderId: elderId),
+              const SizedBox(height: SetuSpacing.lg),
+              for (final medication in medications) ...[
+                _MedicationCard(elderId: elderId, medication: medication),
+                const SizedBox(height: SetuSpacing.md),
+              ],
+            ],
           );
         },
         loading: () => const SetuLoading(),

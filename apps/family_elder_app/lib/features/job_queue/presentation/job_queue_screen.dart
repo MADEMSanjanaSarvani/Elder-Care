@@ -5,6 +5,7 @@ import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
 import '../../caregiver_onboarding/presentation/caregiver_registration_screen.dart';
+import '../../wellness/presentation/weekly_activity_chart.dart';
 import 'pending_verification_screen.dart';
 
 /// A job list first, everything else second (PRD Part 3 §17) — this is
@@ -121,6 +122,27 @@ class _JobList extends ConsumerWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: SetuSpacing.lg),
+                Builder(builder: (context) {
+                  final start = DateTime.now()
+                      .subtract(const Duration(days: 6));
+                  final startDay =
+                      DateTime(start.year, start.month, start.day);
+                  final counts = List<int>.filled(7, 0);
+                  for (final b in bookings) {
+                    final d = b.scheduledAt.toLocal();
+                    final idx = DateTime(d.year, d.month, d.day)
+                        .difference(startDay)
+                        .inDays;
+                    if (idx >= 0 && idx < 7) counts[idx]++;
+                  }
+                  return WeeklyBarChart(
+                    counts: counts,
+                    title: "This week's visits",
+                    icon: Icons.event_available_outlined,
+                    emptyHint: 'Your visits this week will show here.',
+                  );
+                }),
                 const SizedBox(height: SetuSpacing.lg),
                 for (final booking in bookings)
                   _JobCard(booking: booking),

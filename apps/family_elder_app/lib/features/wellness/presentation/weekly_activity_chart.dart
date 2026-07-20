@@ -5,15 +5,17 @@ import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
 
-/// Real 7-day activity: counts timeline events per day for the last week, so
-/// the bars reflect actual logged activity (visits, check-ins, doses, notes)
-/// — never invented numbers. Empty days simply read as 0.
+DateTime _weekStart() {
+  final now = DateTime.now();
+  return DateTime(now.year, now.month, now.day)
+      .subtract(const Duration(days: 6));
+}
+
+/// Real 7-day activity: counts timeline events per day for the last week.
 final weeklyActivityProvider =
     FutureProvider.family<List<int>, String>((ref, elderId) async {
   final client = ref.watch(supabaseClientProvider);
-  final now = DateTime.now();
-  final startDay = DateTime(now.year, now.month, now.day)
-      .subtract(const Duration(days: 6));
+  final startDay = _weekStart();
   final rows = await client
       .from('elder_timeline_events')
       .select('occurred_at')
@@ -28,24 +30,49 @@ final weeklyActivityProvider =
   return counts;
 });
 
-/// A warm bar chart of the last 7 days of activity. Fails soft: on any error
-/// or while loading it shows a slim placeholder instead of a red error, so it
-/// never breaks the screen it sits on.
-class WeeklyActivityChart extends ConsumerWidget {
-  const WeeklyActivityChart({required this.elderId, super.key});
+/// Real 7-day medication adherence: doses marked 'taken' per day, joined to the
+/// elder's medications. Reflects actual logged doses, never invented numbers.
+final medicationAdherenceProvider =
+    FutureProvider.family<List<int>, String>((ref, elderId) async {
+  final client = ref.watch(supabaseClientProvider);
+  final startDay = _weekStart();
+  final rows = await client
+      .from('medication_doses')
+      .select('status, scheduled_at, elder_medications!inner(elder_id)')
+      .eq('elder_medications.elder_id', elderId)
+      .gte('scheduled_at', startDay.toIso8601String());
+  final counts = List<int>.filled(7, 0);
+  for (final r in (rows as List)) {
+    if (r['status'] != 'taken') continue;
+    final d = DateTime.parse(r['scheduled_at'] as String).toLocal();
+    final idx = DateTime(d.year, d.month, d.day).difference(startDay).inDays;
+    if (idx >= 0 && idx < 7) counts[idx]++;
+  }
+  return counts;
+});
 
-  final String elderId;
+/// Reusable warm 7-day bar chart. Fails soft: while loading or on error it
+/// shows a slim placeholder, never a red error, so it never breaks its host.
+class WeeklyBarChart extends StatelessWidget {
+  const WeeklyBarChart({
+    required this.counts,
+    required this.title,
+    required this.icon,
+    this.emptyHint,
+    super.key,
+  });
+
+  final List<int> counts;
+  final String title;
+  final IconData icon;
+  final String? emptyHint;
 
   static const _dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final async = ref.watch(weeklyActivityProvider(elderId));
-    final counts = async.asData?.value ?? const [0, 0, 0, 0, 0, 0, 0];
+  Widget build(BuildContext context) {
     final maxV = counts.fold<int>(0, (m, v) => v > m ? v : m);
-    final now = DateTime.now();
-    final start = DateTime(now.year, now.month, now.day)
-        .subtract(const Duration(days: 6));
+    final start = _weekStart();
 
     return Container(
       padding: const EdgeInsets.all(SetuSpacing.lg),
@@ -59,10 +86,9 @@ class WeeklyActivityChart extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.insights_rounded,
-                  color: SetuColors.accentLight, size: 20),
+              Icon(icon, color: SetuColors.accentLight, size: 20),
               const SizedBox(width: SetuSpacing.sm),
-              Text("This week's activity",
+              Text(title,
                   style: Theme.of(context)
                       .textTheme
                       .titleMedium
@@ -138,15 +164,52 @@ class WeeklyActivityChart extends ConsumerWidget {
               ),
             ),
           ),
-          if (maxV == 0) ...[
+          if (maxV == 0 && emptyHint != null) ...[
             const SizedBox(height: SetuSpacing.sm),
-            const Text(
-              'Activity will appear here as visits, check-ins and doses are logged.',
-              style: TextStyle(color: SetuColors.mutedLight, fontSize: 12.5),
-            ),
+            Text(emptyHint!,
+                style: const TextStyle(
+                    color: SetuColors.mutedLight, fontSize: 12.5)),
           ],
         ],
       ),
+    );
+  }
+}
+
+/// Dashboard/wellness: 7-day activity from timeline events.
+class WeeklyActivityChart extends ConsumerWidget {
+  const WeeklyActivityChart({required this.elderId, super.key});
+  final String elderId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final counts = ref.watch(weeklyActivityProvider(elderId)).asData?.value ??
+        const [0, 0, 0, 0, 0, 0, 0];
+    return WeeklyBarChart(
+      counts: counts,
+      title: "This week's activity",
+      icon: Icons.insights_rounded,
+      emptyHint:
+          'Activity appears here as visits, check-ins and doses are logged.',
+    );
+  }
+}
+
+/// Medications: 7-day adherence (doses taken per day).
+class MedicationAdherenceChart extends ConsumerWidget {
+  const MedicationAdherenceChart({required this.elderId, super.key});
+  final String elderId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final counts =
+        ref.watch(medicationAdherenceProvider(elderId)).asData?.value ??
+            const [0, 0, 0, 0, 0, 0, 0];
+    return WeeklyBarChart(
+      counts: counts,
+      title: 'Doses taken this week',
+      icon: Icons.medication_rounded,
+      emptyHint: 'Adherence appears here as doses are marked taken.',
     );
   }
 }
