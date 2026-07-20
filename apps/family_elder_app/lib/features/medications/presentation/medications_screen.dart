@@ -62,48 +62,28 @@ class MedicationsScreen extends ConsumerWidget {
   }
 
   Future<void> _showAddMedicationDialog(BuildContext context, WidgetRef ref) async {
-    final nameController = TextEditingController();
-    final dosageController = TextEditingController();
-    final timesController = TextEditingController(text: '08:00, 20:00');
-
-    final result = await showDialog<bool>(
+    final result = await showModalBottomSheet<_AddMedResult>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add medication'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Name')),
-            const SizedBox(height: SetuSpacing.sm),
-            TextField(controller: dosageController, decoration: const InputDecoration(labelText: 'Dosage (e.g. 500mg)')),
-            const SizedBox(height: SetuSpacing.sm),
-            TextField(
-              controller: timesController,
-              decoration: const InputDecoration(labelText: 'Times (24h, comma-separated)'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Add')),
-        ],
+      isScrollControlled: true,
+      backgroundColor: SetuColors.paperLight,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
+      builder: (context) => const _AddMedicationSheet(),
     );
 
-    if (result != true || nameController.text.trim().isEmpty) return;
+    if (result == null || result.name.trim().isEmpty) return;
 
     final client = ref.read(supabaseClientProvider);
     final userId = client.auth.currentUser?.id;
     if (userId == null) return;
 
-    final times = timesController.text.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toList();
-
     try {
       await MedicationsRepository(client).addMedication(
         elderId: elderId,
-        name: nameController.text.trim(),
-        dosage: dosageController.text.trim(),
-        times: times,
+        name: result.name.trim(),
+        dosage: result.dosage.trim(),
+        times: result.times,
         addedBy: userId,
       );
       ref.invalidate(_medicationsProvider(elderId));
@@ -112,6 +92,220 @@ class MedicationsScreen extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not add medication: $err')));
       }
     }
+  }
+}
+
+class _AddMedResult {
+  const _AddMedResult(this.name, this.dosage, this.times);
+  final String name;
+  final String dosage;
+  final List<String> times;
+}
+
+/// Add-medication form built to the Stitch `add_medication` design: a warm
+/// sheet with name/dosage inputs, a frequency selector that fills in the dose
+/// times, and a note on the voice-reminder + refill-alert behaviour SETU runs
+/// automatically. Submits through the same repository as before.
+class _AddMedicationSheet extends StatefulWidget {
+  const _AddMedicationSheet();
+
+  @override
+  State<_AddMedicationSheet> createState() => _AddMedicationSheetState();
+}
+
+class _AddMedicationSheetState extends State<_AddMedicationSheet> {
+  final _name = TextEditingController();
+  final _dosage = TextEditingController();
+  String _frequency = 'twice';
+
+  // Default dose times per frequency (24h).
+  static const _timesByFrequency = {
+    'once': ['08:00'],
+    'twice': ['08:00', '20:00'],
+    'thrice': ['08:00', '14:00', '20:00'],
+    'as_needed': <String>[],
+  };
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _dosage.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    final times = _timesByFrequency[_frequency] ?? const <String>[];
+    return Padding(
+      padding: EdgeInsets.only(
+        left: SetuSpacing.lg,
+        right: SetuSpacing.lg,
+        top: SetuSpacing.md,
+        bottom: MediaQuery.of(context).viewInsets.bottom + SetuSpacing.lg,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 44,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: SetuSpacing.md),
+                decoration: BoxDecoration(
+                    color: SetuColors.borderLight,
+                    borderRadius: BorderRadius.circular(999)),
+              ),
+            ),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                      color: SetuColors.peachLight.withValues(alpha: 0.18),
+                      shape: BoxShape.circle),
+                  child: const Icon(Icons.medication_rounded,
+                      color: SetuColors.peachLight),
+                ),
+                const SizedBox(width: SetuSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Add New Medication',
+                          style: t.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w800)),
+                      const Text('Keep track of health with ease.',
+                          style: TextStyle(color: SetuColors.mutedLight)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: SetuSpacing.lg),
+            const Text('Medicine Name',
+                style: TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(height: SetuSpacing.sm),
+            TextField(
+              controller: _name,
+              textCapitalization: TextCapitalization.words,
+              decoration:
+                  const InputDecoration(hintText: 'e.g. Amlodipine'),
+            ),
+            const SizedBox(height: SetuSpacing.md),
+            const Text('Dosage',
+                style: TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(height: SetuSpacing.sm),
+            TextField(
+              controller: _dosage,
+              decoration: const InputDecoration(hintText: 'e.g. 5mg, 1 tablet'),
+            ),
+            const SizedBox(height: SetuSpacing.md),
+            const Text('Frequency',
+                style: TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(height: SetuSpacing.sm),
+            Wrap(
+              spacing: SetuSpacing.sm,
+              runSpacing: SetuSpacing.sm,
+              children: [
+                _freqChip('once', 'Once daily'),
+                _freqChip('twice', 'Twice daily'),
+                _freqChip('thrice', 'Thrice daily'),
+                _freqChip('as_needed', 'As needed'),
+              ],
+            ),
+            if (times.isNotEmpty) ...[
+              const SizedBox(height: SetuSpacing.md),
+              const Text('Times of day',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              const SizedBox(height: SetuSpacing.sm),
+              Wrap(
+                spacing: SetuSpacing.sm,
+                children: [
+                  for (final tm in times)
+                    Chip(
+                      avatar: const Icon(Icons.schedule,
+                          size: 16, color: SetuColors.accentLight),
+                      label: Text(tm),
+                      backgroundColor:
+                          SetuColors.accentLight.withValues(alpha: 0.08),
+                      side: BorderSide(
+                          color:
+                              SetuColors.accentLight.withValues(alpha: 0.3)),
+                    ),
+                ],
+              ),
+            ],
+            const SizedBox(height: SetuSpacing.md),
+            _autoFeatureRow(Icons.record_voice_over,
+                'Voice reminders', 'Friendly spoken prompts at each dose time.'),
+            const SizedBox(height: SetuSpacing.sm),
+            _autoFeatureRow(Icons.notification_important_outlined,
+                'Refill alerts', 'We notify the family when stock runs low.'),
+            const SizedBox(height: SetuSpacing.lg),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => Navigator.of(context).pop(
+                    _AddMedResult(_name.text, _dosage.text, times)),
+                icon: const Icon(Icons.add_circle_outline),
+                label: const Text('Add Medicine'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _freqChip(String value, String label) {
+    final selected = _frequency == value;
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => setState(() => _frequency = value),
+      showCheckmark: false,
+      selectedColor: SetuColors.accentLight,
+      backgroundColor: SetuColors.paperRaisedLight,
+      labelStyle: TextStyle(
+        color: selected ? Colors.white : SetuColors.inkLight,
+        fontWeight: FontWeight.w600,
+      ),
+      side: BorderSide(
+          color: selected ? SetuColors.accentLight : SetuColors.borderLight),
+    );
+  }
+
+  Widget _autoFeatureRow(IconData icon, String title, String subtitle) {
+    return Container(
+      padding: const EdgeInsets.all(SetuSpacing.md),
+      decoration: BoxDecoration(
+        color: SetuColors.lavenderLight.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: SetuColors.lavenderLight, size: 22),
+          const SizedBox(width: SetuSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(fontWeight: FontWeight.w700)),
+                Text(subtitle,
+                    style: const TextStyle(
+                        color: SetuColors.mutedLight, fontSize: 13)),
+              ],
+            ),
+          ),
+          const Icon(Icons.check_circle,
+              color: SetuColors.verifiedLight, size: 20),
+        ],
+      ),
+    );
   }
 }
 
