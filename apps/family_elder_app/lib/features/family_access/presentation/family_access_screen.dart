@@ -58,26 +58,105 @@ class FamilyAccessScreen extends ConsumerWidget {
                   final row = rows[index];
                   final profile = row['profiles'] as Map<String, dynamic>?;
                   final isCoordinator = row['coordinator'] as bool? ?? false;
-                  return Card(
-                    child: ListTile(
-                      title: Text(
-                          profile?['display_name'] as String? ?? 'Pending invite'),
-                      subtitle: Text([
-                        if (row['relationship'] != null) row['relationship'] as String,
-                        row['status'] as String,
-                      ].join(' · ')),
-                      trailing: isElderSelf
-                          ? Switch(
-                              value: isCoordinator,
-                              onChanged: (value) => FamilyAccessRepository(
-                                      ref.read(supabaseClientProvider))
-                                  .setCoordinator(row['id'] as String, value)
-                                  .then((_) => ref.invalidate(
-                                      _familyAccessProvider(elderId))),
-                            )
-                          : isCoordinator
-                              ? const Chip(label: Text('Coordinator'))
-                              : null,
+                  final name =
+                      profile?['display_name'] as String? ?? 'Pending invite';
+                  final relationship = row['relationship'] as String?;
+                  final status = row['status'] as String;
+                  final pending = status != 'active';
+                  final initials = name.trim().isEmpty || name == 'Pending invite'
+                      ? '?'
+                      : name
+                          .trim()
+                          .split(' ')
+                          .where((p) => p.isNotEmpty)
+                          .take(2)
+                          .map((p) => p[0].toUpperCase())
+                          .join();
+                  return Container(
+                    padding: const EdgeInsets.all(SetuSpacing.md),
+                    decoration: BoxDecoration(
+                      color: SetuColors.paperRaisedLight,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: SetuColors.borderLight),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 46,
+                          height: 46,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color:
+                                SetuColors.lavenderLight.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(initials,
+                              style: const TextStyle(
+                                  color: SetuColors.lavenderLight,
+                                  fontWeight: FontWeight.w800)),
+                        ),
+                        const SizedBox(width: SetuSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(name,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 15)),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  if (relationship != null) ...[
+                                    Text(relationship,
+                                        style: const TextStyle(
+                                            color: SetuColors.mutedLight,
+                                            fontSize: 13)),
+                                    const SizedBox(width: 6),
+                                  ],
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: (pending
+                                              ? SetuColors.peachLight
+                                              : SetuColors.verifiedLight)
+                                          .withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    child: Text(pending ? 'Invited' : 'Active',
+                                        style: TextStyle(
+                                            color: pending
+                                                ? SetuColors.peachLight
+                                                : SetuColors.verifiedLight,
+                                            fontSize: 11.5,
+                                            fontWeight: FontWeight.w700)),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (isElderSelf)
+                          Column(
+                            children: [
+                              Switch(
+                                value: isCoordinator,
+                                onChanged: (value) => FamilyAccessRepository(
+                                        ref.read(supabaseClientProvider))
+                                    .setCoordinator(row['id'] as String, value)
+                                    .then((_) => ref.invalidate(
+                                        _familyAccessProvider(elderId))),
+                              ),
+                              const Text('Coordinator',
+                                  style: TextStyle(
+                                      fontSize: 10,
+                                      color: SetuColors.mutedLight)),
+                            ],
+                          )
+                        else if (isCoordinator)
+                          const Chip(label: Text('Coordinator')),
+                      ],
                     ),
                   );
                 },
