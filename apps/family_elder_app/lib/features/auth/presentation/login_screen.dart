@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
 
+import '../../../core/app_build.dart';
 import '../../../core/providers.dart';
 import '../data/auth_repository.dart';
 
@@ -234,9 +235,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: SetuSpacing.lg),
-                  Text('CareHive',
+                  Text('SETU',
                       textAlign: TextAlign.center,
-                      style: theme.textTheme.headlineLarge),
+                      style: theme.textTheme.headlineLarge?.copyWith(
+                          color: SetuColors.accentLight,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1)),
                   const SizedBox(height: 6),
                   Text(
                     'A home away from home for the ones who raised us.',
@@ -244,6 +248,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     style: theme.textTheme.bodyMedium
                         ?.copyWith(color: SetuColors.mutedLight),
                   ),
+                  const SizedBox(height: 4),
+                  Text(kAppBuildLabel,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.labelSmall
+                          ?.copyWith(color: SetuColors.mutedLight)),
                   const SizedBox(height: SetuSpacing.md),
                   Text(
                     'Book trusted caregivers, track medicines, get daily '

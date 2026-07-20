@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:setu_core/setu_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/app_build.dart';
 import '../../../core/preferences.dart';
 import '../../../core/providers.dart';
 import '../../legal/legal_content.dart';
@@ -127,7 +128,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: SetuSpacing.xl),
             const Center(
-              child: Text('CareHive · Version 1.0',
+              child: Text('SETU · $kAppBuildLabel',
                   style:
                       TextStyle(color: SetuColors.mutedLight, fontSize: 12.5)),
             ),
