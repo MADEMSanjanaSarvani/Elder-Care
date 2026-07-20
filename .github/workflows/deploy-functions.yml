@@ -60,8 +60,13 @@ jobs:
           fi
       - name: Link to the live project
         run: supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
-      - name: Apply all migrations
-        run: supabase db push --password "$SUPABASE_DB_PASSWORD" --include-all
+      # The remote DB was half-built by earlier partial deploys, so `db push`
+      # collides on objects that already exist. Since this project holds only
+      # test data (confirmed), reset it: drop everything, re-apply all 26
+      # migrations cleanly, then run seed.sql. `yes |` answers the destructive
+      # confirmation prompt non-interactively.
+      - name: Reset & rebuild the remote database (test data only)
+        run: yes | supabase db reset --linked
 
   deploy:
     needs: migrate
