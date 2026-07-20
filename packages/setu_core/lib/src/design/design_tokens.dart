@@ -75,17 +75,44 @@ class SetuTheme {
     final Color surface =
         isDark ? SetuColors.paperRaisedDark : SetuColors.paperRaisedLight;
 
+    // Full Warmth colour scheme. IMPORTANT: secondary is LAVENDER, not the
+    // success-green — Material 3 derives the bottom-nav indicator and the
+    // segmented-button selection from secondaryContainer, so leaving green
+    // here is what made those elements look like the old sage theme. Green
+    // now lives only where we explicitly use SetuColors.verifiedLight (the
+    // "safe"/success chips).
     final ColorScheme colorScheme = ColorScheme(
       brightness: brightness,
       primary: accent,
       onPrimary: isDark ? SetuColors.inkDark : Colors.white,
-      secondary: isDark ? SetuColors.verifiedDark : SetuColors.verifiedLight,
-      onSecondary: Colors.white,
+      primaryContainer:
+          isDark ? const Color(0xFF7A3300) : const Color(0xFFFFDBC9),
+      onPrimaryContainer:
+          isDark ? const Color(0xFFFFDBC9) : const Color(0xFF773401),
+      secondary: isDark ? SetuColors.lavenderDark : SetuColors.lavenderLight,
+      onSecondary: isDark ? const Color(0xFF1D0A54) : Colors.white,
+      secondaryContainer:
+          isDark ? const Color(0xFF4A3C81) : const Color(0xFFE7DEFF),
+      onSecondaryContainer:
+          isDark ? const Color(0xFFE7DEFF) : const Color(0xFF4A3C81),
+      tertiary: isDark ? SetuColors.peachDark : SetuColors.peachLight,
+      onTertiary: Colors.white,
+      tertiaryContainer:
+          isDark ? const Color(0xFF514632) : const Color(0xFFF2E0C6),
+      onTertiaryContainer:
+          isDark ? const Color(0xFFF2E0C6) : const Color(0xFF514632),
       error: isDark ? SetuColors.sosDark : SetuColors.sosLight,
       onError: Colors.white,
-      surface:
-          isDark ? SetuColors.paperRaisedDark : SetuColors.paperRaisedLight,
+      errorContainer:
+          isDark ? const Color(0xFF93000A) : const Color(0xFFFFDAD6),
+      onErrorContainer:
+          isDark ? const Color(0xFFFFDAD6) : const Color(0xFF93000A),
+      surface: surface,
       onSurface: ink,
+      onSurfaceVariant:
+          isDark ? SetuColors.mutedDark : SetuColors.mutedLight,
+      outline: isDark ? SetuColors.borderDark : const Color(0xFF877369),
+      outlineVariant: border,
     );
 
     final buttonShape =
