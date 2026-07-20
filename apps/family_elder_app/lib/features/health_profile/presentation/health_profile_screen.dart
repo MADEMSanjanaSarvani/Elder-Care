@@ -129,8 +129,65 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
       body: ListView(
         padding: const EdgeInsets.all(SetuSpacing.lg),
         children: [
-          Text('Emergency information',
-              style: Theme.of(context).textTheme.titleMedium),
+          // Emergency-disclosure banner (Stitch "Medical ID"): makes it clear
+          // this data is auto-shared the moment an SOS fires.
+          Container(
+            padding: const EdgeInsets.all(SetuSpacing.md),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  SetuColors.sosLight.withValues(alpha: 0.10),
+                  SetuColors.paperLight,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(18),
+              border:
+                  Border.all(color: SetuColors.sosLight.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                      color: SetuColors.sosLight.withValues(alpha: 0.14),
+                      shape: BoxShape.circle),
+                  child: const Icon(Icons.emergency_outlined,
+                      color: SetuColors.sosLight, size: 22),
+                ),
+                const SizedBox(width: SetuSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Emergency Disclosure',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              color: SetuColors.sosLight)),
+                      const SizedBox(height: 2),
+                      const Text(
+                          'This profile is automatically shared during SOS activation.',
+                          style: TextStyle(
+                              color: SetuColors.mutedLight, fontSize: 13)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: SetuSpacing.lg),
+          Row(
+            children: [
+              const SetuIconChip(
+                  icon: Icons.health_and_safety_outlined,
+                  color: SetuColors.sosLight,
+                  size: 16),
+              const SizedBox(width: SetuSpacing.sm),
+              Text('Emergency information',
+                  style: Theme.of(context).textTheme.titleMedium),
+            ],
+          ),
           const Padding(
             padding: EdgeInsets.only(top: SetuSpacing.xs, bottom: SetuSpacing.sm),
             child: Text(
@@ -193,6 +250,22 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
             onPressed: _saving ? null : _save,
             child: Text(_saving ? 'Saving…' : 'Save'),
           ),
+          const SizedBox(height: SetuSpacing.lg),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.verified_user_outlined,
+                  size: 16, color: SetuColors.verifiedLight),
+              const SizedBox(width: 6),
+              Text('SECURED MEDICAL DATA',
+                  style: TextStyle(
+                      color: SetuColors.mutedLight,
+                      fontSize: 11.5,
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.w700)),
+            ],
+          ),
+          const SizedBox(height: SetuSpacing.md),
         ],
       ),
     );
