@@ -125,14 +125,42 @@ class _PaymentBodyState extends State<_PaymentBody> {
               color: SetuColors.accentLight.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Row(
+            child: Column(
               children: [
-                const Text('Amount to pay'),
-                const Spacer(),
-                Text(widget.amountLabel,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                        color: SetuColors.accentLight,
-                        fontWeight: FontWeight.w800)),
+                Row(
+                  children: [
+                    const Text('Subtotal',
+                        style: TextStyle(color: SetuColors.mutedLight)),
+                    const Spacer(),
+                    Text(widget.amountLabel,
+                        style: const TextStyle(color: SetuColors.mutedLight)),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Row(
+                  children: [
+                    Text('Platform fee',
+                        style: TextStyle(color: SetuColors.mutedLight)),
+                    Spacer(),
+                    Text('FREE',
+                        style: TextStyle(
+                            color: SetuColors.verifiedLight,
+                            fontWeight: FontWeight.w700)),
+                  ],
+                ),
+                const Divider(height: SetuSpacing.lg),
+                Row(
+                  children: [
+                    Text('Total to pay',
+                        style: theme.textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700)),
+                    const Spacer(),
+                    Text(widget.amountLabel,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                            color: SetuColors.accentLight,
+                            fontWeight: FontWeight.w800)),
+                  ],
+                ),
               ],
             ),
           ),
@@ -147,25 +175,31 @@ class _PaymentBodyState extends State<_PaymentBody> {
           _methodTile('netbanking', Icons.account_balance_outlined,
               'Net banking'),
           const SizedBox(height: SetuSpacing.lg),
-          FilledButton(
+          FilledButton.icon(
             onPressed: _processing ? null : _pay,
-            child: Text(_processing
+            icon: Icon(_processing ? Icons.hourglass_top : Icons.lock_outline),
+            label: Text(_processing
                 ? 'Processing…'
-                : 'Pay ${widget.amountLabel}'),
+                : 'Pay Securely · ${widget.amountLabel}'),
           ),
-          const SizedBox(height: SetuSpacing.sm),
+          const SizedBox(height: SetuSpacing.md),
           const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.info_outline, size: 14, color: SetuColors.mutedLight),
+              Icon(Icons.shield_outlined,
+                  size: 15, color: SetuColors.verifiedLight),
               SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  'Demo checkout — no real payment is charged yet.',
-                  style: TextStyle(color: SetuColors.mutedLight, fontSize: 12),
-                ),
-              ),
+              Text('Secured by SETU · your data is encrypted',
+                  style: TextStyle(
+                      color: SetuColors.mutedLight, fontSize: 12.5)),
             ],
+          ),
+          const SizedBox(height: SetuSpacing.xs),
+          const Center(
+            child: Text(
+              'Demo checkout — no real payment is charged yet.',
+              style: TextStyle(color: SetuColors.mutedLight, fontSize: 11.5),
+            ),
           ),
         ],
       ),

@@ -83,30 +83,84 @@ class _CaregiverProfileScreenState extends ConsumerState<CaregiverProfileScreen>
     }
     final avg = (_summary?['average_stars'] as num?)?.toDouble();
     final count = _summary?['rating_count'] as int? ?? 0;
+    final name = (ref.watch(currentProfileProvider).asData?.value?[
+            'display_name'] as String?)
+        ?.trim();
+    final initials = (name == null || name.isEmpty)
+        ? '★'
+        : name
+            .split(' ')
+            .where((p) => p.isNotEmpty)
+            .take(2)
+            .map((p) => p[0].toUpperCase())
+            .join();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
       body: ListView(
         padding: const EdgeInsets.all(SetuSpacing.lg),
         children: [
-          if (avg != null && count > 0)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(SetuSpacing.md),
-                child: Row(
-                  children: [
-                    const Icon(Icons.star, color: SetuColors.accentLight),
-                    const SizedBox(width: SetuSpacing.sm),
-                    Text('${avg.toStringAsFixed(2)} average',
-                        style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(width: SetuSpacing.sm),
-                    Text('($count ${count == 1 ? 'review' : 'reviews'})',
-                        style: Theme.of(context).textTheme.bodySmall),
-                  ],
-                ),
+          // Stitch caregiver_details header: warm mesh, avatar, verified badge
+          // and the aggregate rating.
+          Container(
+            padding: const EdgeInsets.all(SetuSpacing.lg),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              gradient: const LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [Color(0xFFFFDBC9), Color(0xFFE7DEFF)],
               ),
             ),
-          const SizedBox(height: SetuSpacing.md),
+            child: Column(
+              children: [
+                Container(
+                  width: 84,
+                  height: 84,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: SetuColors.paperRaisedLight,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 3),
+                  ),
+                  child: Text(initials,
+                      style: const TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w800,
+                          color: SetuColors.accentLight)),
+                ),
+                const SizedBox(height: SetuSpacing.sm),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(name == null || name.isEmpty ? 'Your profile' : name,
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleLarge
+                            ?.copyWith(fontWeight: FontWeight.w800)),
+                    const SizedBox(width: 6),
+                    const Icon(Icons.verified,
+                        color: SetuColors.lavenderLight, size: 20),
+                  ],
+                ),
+                const SizedBox(height: SetuSpacing.xs),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.star, color: SetuColors.peachLight, size: 18),
+                    const SizedBox(width: 4),
+                    Text(
+                      avg != null && count > 0
+                          ? '${avg.toStringAsFixed(1)} · $count ${count == 1 ? 'review' : 'reviews'}'
+                          : 'New caregiver',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: SetuSpacing.lg),
           Text('About you', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: SetuSpacing.sm),
           TextField(

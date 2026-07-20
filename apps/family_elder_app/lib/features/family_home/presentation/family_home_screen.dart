@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/action_success.dart';
 import '../../../core/providers.dart';
 import '../../suggestions/presentation/suggestions_card.dart';
 import '../../trips/data/trips_repository.dart';
@@ -197,9 +198,21 @@ Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
     ref.invalidate(myElderProfilesProvider);
     await ref.read(myElderProfilesProvider.future);
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$name added to your care circle.')),
-      );
+      // Full-screen success confirmation (Stitch action_successful).
+      await Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (ctx) => ActionSuccessScreen(
+          title: 'Everything is Set Up!',
+          message: '$name is now safely connected to your care circle.',
+          primaryLabel: 'Go to Dashboard',
+          onPrimary: () => Navigator.of(ctx).pop(),
+          secondaryLabel: 'Add Another Profile',
+          onSecondary: () {
+            Navigator.of(ctx).pop();
+            showAddElderDialog(context, ref);
+          },
+          tagline: 'Configuration Complete',
+        ),
+      ));
     }
   } catch (err) {
     if (context.mounted) {
@@ -610,7 +623,10 @@ class _HealthScoreCard extends ConsumerWidget {
         : score >= 70
             ? 'Good'
             : 'Needs attention';
-    return Container(
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () => context.push('/elder/$elderId/wellness-summary'),
+      child: Container(
       padding: const EdgeInsets.all(SetuSpacing.lg),
       decoration: BoxDecoration(
         color: SetuColors.paperRaisedLight,
@@ -623,8 +639,15 @@ class _HealthScoreCard extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Health Score',
-                    style: TextStyle(fontWeight: FontWeight.w700)),
+                Row(
+                  children: [
+                    const Text('Health Score',
+                        style: TextStyle(fontWeight: FontWeight.w700)),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.chevron_right,
+                        size: 18, color: SetuColors.mutedLight),
+                  ],
+                ),
                 Text('$score',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         color: SetuColors.accentLight,
@@ -658,6 +681,7 @@ class _HealthScoreCard extends ConsumerWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }
