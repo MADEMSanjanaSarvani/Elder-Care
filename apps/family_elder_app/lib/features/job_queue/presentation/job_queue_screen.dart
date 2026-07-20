@@ -88,6 +88,40 @@ class _JobList extends ConsumerWidget {
                   );
                 }),
                 const SizedBox(height: SetuSpacing.lg),
+                // Bento stat row (Stitch caregiver dashboard): quick glance at
+                // today's load, completed visits and a tap-through to earnings.
+                Row(
+                  children: [
+                    Expanded(
+                      child: _StatCard(
+                        icon: Icons.today_outlined,
+                        tint: SetuColors.accentLight,
+                        value: '${bookings.length}',
+                        label: 'Visits today',
+                      ),
+                    ),
+                    const SizedBox(width: SetuSpacing.sm),
+                    Expanded(
+                      child: _StatCard(
+                        icon: Icons.task_alt,
+                        tint: SetuColors.verifiedLight,
+                        value: '${bookings.where((b) => b.status == BookingStatus.completed).length}',
+                        label: 'Completed',
+                      ),
+                    ),
+                    const SizedBox(width: SetuSpacing.sm),
+                    Expanded(
+                      child: _StatCard(
+                        icon: Icons.account_balance_wallet_outlined,
+                        tint: SetuColors.lavenderLight,
+                        value: 'View',
+                        label: 'Earnings',
+                        onTap: () => context.push('/earnings'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: SetuSpacing.lg),
                 for (final booking in bookings)
                   _JobCard(booking: booking),
               ],
@@ -122,6 +156,56 @@ class _NoJobs extends StatelessWidget {
             const Text('New assignments will show up here.',
                 textAlign: TextAlign.center),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  const _StatCard({
+    required this.icon,
+    required this.tint,
+    required this.value,
+    required this.label,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final Color tint;
+  final String value;
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: SetuColors.paperRaisedLight,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(SetuSpacing.md),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: SetuColors.borderLight),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: tint, size: 22),
+              const SizedBox(height: SetuSpacing.sm),
+              Text(value,
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: tint)),
+              Text(label,
+                  style: const TextStyle(
+                      fontSize: 12, color: SetuColors.mutedLight)),
+            ],
+          ),
         ),
       ),
     );
