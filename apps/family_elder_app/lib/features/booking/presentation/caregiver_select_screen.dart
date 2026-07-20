@@ -43,7 +43,7 @@ String _roleLabel(String subRole) {
 /// Choose-your-caregiver (the family's own words: "select the caregiver's
 /// profile based on their details so it's helpful to choose the best one").
 /// Lists verified caregivers for the chosen service — name, role, trust tier,
-/// rating and bio — plus an explicit "let CareHive match" option for families
+/// rating and bio — plus an explicit "let SETU match" option for families
 /// who'd rather not pick. Requesting a specific caregiver books them directly.
 class CaregiverSelectScreen extends ConsumerStatefulWidget {
   const CaregiverSelectScreen({
@@ -235,7 +235,7 @@ class _CaregiverSelectScreenState extends ConsumerState<CaregiverSelectScreen> {
                   const SizedBox(height: SetuSpacing.sm),
                   const Text(
                     'Pick someone you trust from their profile below, or let '
-                    'CareHive match the best available.',
+                    'SETU match the best available.',
                     style: TextStyle(color: SetuColors.mutedLight),
                   ),
                   const SizedBox(height: SetuSpacing.md),
@@ -360,7 +360,7 @@ class _AutoMatchCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Let CareHive match the best',
+                  Text('Let SETU match the best',
                       style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 2),
                   const Text('Fastest — we pick a top-rated, available caregiver.',
@@ -386,7 +386,7 @@ class _NoCaregivers extends StatelessWidget {
       title: 'No profiles to show yet',
       message:
           'No caregivers are listed for this service in your area right now. '
-          'Tap "Let CareHive match the best" above and our team will find one.',
+          'Tap "Let SETU match the best" above and our team will find one.',
     );
   }
 }
@@ -406,7 +406,7 @@ class _CaregiverCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = caregiver['name'] as String? ?? 'CareHive caregiver';
+    final name = caregiver['name'] as String? ?? 'SETU caregiver';
     final subRole = caregiver['sub_role'] as String? ?? '';
     final tier = _trust(caregiver['trust_tier'] as String? ?? '');
     final photoUrl = caregiver['photo_url'] as String?;
@@ -476,7 +476,7 @@ class _CaregiverCard extends StatelessWidget {
                             ],
                           )
                         else
-                          const Text('New to CareHive',
+                          const Text('New to SETU',
                               style: TextStyle(
                                   color: SetuColors.mutedLight, fontSize: 12.5)),
                         if (distance != null)

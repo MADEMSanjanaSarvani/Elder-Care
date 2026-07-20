@@ -109,7 +109,7 @@ class SettingsScreen extends ConsumerWidget {
             _NavTile(
               icon: Icons.download_outlined,
               label: 'Export my data',
-              subtitle: 'Download a copy of your CareHive data',
+              subtitle: 'Download a copy of your SETU data',
               onTap: () => _exportData(context, ref),
             ),
             _NavTile(
@@ -162,7 +162,7 @@ class SettingsScreen extends ConsumerWidget {
         builder: (context) => AlertDialog(
           title: const Text('Your data is ready'),
           content: const Text(
-              'We\'ve prepared a copy of your CareHive data. Copy it to save '
+              'We\'ve prepared a copy of your SETU data. Copy it to save '
               'or share it wherever you like.'),
           actions: [
             TextButton(

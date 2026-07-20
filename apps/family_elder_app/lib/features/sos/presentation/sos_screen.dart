@@ -158,7 +158,7 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                         icon: Icons.support_agent_outlined,
                         tint: SetuColors.peachLight,
                         title: 'On-call team alerted',
-                        subtitle: 'CareHive is coordinating help'),
+                        subtitle: 'SETU is coordinating help'),
                     _ActiveAction(
                         icon: Icons.my_location_outlined,
                         tint: SetuColors.accentLight,
@@ -203,11 +203,11 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.notifications_active_outlined),
                 label: Text(
-                    _notifying ? 'Notifying…' : 'Also notify family & CareHive'),
+                    _notifying ? 'Notifying…' : 'Also notify family & SETU'),
               ),
             const SizedBox(height: SetuSpacing.sm),
             Text(
-              'Notifying CareHive alerts your family and our on-call team at the '
+              'Notifying SETU alerts your family and our on-call team at the '
               'same time — it does not replace calling 108.',
               textAlign: TextAlign.center,
               style: Theme.of(context)

@@ -7,7 +7,7 @@ library;
 const String kPrivacyPolicyUpdated = 'Updated 18 July 2026';
 
 const String kPrivacyPolicy = '''
-CareHive cares for your family's most sensitive information, so we treat
+SETU cares for your family's most sensitive information, so we treat
 privacy as a core feature, not fine print.
 
 WHAT WE COLLECT
@@ -48,16 +48,16 @@ Questions or requests: privacy@carehive.in
 ''';
 
 const String kTermsOfService = '''
-By using CareHive you agree to these terms.
+By using SETU you agree to these terms.
 
 THE SERVICE
-CareHive connects families with background-verified caregivers and helps
+SETU connects families with background-verified caregivers and helps
 you manage medicines, appointments, health records, subscriptions and
-emergency help. CareHive is a coordination platform; caregivers deliver
+emergency help. SETU is a coordination platform; caregivers deliver
 the hands-on care.
 
 NOT A MEDICAL OR EMERGENCY SERVICE
-CareHive does not provide medical advice, diagnosis or treatment, and is
+SETU does not provide medical advice, diagnosis or treatment, and is
 not a substitute for professional care. In an emergency, always call 108
 (or your local emergency number) first — the in-app SOS notifies your
 family and our team in parallel, never instead of emergency services.
@@ -79,7 +79,7 @@ own judgement in choosing and supervising care.
 
 CHANGES & TERMINATION
 We may update these terms and will notify you of material changes. You may
-stop using CareHive and request account deletion at any time.
+stop using SETU and request account deletion at any time.
 
 CONTACT
 support@carehive.in

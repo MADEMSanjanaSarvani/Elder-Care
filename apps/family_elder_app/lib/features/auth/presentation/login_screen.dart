@@ -486,7 +486,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 }
 
 /// A small feature pill used on the welcome/login header to tell newcomers
-/// what CareHive is at a glance.
+/// what SETU is at a glance.
 class _MiniFeature extends StatelessWidget {
   const _MiniFeature(this.icon, this.label);
 

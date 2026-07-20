@@ -10,7 +10,7 @@ class PendingVerificationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('CareHive Care')),
+      appBar: AppBar(title: const Text('SETU Care')),
       body: const SetuEmptyState(
         icon: Icons.verified_user_outlined,
         title: 'Verification in progress',

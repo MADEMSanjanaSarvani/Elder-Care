@@ -64,7 +64,7 @@ class _ChooseRoleScreenState extends ConsumerState<ChooseRoleScreen> {
                     ),
                   ),
                   const SizedBox(height: SetuSpacing.lg),
-                  Text('Welcome to CareHive',
+                  Text('Welcome to SETU',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.headlineSmall),
                   const SizedBox(height: 6),

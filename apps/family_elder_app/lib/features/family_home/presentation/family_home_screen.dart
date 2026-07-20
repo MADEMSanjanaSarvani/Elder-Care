@@ -25,7 +25,7 @@ final homeSummaryProvider =
   return HomeSummaryRepository(ref.watch(supabaseClientProvider)).fetch(elderId);
 });
 
-/// Timeline-first dashboard (PRD Part 3 §17). Redesigned to the CareHive
+/// Timeline-first dashboard (PRD Part 3 §17). Redesigned to the SETU
 /// design system: an avatar header, a friendly "Today" status card, a clean
 /// grid of the primary actions, and everything secondary tucked under
 /// "More" — clarity over density. Consent/privacy stay one tap away (trust
@@ -258,7 +258,7 @@ String _addElderError(Object err) {
 }
 
 /// First-run welcome. Rather than a bare empty state, this explains what
-/// CareHive is for a brand-new family member and invites them to begin — so
+/// SETU is for a brand-new family member and invites them to begin — so
 /// the very first screen after sign-in teaches the idea and feels warm.
 class _NoElders extends ConsumerWidget {
   const _NoElders();
@@ -297,12 +297,12 @@ class _NoElders extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: SetuSpacing.md),
-        Text('Welcome to CareHive',
+        Text('Welcome to SETU',
             textAlign: TextAlign.center, style: theme.textTheme.headlineMedium),
         const SizedBox(height: SetuSpacing.xs),
         Text(
           'A warm, simple way to look after your parents — together, from '
-          'anywhere. Here\'s everything CareHive does for your family.',
+          'anywhere. Here\'s everything SETU does for your family.',
           textAlign: TextAlign.center,
           style: theme.textTheme.bodyMedium
               ?.copyWith(color: SetuColors.mutedLight, height: 1.5),

@@ -69,7 +69,7 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('CareHive companion')),
+      appBar: AppBar(title: const Text('SETU companion')),
       body: Column(
         children: [
           Expanded(
