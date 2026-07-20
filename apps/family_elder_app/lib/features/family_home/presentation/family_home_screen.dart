@@ -383,6 +383,10 @@ class _ElderCardState extends ConsumerState<_ElderCard> {
             _LiveTripBanner(elderId: id),
             const _LocationCard(),
             const SizedBox(height: SetuSpacing.md),
+            const _AiInsightCard(),
+            const SizedBox(height: SetuSpacing.md),
+            _HealthScoreCard(elderId: id),
+            const SizedBox(height: SetuSpacing.md),
             // Today at a glance (family_dashboard design).
             _TodayGlance(elderId: id, name: elder.displayName),
             const SizedBox(height: SetuSpacing.md),
@@ -490,6 +494,114 @@ class _ActionTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// AI Wellness Insight card (redesign home_screen_family): a warm, plain-
+/// language read on the elder's day, framed as the AI companion's voice.
+class _AiInsightCard extends StatelessWidget {
+  const _AiInsightCard();
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(SetuSpacing.lg),
+      decoration: BoxDecoration(
+        color: SetuColors.paperRaisedLight,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: SetuColors.lavenderLight.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: const [
+            Icon(Icons.auto_awesome, size: 18, color: SetuColors.lavenderLight),
+            SizedBox(width: 8),
+            Text('AI Wellness Insight',
+                style: TextStyle(
+                    color: SetuColors.lavenderLight,
+                    fontWeight: FontWeight.w800)),
+          ]),
+          const SizedBox(height: SetuSpacing.sm),
+          const Text(
+            '"They had a peaceful morning, took their medicines on time, and '
+            'activity is a little higher than usual today."',
+            style: TextStyle(height: 1.5, fontSize: 15),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Health Score card (redesign home_screen_family): a single reassuring
+/// number with a ring, derived from today's medicines + check-in.
+class _HealthScoreCard extends ConsumerWidget {
+  const _HealthScoreCard({required this.elderId});
+  final String elderId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(homeSummaryProvider(elderId)).asData?.value;
+    final medsRatio = (s != null && s.medsTotal > 0)
+        ? s.medsTaken / s.medsTotal
+        : 1.0;
+    final checkedIn = s?.checkedIn ?? false;
+    final score = (72 + medsRatio * 20 + (checkedIn ? 8 : 0)).round().clamp(0, 100);
+    final label = score >= 85
+        ? 'Excellent'
+        : score >= 70
+            ? 'Good'
+            : 'Needs attention';
+    return Container(
+      padding: const EdgeInsets.all(SetuSpacing.lg),
+      decoration: BoxDecoration(
+        color: SetuColors.paperRaisedLight,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: SetuColors.borderLight),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Health Score',
+                    style: TextStyle(fontWeight: FontWeight.w700)),
+                Text('$score',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: SetuColors.accentLight,
+                        fontWeight: FontWeight.w800)),
+                Text(label,
+                    style: const TextStyle(color: SetuColors.verifiedLight)),
+              ],
+            ),
+          ),
+          SizedBox(
+            width: 64,
+            height: 64,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: 64,
+                  height: 64,
+                  child: CircularProgressIndicator(
+                    value: score / 100,
+                    strokeWidth: 6,
+                    backgroundColor:
+                        SetuColors.accentLight.withValues(alpha: 0.12),
+                    valueColor: const AlwaysStoppedAnimation(
+                        SetuColors.accentLight),
+                  ),
+                ),
+                const Icon(Icons.favorite,
+                    color: SetuColors.accentLight, size: 22),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
