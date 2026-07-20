@@ -18,7 +18,13 @@ final memoriesProvider =
   try {
     await repo.generateToday(elderId);
   } catch (_) {}
-  return repo.list(elderId);
+  // Fail soft: if the memories backend isn't reachable/provisioned yet, show
+  // the friendly empty state instead of a scary "that didn't load" error.
+  try {
+    return await repo.list(elderId);
+  } catch (_) {
+    return <SetuMemory>[];
+  }
 });
 
 /// Maps the small, fixed set of icon names the generator emits to IconData,

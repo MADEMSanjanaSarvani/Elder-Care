@@ -169,6 +169,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             elderId: state.pathParameters['elderId']!),
       ),
       GoRoute(
+        path: '/elder/:elderId/wellness-summary',
+        builder: (context, state) => WellnessSummaryScreen(
+            elderId: state.pathParameters['elderId']!),
+      ),
+      GoRoute(
         path: '/elder/:elderId/privacy',
         builder: (context, state) =>
             PrivacyScreen(elderId: state.pathParameters['elderId']!),
