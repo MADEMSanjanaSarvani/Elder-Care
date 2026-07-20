@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/app_build.dart';
 import '../../../core/preferences.dart';
 import '../../../core/providers.dart';
+import '../../design_preview/presentation/design_preview_screen.dart';
 import '../../legal/legal_content.dart';
 import '../../legal/presentation/legal_screen.dart';
 
@@ -87,6 +88,16 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                 ],
               ),
+            ),
+            const SizedBox(height: SetuSpacing.xl),
+            Text('Design', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: SetuSpacing.sm),
+            _NavTile(
+              icon: Icons.palette_outlined,
+              label: 'Design Preview',
+              subtitle: 'View the exact Stitch screen designs',
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const DesignPreviewScreen())),
             ),
             const SizedBox(height: SetuSpacing.xl),
             Text('Account & privacy',
