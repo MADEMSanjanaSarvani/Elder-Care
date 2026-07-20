@@ -94,35 +94,91 @@ Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
   final nameController = TextEditingController();
   final relationshipController = TextEditingController();
 
-  final submitted = await showDialog<bool>(
+  final submitted = await showModalBottomSheet<bool>(
     context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Add someone you care for'),
-      content: Column(
+    isScrollControlled: true,
+    backgroundColor: SetuColors.paperLight,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    ),
+    builder: (context) => Padding(
+      padding: EdgeInsets.only(
+        left: SetuSpacing.lg,
+        right: SetuSpacing.lg,
+        top: SetuSpacing.md,
+        bottom: MediaQuery.of(context).viewInsets.bottom + SetuSpacing.lg,
+      ),
+      child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Center(
+            child: Container(
+              width: 44,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: SetuSpacing.md),
+              decoration: BoxDecoration(
+                  color: SetuColors.borderLight,
+                  borderRadius: BorderRadius.circular(999)),
+            ),
+          ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                    color: SetuColors.accentLight.withValues(alpha: 0.14),
+                    shape: BoxShape.circle),
+                child: const Icon(Icons.elderly_outlined,
+                    color: SetuColors.accentLight),
+              ),
+              const SizedBox(width: SetuSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Add someone you care for',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleLarge
+                            ?.copyWith(fontWeight: FontWeight.w800)),
+                    const Text('They join your care circle right away.',
+                        style: TextStyle(color: SetuColors.mutedLight)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: SetuSpacing.lg),
+          const Text('Their name',
+              style: TextStyle(fontWeight: FontWeight.w700)),
+          const SizedBox(height: SetuSpacing.sm),
           TextField(
             controller: nameController,
-            decoration: const InputDecoration(
-                labelText: 'Their name', hintText: 'e.g. Lakshmi'),
+            autofocus: true,
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(hintText: 'e.g. Lakshmi'),
           ),
+          const SizedBox(height: SetuSpacing.md),
+          const Text('Relationship (optional)',
+              style: TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(height: SetuSpacing.sm),
           TextField(
             controller: relationshipController,
-            decoration: const InputDecoration(
-                labelText: 'Relationship (optional)',
-                hintText: 'e.g. Mother'),
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(hintText: 'e.g. Mother'),
+          ),
+          const SizedBox(height: SetuSpacing.lg),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () => Navigator.of(context).pop(true),
+              icon: const Icon(Icons.person_add_alt_1),
+              label: const Text('Add to care circle'),
+            ),
           ),
         ],
       ),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel')),
-        FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Add')),
-      ],
     ),
   );
 
