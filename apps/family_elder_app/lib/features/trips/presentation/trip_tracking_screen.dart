@@ -1,9 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:setu_core/setu_core.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/providers.dart';
 import '../data/trips_repository.dart';
+
+/// Opens the caregiver's live location (with directions to the elder's home
+/// when known) in the phone's Google Maps app — no in-app map SDK needed.
+Future<void> _openInGoogleMaps(CaregiverTrip trip) async {
+  final cur = (trip.currentLat != null && trip.currentLng != null)
+      ? '${trip.currentLat},${trip.currentLng}'
+      : null;
+  final dest = (trip.destinationLat != null && trip.destinationLng != null)
+      ? '${trip.destinationLat},${trip.destinationLng}'
+      : null;
+  final Uri uri;
+  if (cur != null && dest != null) {
+    uri = Uri.parse(
+        'https://www.google.com/maps/dir/?api=1&origin=$cur&destination=$dest&travelmode=driving');
+  } else if (cur != null) {
+    uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$cur');
+  } else if (dest != null) {
+    uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$dest');
+  } else {
+    return;
+  }
+  await launchUrl(uri, mode: LaunchMode.externalApplication);
+}
 
 /// Live stream of the trip for a booking — the family's "on the way" view.
 final tripProvider =
@@ -50,6 +74,16 @@ class TripTrackingScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(SetuSpacing.lg),
             children: [
               _StatusHero(trip: trip, who: who),
+              if ((trip.currentLat != null && trip.currentLng != null) ||
+                  (trip.destinationLat != null &&
+                      trip.destinationLng != null)) ...[
+                const SizedBox(height: SetuSpacing.md),
+                FilledButton.icon(
+                  onPressed: () => _openInGoogleMaps(trip),
+                  icon: const Icon(Icons.map_outlined),
+                  label: const Text('Open in Google Maps'),
+                ),
+              ],
               const SizedBox(height: SetuSpacing.lg),
               _StatusSteps(status: trip.status),
               if (trip.updatedAt != null) ...[
