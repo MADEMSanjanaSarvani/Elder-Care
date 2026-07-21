@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "870720833565-s91k7v89ekunlnetihntptute83ogbks.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "in.carehive.app",
+            "certificate_hash": "6602354aa5d25f08e51d4436919a6eedd550d149"
+          }
+        },
+        {
           "client_id": "870720833565-cgkuqb7lsupbhjnpvggp5s7fcjk1p2qa.apps.googleusercontent.com",
           "client_type": 3
         }
