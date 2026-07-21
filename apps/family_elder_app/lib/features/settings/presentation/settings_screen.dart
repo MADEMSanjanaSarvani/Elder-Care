@@ -8,6 +8,7 @@ import '../../../core/app_build.dart';
 import '../../../core/preferences.dart';
 import '../../../core/providers.dart';
 import '../../design_preview/presentation/design_preview_screen.dart';
+import '../../payments/presentation/payment_flow_screens.dart';
 import '../../legal/legal_content.dart';
 import '../../legal/presentation/legal_screen.dart';
 
@@ -116,6 +117,12 @@ class SettingsScreen extends ConsumerWidget {
               label: 'Terms of Service',
               onTap: () => _openLegal(context,
                   title: 'Terms of Service', body: kTermsOfService),
+            ),
+            _NavTile(
+              icon: Icons.currency_rupee,
+              label: 'Cancellation & Refund Policy',
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const CancellationPolicyScreen())),
             ),
             _NavTile(
               icon: Icons.download_outlined,
