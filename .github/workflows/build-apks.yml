@@ -32,6 +32,26 @@ on:
       - claude/elder-care-platform-mx27jo
 
 jobs:
+  # Whole-app static audit: catches errors, warnings, unused code, missing
+  # awaits and dead code across every Dart file. Runs in parallel with the
+  # build so it never blocks producing an installable APK; a red result here
+  # is the signal to fix real code issues.
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Fetch dependencies
+        working-directory: apps/family_elder_app
+        run: flutter pub get
+      - name: Analyze (errors + warnings fail; style infos don't)
+        working-directory: apps/family_elder_app
+        run: flutter analyze --no-fatal-infos
+
   build:
     runs-on: ubuntu-latest
     steps:
