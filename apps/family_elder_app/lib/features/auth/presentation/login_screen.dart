@@ -243,7 +243,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           letterSpacing: 1)),
                   const SizedBox(height: 6),
                   Text(
-                    'A home away from home for the ones who raised us.',
+                    "Your parents' safety net.",
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                        color: SetuColors.inkLight,
+                        fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'A trusted elder-care ecosystem for families.',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium
                         ?.copyWith(color: SetuColors.mutedLight),

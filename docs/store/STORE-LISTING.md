@@ -10,16 +10,23 @@ Graphics for the listing are in this folder:
 
 # App 1 — Setu (family & elder app)
 
-**App name:** `Setu — Elder Care`
+**App name:** `SETU — Elder Care` *(keep "Elder Care" for search/ASO; the "safety net" hook lives in the copy below)*
+
+**Tagline / hook (use everywhere — screenshots, feature graphic, socials):**
+> **Your parents' safety net.** A trusted elder-care ecosystem for families.
 
 **Short description** (max 80 characters):
 ```
-Coordinate care, medicines, visits and emergencies for your elders — together.
+Your parents' safety net — verified caregivers, medicines, SOS & daily updates.
 ```
 
 **Full description** (paste as-is; under Play's 4000-char limit):
 ```
-Setu helps families care for their elders — together, from anywhere.
+SETU is your parents' safety net — a trusted elder-care ecosystem for families.
+
+When you can't always be there, SETU makes sure someone trusted is. Verified
+caregivers, medicine reminders, daily updates, and one-tap emergency help —
+so you always know your parents are safe, even from another city or country.
 
 One place to organise everything about your parent's or grandparent's day-to-day
 care, with the elder's privacy and consent at the centre.
