@@ -4,7 +4,7 @@ description: >
   (PRD Part 3 §17/§18): family mode (dashboard, booking, consent
   management) and elder mode (large-text, voice-first, three-action home).
 publish_to: "none"
-version: 0.1.2+9
+version: 0.1.2+10
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -29,6 +29,8 @@ dependencies:
   # Android build). Powers the health trends, activity bars and adherence
   # graphs across the dashboard, wellness and reports screens.
   fl_chart: ^0.69.0
+  # Offline detection for the global "no internet" banner + graceful retries.
+  connectivity_plus: ^6.0.5
   # Push notifications (FCM) and Google Sign-In. Bounded below the next major
   # so a CI resolve never silently pulls a breaking API change.
   firebase_core: ">=3.6.0 <4.0.0"

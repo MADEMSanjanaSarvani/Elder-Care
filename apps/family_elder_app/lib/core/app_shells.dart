@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
 
+import 'offline_banner.dart';
 import 'providers.dart';
 import '../features/assistant/presentation/assistant_screen.dart';
 import '../features/booking/presentation/booking_screen.dart';
@@ -115,7 +116,10 @@ class _FamilyShellState extends ConsumerState<FamilyShell> {
     ];
 
     return Scaffold(
-      body: IndexedStack(index: _index, children: tabs),
+      body: Column(children: [
+        const OfflineBanner(),
+        Expanded(child: IndexedStack(index: _index, children: tabs)),
+      ]),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
@@ -172,7 +176,10 @@ class _ElderShellState extends ConsumerState<ElderShell> {
     ];
 
     return Scaffold(
-      body: IndexedStack(index: _index, children: tabs),
+      body: Column(children: [
+        const OfflineBanner(),
+        Expanded(child: IndexedStack(index: _index, children: tabs)),
+      ]),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
@@ -238,7 +245,10 @@ class _CaregiverShellState extends State<CaregiverShell> {
       const ProfileMenuScreen(),
     ];
     return Scaffold(
-      body: IndexedStack(index: _index, children: tabs),
+      body: Column(children: [
+        const OfflineBanner(),
+        Expanded(child: IndexedStack(index: _index, children: tabs)),
+      ]),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
