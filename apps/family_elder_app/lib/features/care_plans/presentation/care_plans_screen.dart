@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/providers.dart';
 import '../../payments/presentation/demo_payment_sheet.dart';
+import '../../payments/presentation/payment_flow_screens.dart';
 import '../data/care_plans_repository.dart';
 
 final _plansProvider =
@@ -375,8 +376,28 @@ class _PlanCard extends ConsumerWidget {
           linkId: linkId, elderId: elderId, carePlanId: planId);
       if (activated) {
         ref.invalidate(_subscriptionProvider(elderId));
-        messenger.showSnackBar(
-            SnackBar(content: Text('${plan['name']} is now active.')));
+        if (!context.mounted) return;
+        final total = (plan['monthly_price'] as num?)?.toDouble() ?? 0;
+        final txn = linkId;
+        await Navigator.of(context).push(MaterialPageRoute<void>(
+          builder: (_) => PaymentResultScreen(
+            status: PaymentStatus.success,
+            title: '${plan['name']} — monthly plan',
+            amountLabel: currencyLabel,
+            txnId: txn,
+            onViewInvoice: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => InvoiceScreen(
+                  invoiceNo: 'INV-${txn.substring(txn.length - 8).toUpperCase()}',
+                  title: '${plan['name']} — monthly plan',
+                  total: total,
+                  method: 'Razorpay',
+                  date: DateTime.now(),
+                ),
+              ),
+            ),
+          ),
+        ));
       } else {
         messenger.showSnackBar(const SnackBar(
             content: Text(
