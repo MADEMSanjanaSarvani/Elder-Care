@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
 
 /// Elder Wellness Activities — a warm daily engagement hub (matched to the
