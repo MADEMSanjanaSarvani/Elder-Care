@@ -143,7 +143,24 @@ Deno.serve(async (req) => {
         headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({ model: "gpt-4o", temperature: 0.2, messages, tools: TOOLS, tool_choice: "auto" }),
       });
-      if (!res.ok) return errorResponse(`AI assistant call failed: ${await res.text()}`, 502);
+      if (!res.ok) {
+        // Dumping OpenAI's raw JSON into a chat bubble helps nobody. The
+        // three failures that happen in practice each have a specific fix,
+        // so name it — "insufficient_quota" especially, which means the key
+        // is valid but the account has no credit. That is where every new
+        // OpenAI project starts, and it is the most likely reason the
+        // assistant appears "broken" on a first run.
+        const body = await res.text();
+        console.error("openai error", res.status, body);
+        const friendly = res.status === 429 && body.includes("insufficient_quota")
+          ? "The assistant is out of credit. Add a little balance to the OpenAI account and it will start working again."
+          : res.status === 429
+            ? "The assistant is busy right now. Please try again in a moment."
+            : res.status === 401
+              ? "The assistant's API key isn't valid. Check OPENAI_API_KEY in the Supabase secrets."
+              : "The assistant is having trouble right now. Please try again shortly.";
+        return errorResponse(friendly, 502);
+      }
       const completion = await res.json();
       const choice = completion.choices?.[0]?.message;
       messages.push(choice);

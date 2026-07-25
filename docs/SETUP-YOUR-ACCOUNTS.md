@@ -27,8 +27,9 @@ with it.
 - [ ] Auth → Providers → **Email**: for a smooth pilot, turn **"Confirm email"
       OFF** (instant signup). For public launch, turn it ON *after* you set up
       custom email (section 7).
-- [ ] Run these once in **SQL Editor** (I'll tell you when each is ready):
-  - `supabase/sample_caregivers.sql` (demo caregivers so the marketplace isn't empty)
+- [ ] Nothing to run by hand — `supabase/seed.sql` creates the region, the
+      service catalogue *and* the demo caregivers, so the marketplace is
+      never empty after a deploy.
 
 **Send me:** Project URL + anon key. **You set as secrets later:** payment & SMS keys.
 

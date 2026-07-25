@@ -36,7 +36,6 @@ import '../features/doctors/presentation/doctors_screen.dart';
 import '../features/doctors/presentation/video_consult_screen.dart';
 import '../features/timeline/presentation/timeline_screen.dart';
 import '../features/trips/presentation/caregiver_trip_screen.dart';
-import '../features/design_preview/presentation/design_preview_screen.dart';
 import '../features/wellness/presentation/wellness_activities_screen.dart';
 import '../features/wellness/presentation/wellness_summary_screen.dart';
 import '../features/trips/presentation/trip_tracking_screen.dart';
@@ -86,9 +85,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
           path: '/reset-password',
           builder: (context, state) => const SetNewPasswordScreen()),
-      GoRoute(
-          path: '/design-preview',
-          builder: (context, state) => const DesignPreviewScreen()),
       GoRoute(
           path: '/home', builder: (context, state) => const HomeRouterScreen()),
       GoRoute(

@@ -6,6 +6,32 @@ import '../../../core/providers.dart';
 import '../data/booking_repository.dart';
 import 'caregiver_select_screen.dart';
 
+/// One plain line describing what actually happens on the visit.
+///
+/// The catalogue only stores a name and a price, and "Home Nursing Visit —
+/// from ₹1199" tells a worried daughter nothing about what she's buying.
+/// These live here rather than in the database on purpose: they're product
+/// copy, they change with the wording of the app, and adding a column would
+/// mean a migration and a redeploy every time a sentence is reworded.
+String _serviceBlurb(String code) {
+  switch (code) {
+    case 'companionship_visit':
+      return 'Someone sits with them, talks, and shares a cup of tea.';
+    case 'medicine_pickup':
+      return 'We collect the prescription and deliver it to their door.';
+    case 'grocery_assistance':
+      return 'Shopping done and put away, from their own list.';
+    case 'physiotherapy':
+      return 'A trained physio runs their exercises at home.';
+    case 'home_nursing':
+      return 'A qualified nurse for dressings, injections and vitals.';
+    case 'hospital_companion':
+      return 'Accompanied to the appointment, with notes sent to you after.';
+    default:
+      return 'A verified caregiver visits and helps at home.';
+  }
+}
+
 IconData _serviceIcon(String code) {
   switch (code) {
     case 'companionship_visit':
@@ -257,10 +283,20 @@ class _ServiceCard extends StatelessWidget {
                   children: [
                     Text(service.name,
                         style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 3),
+                    Text(
+                      _serviceBlurb(service.code),
+                      style: const TextStyle(
+                          color: SetuColors.mutedLight,
+                          fontSize: 13.5,
+                          height: 1.35),
+                    ),
+                    const SizedBox(height: 5),
                     Text(
                       'From ${service.currency} ${service.basePrice.toStringAsFixed(0)}',
-                      style: const TextStyle(color: SetuColors.mutedLight),
+                      style: const TextStyle(
+                          color: SetuColors.accentLight,
+                          fontWeight: FontWeight.w700),
                     ),
                   ],
                 ),

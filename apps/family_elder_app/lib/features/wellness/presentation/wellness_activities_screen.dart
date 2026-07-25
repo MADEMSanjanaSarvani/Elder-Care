@@ -4,6 +4,7 @@ import 'package:setu_core/setu_core.dart';
 
 import '../../family_home/data/home_summary_repository.dart' show HomeSummary;
 import '../../family_home/presentation/family_home_screen.dart' show homeSummaryProvider;
+import 'memory_game_screen.dart';
 
 /// Elder Wellness Activities — a warm daily engagement hub matching the
 /// Stitch "elder_wellness_activities" design: a real health-score ring, a
@@ -16,9 +17,11 @@ import '../../family_home/presentation/family_home_screen.dart' show homeSummary
 /// track. The ring is wired to the same real score (medicines + check-in)
 /// used everywhere else in the app, the insight line is derived from that
 /// same real data, and the walking card dropped its invented step count in
-/// favour of a plain encouragement message. Memory Games, Meditation, Story
-/// Listening and the AI prompt are static engagement content (not user
-/// data), unchanged from before, still wired to the "coming soon" snackbar.
+/// favour of a plain encouragement message. Memory Games opens a real,
+/// playable card-matching game; Meditation and Story Listening remain static
+/// engagement content. The mock's "would you like to hear yesterday's story"
+/// prompt was dropped — both its buttons only raised a "coming soon"
+/// snackbar, and a card that pretends to converse is worse than no card.
 class WellnessActivitiesScreen extends ConsumerWidget {
   const WellnessActivitiesScreen({required this.elderId, super.key});
   final String elderId;
@@ -42,8 +45,6 @@ class WellnessActivitiesScreen extends ConsumerWidget {
           _walkingCard(context, t),
           const SizedBox(height: SetuSpacing.md),
           _storyCard(context, t),
-          const SizedBox(height: SetuSpacing.md),
-          _aiPromptCard(context, t),
         ],
       ),
     );
@@ -196,7 +197,10 @@ class WellnessActivitiesScreen extends ConsumerWidget {
               style: t.bodyMedium?.copyWith(color: SetuColors.mutedLight, height: 1.4)),
           const SizedBox(height: SetuSpacing.md),
           FilledButton.icon(
-            onPressed: () => _soon(context),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                  builder: (_) => const MemoryGameScreen()),
+            ),
             icon: const Icon(Icons.arrow_forward),
             label: const Text('Play Now'),
           ),
@@ -295,50 +299,6 @@ class WellnessActivitiesScreen extends ConsumerWidget {
     );
   }
 
-  Widget _aiPromptCard(BuildContext context, TextTheme t) {
-    return Container(
-      padding: const EdgeInsets.all(SetuSpacing.lg),
-      decoration: BoxDecoration(
-        color: SetuColors.lavenderLight.withValues(alpha: 0.24),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-                color: SetuColors.paperLight.withValues(alpha: 0.7),
-                shape: BoxShape.circle),
-            child: const Icon(Icons.smart_toy_outlined,
-                color: SetuColors.lavenderLight),
-          ),
-          const SizedBox(width: SetuSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                    '"Would you like to hear your favourite story from yesterday?"',
-                    style: t.bodyMedium?.copyWith(height: 1.4, fontWeight: FontWeight.w600)),
-                const SizedBox(height: SetuSpacing.sm),
-                Row(children: [
-                  FilledButton(
-                      onPressed: () => _soon(context),
-                      child: const Text('Yes, please')),
-                  const SizedBox(width: SetuSpacing.sm),
-                  OutlinedButton(
-                      onPressed: () => _soon(context),
-                      child: const Text('Not now')),
-                ]),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _simpleCard(BuildContext context,
       {required TextTheme t,
       required Color tint,
@@ -366,12 +326,6 @@ class WellnessActivitiesScreen extends ConsumerWidget {
           ),
         ),
       ]),
-    );
-  }
-
-  void _soon(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Coming soon in your next update.')),
     );
   }
 }

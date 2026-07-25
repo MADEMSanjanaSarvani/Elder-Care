@@ -273,7 +273,7 @@ Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
   try {
     final client = ref.read(supabaseClientProvider);
     // invoke() returns only on a 2xx; anything else throws FunctionException.
-    await client.functions.invoke('family-add-elder', body: {
+    final res = await client.functions.invoke('family-add-elder', body: {
       'display_name': name,
       'relationship': relationshipController.text.trim(),
       'primary_language': language,
@@ -281,22 +281,45 @@ Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
         'dob':
             '${dob!.year.toString().padLeft(4, '0')}-${dob!.month.toString().padLeft(2, '0')}-${dob!.day.toString().padLeft(2, '0')}',
     });
+    final data = res.data;
+    final newElderId =
+        data is Map && data['elder_id'] is String ? data['elder_id'] as String : null;
     // Wait for the fresh list so the new person is actually on screen before
     // we say "added" — no more "did it save?" ambiguity.
     ref.invalidate(myElderProfilesProvider);
     await ref.read(myElderProfilesProvider.future);
     if (context.mounted) {
       // Full-screen success confirmation (Stitch action_successful).
+      //
+      // The primary action leads straight into medical details rather than
+      // the dashboard. Blood group, allergies and conditions are what a
+      // caregiver or a paramedic sees in an emergency, and they feed the
+      // health profile, the SOS screen and every caregiver's visit view — so
+      // the moment the person is added is the only moment the family is
+      // reliably willing to fill them in. It stays skippable: nobody should
+      // be blocked from finishing because they can't remember a blood group.
       await Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (ctx) => ActionSuccessScreen(
           title: 'Everything is Set Up!',
-          message: '$name is now safely connected to your care circle.',
-          primaryLabel: 'Go to Dashboard',
-          onPrimary: () => Navigator.of(ctx).pop(),
-          secondaryLabel: 'Add Another Profile',
+          message: newElderId == null
+              ? '$name is now safely connected to your care circle.'
+              : '$name is now safely connected to your care circle.\n\n'
+                  'Next, add their medical details — blood group, allergies '
+                  'and conditions. This is what a caregiver or paramedic sees '
+                  'if something goes wrong.',
+          primaryLabel:
+              newElderId == null ? 'Go to Dashboard' : 'Add medical details',
+          onPrimary: () {
+            Navigator.of(ctx).pop();
+            if (newElderId != null) {
+              context.push('/elder/$newElderId/health-profile');
+            }
+          },
+          secondaryLabel:
+              newElderId == null ? 'Add Another Profile' : 'I\'ll do this later',
           onSecondary: () {
             Navigator.of(ctx).pop();
-            showAddElderDialog(context, ref);
+            if (newElderId == null) showAddElderDialog(context, ref);
           },
           tagline: 'Configuration Complete',
         ),
@@ -494,6 +517,12 @@ class _ElderSectionState extends ConsumerState<_ElderSection> {
     const peach = SetuColors.peachLight;
     const lav = SetuColors.lavenderLight;
     const primary = <_Action>[
+      // Emergency comes first and carries the SOS red. The route and screen
+      // already existed but nothing on the family dashboard linked to them,
+      // so a family member simply could not reach SOS — only the elder's own
+      // home had a button. That is the one thing that must never be buried.
+      _Action(Icons.emergency_outlined, 'Emergency', 'sos',
+          SetuColors.sosLight),
       _Action(Icons.add_circle_outline, 'Book help', 'booking', sage),
       _Action(Icons.timeline_outlined, 'Timeline', 'timeline', lav),
       _Action(Icons.medication_outlined, 'Medicines', 'medications', peach),

@@ -8,7 +8,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/app_build.dart';
 import '../../../core/preferences.dart';
 import '../../../core/providers.dart';
-import '../../design_preview/presentation/design_preview_screen.dart';
 import '../../payments/presentation/payment_flow_screens.dart';
 import '../../legal/legal_content.dart';
 import '../../legal/presentation/legal_screen.dart';
@@ -227,12 +226,6 @@ class SettingsScreen extends ConsumerWidget {
                   label: 'Delete my account',
                   danger: true,
                   onTap: () => _deleteAccount(context, ref),
-                ),
-                _NavRow(
-                  icon: Icons.palette_outlined,
-                  label: 'Design Preview',
-                  onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => const DesignPreviewScreen())),
                 ),
               ],
               footer: Container(
