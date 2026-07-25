@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/providers.dart';
 import '../data/booking_repository.dart';
+import '../../../core/illustrations.dart';
 
 String _roleLabel(String subRole) {
   switch (subRole) {
@@ -495,7 +496,8 @@ class _NoCaregivers extends StatelessWidget {
   const _NoCaregivers();
   @override
   Widget build(BuildContext context) {
-    return const SetuEmptyState(
+    return SetuEmptyState(
+      artwork: SetuArt.emptyCare(),
       icon: Icons.groups_outlined,
       title: 'No profiles to show yet',
       message:

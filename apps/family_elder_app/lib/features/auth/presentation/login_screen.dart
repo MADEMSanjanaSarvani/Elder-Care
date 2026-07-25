@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
 
 import '../../../core/app_build.dart';
+import '../../../core/illustrations.dart';
 import '../../../core/providers.dart';
 import '../../legal/legal_content.dart';
 import '../../legal/presentation/legal_screen.dart';
@@ -336,9 +337,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
+      body: Stack(
+        children: [
+          // A soft warm wash behind the top of the form, so the first screen
+          // reads as light rather than an empty panel.
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: MediaQuery.of(context).size.height * 0.42,
+            child: SetuArt.loginBackdrop(),
+          ),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
@@ -513,7 +525,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
             ),
           ),
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }

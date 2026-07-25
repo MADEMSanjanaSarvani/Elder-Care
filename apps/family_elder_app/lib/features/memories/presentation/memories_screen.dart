@@ -4,6 +4,7 @@ import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
 import '../data/memories_repository.dart';
+import '../../../core/illustrations.dart';
 
 /// SETU Memories — the warm, human story of an elder's days. Newest first;
 /// pull-to-refresh (or the top button) asks the server to (re)generate
@@ -71,9 +72,10 @@ class MemoriesScreen extends ConsumerWidget {
             return RefreshIndicator(
               onRefresh: () async => ref.refresh(memoriesProvider(elderId).future),
               child: ListView(
-                children: const [
-                  SizedBox(height: 120),
+                children: [
+                  const SizedBox(height: 120),
                   SetuEmptyState(
+                    artwork: SetuArt.emptyMemories(),
                     icon: Icons.auto_awesome_rounded,
                     title: 'Memories are on the way',
                     message:

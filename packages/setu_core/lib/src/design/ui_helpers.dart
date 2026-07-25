@@ -32,18 +32,25 @@ class SetuIconChip extends StatelessWidget {
   }
 }
 
-/// A calm, centered empty state: icon, title, and a short line of guidance.
+/// A calm, centered empty state: artwork (or icon), title, and a short line
+/// of guidance.
+///
+/// [artwork] takes precedence over [icon] when supplied — screens pass an
+/// illustration from the app's asset bundle. The widget rather than an asset
+/// path keeps this package free of asset declarations of its own.
 class SetuEmptyState extends StatelessWidget {
   const SetuEmptyState({
     required this.icon,
     required this.title,
     this.message,
+    this.artwork,
     super.key,
   });
 
   final IconData icon;
   final String title;
   final String? message;
+  final Widget? artwork;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +60,8 @@ class SetuEmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 56, color: SetuColors.mutedLight),
+            artwork ??
+                Icon(icon, size: 56, color: SetuColors.mutedLight),
             const SizedBox(height: SetuSpacing.md),
             Text(title,
                 textAlign: TextAlign.center,

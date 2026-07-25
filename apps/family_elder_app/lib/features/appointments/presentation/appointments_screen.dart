@@ -5,6 +5,7 @@ import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
 import '../data/appointments_repository.dart';
+import '../../../core/illustrations.dart';
 
 final _appointmentsProvider =
     FutureProvider.family<List<Map<String, dynamic>>, String>((ref, elderId) async {
@@ -35,7 +36,8 @@ class AppointmentsScreen extends ConsumerWidget {
       body: appointmentsAsync.when(
         data: (appointments) {
           if (appointments.isEmpty) {
-            return const SetuEmptyState(
+            return SetuEmptyState(
+              artwork: SetuArt.emptyTimeline(),
               icon: Icons.event_outlined,
               title: 'No appointments yet',
               message: 'Add a doctor visit to track it and book a companion.',

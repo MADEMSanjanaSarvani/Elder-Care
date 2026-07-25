@@ -4,7 +4,7 @@ description: >
   (PRD Part 3 §17/§18): family mode (dashboard, booking, consent
   management) and elder mode (large-text, voice-first, three-action home).
 publish_to: "none"
-version: 0.2.0+14
+version: 0.2.1+15
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -66,3 +66,6 @@ flutter:
     - assets/icon/icon.png
     # Exact Stitch design renders, shown in the in-app Design Preview.
     - assets/stitch/
+    # Original SETU illustrations (tools/build_illustrations.py regenerates
+    # them). The 2.0x/ variants are picked up automatically by Flutter.
+    - assets/illustrations/

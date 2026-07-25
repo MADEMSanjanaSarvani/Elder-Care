@@ -6,6 +6,7 @@ import 'package:setu_core/setu_core.dart';
 import '../../../core/providers.dart';
 import '../data/doctors_repository.dart';
 import 'consultations_screen.dart';
+import '../../../core/illustrations.dart';
 
 final doctorsProvider =
     FutureProvider.family<List<Doctor>, String?>((ref, specialty) async {
@@ -68,7 +69,8 @@ class _DoctorsScreenState extends ConsumerState<DoctorsScreen> {
         error: (e, _) => const SetuErrorState(),
         data: (allDoctors) {
           if (allDoctors.isEmpty) {
-            return const SetuEmptyState(
+            return SetuEmptyState(
+              artwork: SetuArt.emptyCare(),
               icon: Icons.medical_services_outlined,
               title: 'No doctors listed yet',
               message: 'Doctors for your city will appear here soon.',

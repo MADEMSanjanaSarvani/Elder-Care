@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/illustrations.dart';
+
 /// Key persisted in SharedPreferences once onboarding has been seen.
 const onboardingSeenKey = 'onboarding_seen_v1';
 
@@ -185,7 +187,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           s.tint.withValues(alpha: 0.06),
                         ]),
                       ),
-                      child: Icon(s.icon, size: 80, color: s.tint),
+                      // The first slide leads with the family illustration —
+                      // it's the promise of the whole app. The rest keep
+                      // their icons so each slide stays visually distinct.
+                      child: i == 0
+                          ? Center(child: SetuArt.family(height: 150))
+                          : Icon(s.icon, size: 80, color: s.tint),
                     ),
                     const SizedBox(height: SetuSpacing.xl),
                     Text(s.title,

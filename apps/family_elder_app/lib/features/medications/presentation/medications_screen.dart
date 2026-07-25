@@ -6,6 +6,7 @@ import 'package:setu_core/setu_core.dart';
 import '../../../core/providers.dart';
 import '../../wellness/presentation/weekly_activity_chart.dart';
 import '../data/medications_repository.dart';
+import '../../../core/illustrations.dart';
 
 final _medicationsProvider =
     FutureProvider.family<List<Map<String, dynamic>>, String>((ref, elderId) async {
@@ -40,7 +41,8 @@ class MedicationsScreen extends ConsumerWidget {
       body: medicationsAsync.when(
         data: (medications) {
           if (medications.isEmpty) {
-            return const SetuEmptyState(
+            return SetuEmptyState(
+              artwork: SetuArt.emptyCare(),
               icon: Icons.medication_outlined,
               title: 'No medicines yet',
               message: 'Add a medicine to track doses and refills.',

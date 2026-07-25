@@ -4,6 +4,7 @@ import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
 import '../data/rating_repository.dart';
+import '../../../core/illustrations.dart';
 
 final _unratedProvider =
     FutureProvider.family<List<Map<String, dynamic>>, String>((ref, elderId) async {
@@ -29,7 +30,8 @@ class RateVisitsScreen extends ConsumerWidget {
       body: unratedAsync.when(
         data: (bookings) {
           if (bookings.isEmpty) {
-            return const SetuEmptyState(
+            return SetuEmptyState(
+              artwork: SetuArt.emptyCare(),
               icon: Icons.star_outline,
               title: 'Nothing to rate',
               message: 'After a completed visit, you can rate it here.',
