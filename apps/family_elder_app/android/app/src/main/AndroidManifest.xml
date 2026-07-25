@@ -41,6 +41,17 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Deep link for Supabase Auth callbacks (password reset today,
+                 email confirmation later). Without this the emailed link has
+                 nowhere to land and falls back to the project's Site URL,
+                 which is http://localhost:3000 on a fresh project. Keep in
+                 sync with kPasswordResetRedirect in auth_repository.dart. -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="in.carehive.app" android:host="auth"/>
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

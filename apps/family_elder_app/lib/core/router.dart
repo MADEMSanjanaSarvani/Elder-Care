@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../features/appointments/presentation/appointments_screen.dart';
 import '../features/assistant/presentation/assistant_screen.dart';
 import '../features/auth/presentation/choose_role_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
+import '../features/auth/presentation/set_new_password_screen.dart';
 import '../features/booking/presentation/booking_screen.dart';
 import '../features/care_plans/presentation/care_plans_screen.dart';
 import '../features/companion_visits/presentation/companion_preferences_screen.dart';
@@ -44,6 +46,16 @@ import 'providers.dart';
 final routerProvider = Provider<GoRouter>((ref) {
   final client = ref.watch(supabaseClientProvider);
 
+  // A password-reset deep link re-opens the app and Supabase emits this
+  // event once it has exchanged the token for a recovery session. Raise the
+  // flag the redirect below reads, so the user lands on "choose a new
+  // password" rather than silently on the dashboard.
+  ref.listen<AsyncValue<AuthState>>(authStateProvider, (_, next) {
+    if (next.asData?.value.event == AuthChangeEvent.passwordRecovery) {
+      ref.read(passwordRecoveryProvider.notifier).state = true;
+    }
+  });
+
   return GoRouter(
     initialLocation: '/home',
     refreshListenable: GoRouterRefreshStream(client.auth.onAuthStateChange),
@@ -51,6 +63,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       final signedIn = client.auth.currentUser != null;
       final seenOnboarding = ref.read(onboardingSeenProvider);
       final loc = state.matchedLocation;
+      // A password-reset link signs the user in with a recovery session. Pin
+      // them to the "choose a new password" screen until it's actually saved,
+      // otherwise they'd land on the dashboard and never get to change it.
+      if (ref.read(passwordRecoveryProvider)) {
+        return loc == '/reset-password' ? null : '/reset-password';
+      }
       if (!signedIn) {
         // First-time (not yet onboarded) users see the intro carousel first.
         if (!seenOnboarding && loc != '/onboarding') return '/onboarding';
@@ -65,6 +83,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           path: '/onboarding',
           builder: (context, state) => const OnboardingScreen()),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(
+          path: '/reset-password',
+          builder: (context, state) => const SetNewPasswordScreen()),
       GoRoute(
           path: '/design-preview',
           builder: (context, state) => const DesignPreviewScreen()),

@@ -10,6 +10,13 @@ final supabaseClientProvider =
 final authStateProvider =
     StreamProvider<AuthState>((ref) => SetuSupabaseClient.onAuthStateChange);
 
+/// True while the user is inside a Supabase password-recovery session — i.e.
+/// they just followed the link in a reset email and it re-opened the app.
+/// Supabase signs them in with a short-lived recovery session, so without
+/// this flag the router would drop them straight on the dashboard and they'd
+/// never get the chance to choose a new password. Cleared once it's saved.
+final passwordRecoveryProvider = StateProvider<bool>((ref) => false);
+
 /// The signed-in user's `profiles` row — null while signed out or before
 /// the row has been created (see `AuthRepository.completeSignIn`).
 final currentProfileProvider =

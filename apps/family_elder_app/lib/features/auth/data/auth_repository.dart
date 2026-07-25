@@ -3,6 +3,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/env.dart';
 
+/// Where Supabase should send the user back to after they tap the link in a
+/// password-reset email. Must be registered twice to work:
+///   * Android — the `<intent-filter>` on MainActivity in AndroidManifest.xml
+///   * Supabase — Authentication → URL Configuration → Redirect URLs
+/// Without it Supabase falls back to the project's Site URL, which defaults
+/// to `http://localhost:3000` and dead-ends in the phone's browser.
+const String kPasswordResetRedirect = 'in.carehive.app://auth/reset-password';
+
 /// Auth via Supabase Auth. Phone OTP is the primary path — a phone number is
 /// something the elder persona (PRD Part 1 §05) already has memorized and
 /// dials daily. Email + password is offered as a second option for family
@@ -47,7 +55,13 @@ class AuthRepository {
   /// Sends a password-reset email via Supabase Auth (no external provider
   /// needed — Supabase's own mailer delivers it).
   Future<void> sendPasswordReset(String email) =>
-      _client.auth.resetPasswordForEmail(email);
+      _client.auth.resetPasswordForEmail(email,
+          redirectTo: kPasswordResetRedirect);
+
+  /// Sets a new password for the user currently in a recovery session (i.e.
+  /// straight after they followed the emailed link back into the app).
+  Future<void> updatePassword(String newPassword) =>
+      _client.auth.updateUser(UserAttributes(password: newPassword));
 
   /// Native Google Sign-In → Supabase. We ask Google for an idToken audienced
   /// to our Web (server) client, then hand it to Supabase's Google provider.
