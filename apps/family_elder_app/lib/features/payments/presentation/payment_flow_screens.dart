@@ -7,6 +7,16 @@ import 'package:setu_core/setu_core.dart';
 /// refund policy. These are gateway-agnostic — they render whatever the
 /// checkout produced, so wiring a real Razorpay result in later is a data
 /// change, not a rewrite.
+///
+/// Restyled to match the Stitch "secure_payment" design's warm, trustworthy
+/// card language. The mock itself shows an in-app "choose payment method +
+/// enter card number" checkout form — SETU never collects card details
+/// in-app; `createPlanPaymentLink` hands off to Razorpay's own PCI-compliant
+/// hosted checkout page in the external browser (see care_plans_screen.dart
+/// `_subscribe`). Building a look-alike in-app card form here would either
+/// go nowhere (misleading) or imply we handle card data ourselves (we
+/// don't), so it's intentionally not replicated — only the trust-badge
+/// styling and summary-panel visual language carry over.
 
 enum PaymentStatus { success, failed, pending }
 
@@ -128,10 +138,37 @@ class PaymentResultScreen extends StatelessWidget {
                   child: const Text('Done'),
                 ),
               ),
+              const SizedBox(height: SetuSpacing.md),
+              const _SecuredBySetuBadge(),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+/// A small trust footer matching the Stitch "secure_payment" design's
+/// "SECURED BY SETU" badge. The claim is true for SETU's real flow: card
+/// details are entered on Razorpay's own hosted checkout page in the
+/// external browser, never captured by this app.
+class _SecuredBySetuBadge extends StatelessWidget {
+  const _SecuredBySetuBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.lock_outline, size: 14, color: SetuColors.mutedLight),
+        const SizedBox(width: 6),
+        Text('SECURED BY SETU',
+            style: TextStyle(
+                color: SetuColors.mutedLight,
+                fontSize: 11,
+                letterSpacing: 1,
+                fontWeight: FontWeight.w700)),
+      ],
     );
   }
 }
@@ -205,26 +242,59 @@ class InvoiceScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: SetuSpacing.lg),
-          _row('Invoice no.', invoiceNo),
-          _row('Date', '${date.day}/${date.month}/${date.year}'),
-          _row('Payment method', method),
-          const Divider(height: SetuSpacing.xl),
-          Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-          const SizedBox(height: SetuSpacing.md),
-          _row('Taxable value', _r(base)),
-          _row('GST (18%)', _r(gst)),
-          const Divider(height: SetuSpacing.lg),
-          Row(
-            children: [
-              const Text('Total paid',
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-              const Spacer(),
-              Text(_r(total),
-                  style: const TextStyle(
-                      color: SetuColors.accentLight,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 18)),
-            ],
+          Container(
+            padding: const EdgeInsets.all(SetuSpacing.md),
+            decoration: BoxDecoration(
+              color: SetuColors.paperRaisedLight,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: SetuColors.borderLight),
+            ),
+            child: Column(
+              children: [
+                _row('Invoice no.', invoiceNo),
+                _row('Date', '${date.day}/${date.month}/${date.year}'),
+                _row('Payment method', method),
+              ],
+            ),
+          ),
+          const SizedBox(height: SetuSpacing.lg),
+          Text('SUMMARY',
+              style: TextStyle(
+                  color: SetuColors.mutedLight,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1)),
+          const SizedBox(height: SetuSpacing.sm),
+          Container(
+            padding: const EdgeInsets.all(SetuSpacing.lg),
+            decoration: BoxDecoration(
+              color: SetuColors.accentLight.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: SetuColors.accentLight.withValues(alpha: 0.2)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                const SizedBox(height: SetuSpacing.md),
+                _row('Taxable value', _r(base)),
+                _row('GST (18%)', _r(gst)),
+                Divider(height: SetuSpacing.lg, color: SetuColors.borderLight),
+                Row(
+                  children: [
+                    const Text('Total paid',
+                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                    const Spacer(),
+                    Text(_r(total),
+                        style: const TextStyle(
+                            color: SetuColors.accentLight,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 20)),
+                  ],
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: SetuSpacing.xl),
           const Center(
@@ -232,6 +302,8 @@ class InvoiceScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(color: SetuColors.mutedLight)),
           ),
+          const SizedBox(height: SetuSpacing.md),
+          const _SecuredBySetuBadge(),
         ],
       ),
     );

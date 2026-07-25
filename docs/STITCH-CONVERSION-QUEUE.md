@@ -29,10 +29,10 @@ git pull origin claude/elder-care-platform-mx27jo
 | 7 | settings_dashboard | `features/settings/presentation/settings_screen.dart` | ✅ done |
 | 8 | ai_companion | `features/assistant/presentation/assistant_screen.dart` | ✅ done |
 | 9 | add_medication (1+2) | `features/medications/presentation/medications_screen.dart` | ✅ done |
-| 10 | emergency_medical_profile (1+2) | `features/health_profile/presentation/health_profile_screen.dart` | ⬜ |
-| 11 | emergency_sos_active | `features/sos/presentation/sos_screen.dart` | ⬜ |
-| 12 | premium_plans | `features/care_plans/presentation/care_plans_screen.dart` | ⬜ |
-| 13 | secure_payment | `features/payments/presentation/payment_flow_screens.dart` | ⬜ |
+| 10 | emergency_medical_profile (1+2) | `features/health_profile/presentation/health_profile_screen.dart` | ✅ done |
+| 11 | emergency_sos_active | `features/sos/presentation/sos_screen.dart` | ✅ done |
+| 12 | premium_plans | `features/care_plans/presentation/care_plans_screen.dart` | ✅ done |
+| 13 | secure_payment | `features/payments/presentation/payment_flow_screens.dart` | ✅ done |
 | 14 | caregiver_marketplace | `features/booking/presentation/caregiver_select_screen.dart` | ⬜ |
 | 15 | caregiver_details | `features/booking/presentation/caregiver_select_screen.dart` (detail sheet) | ⬜ |
 | 16 | doctor_consultations | `features/doctors/presentation/doctors_screen.dart` | ⬜ |

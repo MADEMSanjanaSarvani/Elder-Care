@@ -255,83 +255,111 @@ class _PlanCard extends ConsumerWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: SetuSpacing.md),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            tint.withValues(alpha: 0.14),
-            tint.withValues(alpha: 0.04),
-          ],
-        ),
+        color: SetuColors.paperRaisedLight,
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-            color: tint.withValues(alpha: popular ? 0.6 : 0.25),
+            color: tint.withValues(alpha: popular ? 0.7 : 0.25),
             width: popular ? 2 : 1),
+        boxShadow: popular
+            ? [
+                BoxShadow(
+                    color: tint.withValues(alpha: 0.18),
+                    blurRadius: 20,
+                    offset: const Offset(0, 6)),
+              ]
+            : null,
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(SetuSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (popular)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              color: tint,
+              child: const Text('MOST POPULAR',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1)),
+            ),
+          Padding(
+            padding: const EdgeInsets.all(SetuSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(plan['name'] as String,
-                    style: Theme.of(context).textTheme.titleLarge),
-                if (popular) ...[
-                  const SizedBox(width: SetuSpacing.sm),
-                  const SetuStatusPill(
-                      label: 'Most loved', color: SetuColors.accentLight),
-                ],
-              ],
-            ),
-            const SizedBox(height: SetuSpacing.xs),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Text('$currency $price',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: tint, fontWeight: FontWeight.w800)),
-                const Text(' / month',
-                    style: TextStyle(color: SetuColors.mutedLight)),
-              ],
-            ),
-            if (plan['description'] != null)
-              Padding(
-                padding: const EdgeInsets.only(top: SetuSpacing.xs),
-                child: Text(plan['description'] as String,
-                    style: const TextStyle(
-                        color: SetuColors.mutedLight, height: 1.4)),
-              ),
-            const SizedBox(height: SetuSpacing.md),
-            for (final alloc in allocations)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w800)),
+                const SizedBox(height: SetuSpacing.xs),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
                   children: [
-                    Icon(Icons.check_circle, size: 18, color: tint),
-                    const SizedBox(width: SetuSpacing.sm),
-                    Expanded(
-                      child: Text(
-                          '${alloc['visits_per_period']} × ${(alloc['service_catalog'] as Map<String, dynamic>?)?['name'] ?? ''} / ${alloc['period']}'),
-                    ),
+                    Text('$currency $price',
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineLarge
+                            ?.copyWith(color: tint, fontWeight: FontWeight.w900)),
+                    const Text(' / month',
+                        style: TextStyle(color: SetuColors.mutedLight)),
                   ],
                 ),
-              ),
-            const SizedBox(height: SetuSpacing.md),
-            FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: tint),
-              onPressed: hasActiveSub
-                  ? null
-                  : () => _subscribe(context, ref,
-                      currencyLabel: '$currency $price'),
-              child: Text(hasActiveSub
-                  ? 'Cancel current plan first'
-                  : 'Choose ${plan['name']}'),
+                if (plan['description'] != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: SetuSpacing.xs),
+                    child: Text(plan['description'] as String,
+                        style: const TextStyle(
+                            color: SetuColors.mutedLight, height: 1.4)),
+                  ),
+                const SizedBox(height: SetuSpacing.md),
+                for (final alloc in allocations)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                              color: tint.withValues(alpha: 0.16),
+                              shape: BoxShape.circle),
+                          child: Icon(Icons.check, size: 14, color: tint),
+                        ),
+                        const SizedBox(width: SetuSpacing.sm),
+                        Expanded(
+                          child: Text(
+                              '${alloc['visits_per_period']} × ${(alloc['service_catalog'] as Map<String, dynamic>?)?['name'] ?? ''} / ${alloc['period']}'),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: SetuSpacing.md),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                        backgroundColor: tint,
+                        padding: const EdgeInsets.symmetric(
+                            vertical: SetuSpacing.md)),
+                    onPressed: hasActiveSub
+                        ? null
+                        : () => _subscribe(context, ref,
+                            currencyLabel: '$currency $price'),
+                    child: Text(hasActiveSub
+                        ? 'Cancel current plan first'
+                        : 'Choose ${plan['name']}'),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

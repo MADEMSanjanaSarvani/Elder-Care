@@ -127,6 +127,33 @@ class _SosScreenState extends ConsumerState<SosScreen> {
               const SizedBox(height: SetuSpacing.md),
             ],
             if (_notified) ...[
+              // Matches the Stitch "emergency_sos_active" badge treatment.
+              Center(
+                child: Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: SetuColors.sosLight,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 3),
+                    boxShadow: [
+                      BoxShadow(
+                          color: SetuColors.sosLight.withValues(alpha: 0.35),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4)),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Text('SOS',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 16,
+                            letterSpacing: 1)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: SetuSpacing.md),
               Text('Emergency Mode Activated',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -136,6 +163,66 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                   textAlign: TextAlign.center,
                   style: TextStyle(color: SetuColors.mutedLight)),
               const SizedBox(height: SetuSpacing.lg),
+              // Decorative "location shared" strip — the real trigger() call
+              // already sent live coordinates; this isn't a live map, just a
+              // reassurance that it happened (no fabricated street address).
+              Container(
+                height: 84,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      SetuColors.verifiedLight.withValues(alpha: 0.16),
+                      SetuColors.accentLight.withValues(alpha: 0.10),
+                    ],
+                  ),
+                  border: Border.all(color: SetuColors.borderLight),
+                ),
+                child: Row(
+                  children: [
+                    const SizedBox(width: SetuSpacing.md),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: const BoxDecoration(
+                          color: SetuColors.verifiedLight, shape: BoxShape.circle),
+                      child: const Icon(Icons.my_location,
+                          color: Colors.white, size: 20),
+                    ),
+                    const SizedBox(width: SetuSpacing.md),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('Live location sharing',
+                              style: TextStyle(fontWeight: FontWeight.w800)),
+                          Text('Responders can see where you are',
+                              style: TextStyle(
+                                  color: SetuColors.mutedLight, fontSize: 12.5)),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(right: SetuSpacing.md),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: SetuColors.verifiedLight,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: const Text('ACTIVE',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5)),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: SetuSpacing.md),
               Container(
                 padding: const EdgeInsets.all(SetuSpacing.lg),
                 decoration: BoxDecoration(
@@ -174,17 +261,27 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                   color: SetuColors.accentLight,
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Row(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.headset_mic_outlined, color: Colors.white),
-                    SizedBox(width: SetuSpacing.md),
-                    Expanded(
-                      child: Text(
-                        'We\'re keeping your line open. If you can speak, tell us '
-                        'what happened. Otherwise, just keep breathing deeply.',
-                        style: TextStyle(color: Colors.white, height: 1.4),
-                      ),
+                    Row(
+                      children: const [
+                        Icon(Icons.headset_mic_outlined,
+                            color: Colors.white, size: 18),
+                        SizedBox(width: 8),
+                        Text('AI DISPATCHER',
+                            style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.6)),
+                      ],
+                    ),
+                    const SizedBox(height: SetuSpacing.sm),
+                    const Text(
+                      'We\'re keeping your line open. If you can speak, tell us '
+                      'what happened. Otherwise, just keep breathing deeply.',
+                      style: TextStyle(color: Colors.white, height: 1.4),
                     ),
                   ],
                 ),
