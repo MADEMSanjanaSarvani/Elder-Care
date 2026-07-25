@@ -25,10 +25,10 @@ git pull origin claude/elder-care-platform-mx27jo
 | 3 | daily_timeline_peace_of_mind (1+2) | `features/timeline/presentation/timeline_screen.dart` | ✅ done |
 | 4 | wellness_summary (1+2) | `features/wellness/presentation/wellness_summary_screen.dart` | ✅ done |
 | 5 | elder_wellness_activities | `features/wellness/presentation/wellness_activities_screen.dart` | ✅ done |
-| 6 | notification_center + no_notifications | `features/notifications/presentation/notification_inbox_screen.dart` | ⬜ |
-| 7 | settings_dashboard | `features/settings/presentation/settings_screen.dart` | ⬜ |
-| 8 | ai_companion | `features/assistant/presentation/assistant_screen.dart` | ⬜ |
-| 9 | add_medication (1+2) | `features/medications/presentation/medications_screen.dart` | ⬜ |
+| 6 | notification_center + no_notifications | `features/notifications/presentation/notification_inbox_screen.dart` | ✅ done |
+| 7 | settings_dashboard | `features/settings/presentation/settings_screen.dart` | ✅ done |
+| 8 | ai_companion | `features/assistant/presentation/assistant_screen.dart` | ✅ done |
+| 9 | add_medication (1+2) | `features/medications/presentation/medications_screen.dart` | ✅ done |
 | 10 | emergency_medical_profile (1+2) | `features/health_profile/presentation/health_profile_screen.dart` | ⬜ |
 | 11 | emergency_sos_active | `features/sos/presentation/sos_screen.dart` | ⬜ |
 | 12 | premium_plans | `features/care_plans/presentation/care_plans_screen.dart` | ⬜ |

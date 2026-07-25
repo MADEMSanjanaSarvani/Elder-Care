@@ -85,7 +85,7 @@ class MedicationsScreen extends ConsumerWidget {
       await MedicationsRepository(client).addMedication(
         elderId: elderId,
         name: result.name.trim(),
-        dosage: result.dosage.trim(),
+        dosage: result.dosage,
         times: result.times,
         addedBy: userId,
       );
@@ -105,10 +105,18 @@ class _AddMedResult {
   final List<String> times;
 }
 
-/// Add-medication form built to the Stitch `add_medication` design: a warm
-/// sheet with name/dosage inputs, a frequency selector that fills in the dose
-/// times, and a note on the voice-reminder + refill-alert behaviour SETU runs
-/// automatically. Submits through the same repository as before.
+/// Add-medication form built to match the Stitch `add_medication` design
+/// (both frames): a hero banner, a split amount+unit dosage entry, a
+/// frequency selector that fills in the dose times, and a note on the
+/// voice-reminder + refill-alert behaviour SETU runs automatically.
+/// Submits through the same repository as before — the amount+unit split is
+/// purely a visual/entry convenience, composed back into the single dosage
+/// string the backend already expects.
+///
+/// The Stitch mock's frame 2 also shows a fabricated "AI SUGGESTION: Take
+/// with food..." card — there's no real per-medicine advice engine behind
+/// that (and a wrong guess here would be a safety issue, not just a UI
+/// nit), so it's omitted rather than invented.
 class _AddMedicationSheet extends StatefulWidget {
   const _AddMedicationSheet();
 
@@ -118,8 +126,11 @@ class _AddMedicationSheet extends StatefulWidget {
 
 class _AddMedicationSheetState extends State<_AddMedicationSheet> {
   final _name = TextEditingController();
-  final _dosage = TextEditingController();
+  final _dosageAmount = TextEditingController();
+  String _dosageUnit = 'mg';
   String _frequency = 'twice';
+
+  static const _units = ['mg', 'ml', 'mcg', 'tablet(s)', 'drop(s)', 'puff(s)'];
 
   // Default dose times per frequency (24h).
   static const _timesByFrequency = {
@@ -132,8 +143,13 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
   @override
   void dispose() {
     _name.dispose();
-    _dosage.dispose();
+    _dosageAmount.dispose();
     super.dispose();
+  }
+
+  String get _dosage {
+    final amount = _dosageAmount.text.trim();
+    return amount.isEmpty ? '' : '$amount $_dosageUnit';
   }
 
   @override
@@ -162,30 +178,36 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
                     borderRadius: BorderRadius.circular(999)),
               ),
             ),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                      color: SetuColors.peachLight.withValues(alpha: 0.18),
-                      shape: BoxShape.circle),
-                  child: const Icon(Icons.medication_rounded,
-                      color: SetuColors.peachLight),
-                ),
-                const SizedBox(width: SetuSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Add New Medication',
-                          style: t.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.w800)),
-                      const Text('Keep track of health with ease.',
-                          style: TextStyle(color: SetuColors.mutedLight)),
-                    ],
+            Text('Add New Medication',
+                style: t.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+            const SizedBox(height: SetuSpacing.md),
+            // Hero banner (matches the Stitch design's purple info panel).
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                  vertical: SetuSpacing.lg, horizontal: SetuSpacing.md),
+              decoration: BoxDecoration(
+                color: SetuColors.lavenderLight.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                        color: SetuColors.lavenderLight.withValues(alpha: 0.18),
+                        shape: BoxShape.circle),
+                    child: const Icon(Icons.medication_rounded,
+                        color: SetuColors.lavenderLight, size: 28),
                   ),
-                ),
-              ],
+                  const SizedBox(height: SetuSpacing.sm),
+                  const Text('Keep track of your health with ease.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: SetuColors.lavenderLight,
+                          fontWeight: FontWeight.w600)),
+                ],
+              ),
             ),
             const SizedBox(height: SetuSpacing.lg),
             const Text('Medicine Name',
@@ -201,9 +223,30 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
             const Text('Dosage',
                 style: TextStyle(fontWeight: FontWeight.w700)),
             const SizedBox(height: SetuSpacing.sm),
-            TextField(
-              controller: _dosage,
-              decoration: const InputDecoration(hintText: 'e.g. 5mg, 1 tablet'),
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: TextField(
+                    controller: _dosageAmount,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(hintText: 'e.g. 5'),
+                  ),
+                ),
+                const SizedBox(width: SetuSpacing.sm),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    initialValue: _dosageUnit,
+                    items: [
+                      for (final u in _units)
+                        DropdownMenuItem(value: u, child: Text(u)),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) setState(() => _dosageUnit = v);
+                    },
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: SetuSpacing.md),
             const Text('Frequency',
@@ -221,7 +264,7 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
             ),
             if (times.isNotEmpty) ...[
               const SizedBox(height: SetuSpacing.md),
-              const Text('Times of day',
+              const Text('Time of Day',
                   style: TextStyle(fontWeight: FontWeight.w700)),
               const SizedBox(height: SetuSpacing.sm),
               Wrap(
@@ -243,16 +286,16 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
             ],
             const SizedBox(height: SetuSpacing.md),
             _autoFeatureRow(Icons.record_voice_over,
-                'Voice reminders', 'Friendly spoken prompts at each dose time.'),
+                'Voice Reminders', 'Friendly spoken prompts at each dose time.'),
             const SizedBox(height: SetuSpacing.sm),
             _autoFeatureRow(Icons.notification_important_outlined,
-                'Refill alerts', 'We notify the family when stock runs low.'),
+                'Refill Alerts', 'We notify the family when stock runs low.'),
             const SizedBox(height: SetuSpacing.lg),
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
-                onPressed: () => Navigator.of(context).pop(
-                    _AddMedResult(_name.text, _dosage.text, times)),
+                onPressed: () => Navigator.of(context)
+                    .pop(_AddMedResult(_name.text, _dosage, times)),
                 icon: const Icon(Icons.add_circle_outline),
                 label: const Text('Add Medicine'),
               ),
@@ -304,8 +347,7 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
               ],
             ),
           ),
-          const Icon(Icons.check_circle,
-              color: SetuColors.verifiedLight, size: 20),
+          const Switch(value: true, onChanged: null),
         ],
       ),
     );

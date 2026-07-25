@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
+import '../../family_home/presentation/family_home_screen.dart' show homeSummaryProvider;
 import '../data/assistant_repository.dart';
 
 class _ChatMessage {
@@ -13,11 +14,15 @@ class _ChatMessage {
   final Map<String, dynamic>? bookingDraft;
 }
 
-/// AI Care Assistant chat (PRD Part 7, Batch 4, Module 13). Suggested
-/// question chips on first open so a first-time user isn't staring at a
-/// blank box wondering what's allowed. A booking the assistant proposes
-/// shows as an explicit confirm card — the assistant never books anything
-/// directly.
+/// AI Care Assistant chat, matching the Stitch "ai_companion" design: a big
+/// glowing orb with a real mood pill, suggested question chips on first
+/// open, and a Memory Lane prompt that deep-links into the real memories
+/// feature. A booking the assistant proposes shows as an explicit confirm
+/// card — the assistant never books anything directly.
+///
+/// The Stitch mock also shows a "Hydration Reminder" card ("You've had 4
+/// glasses today") — SETU tracks no water-intake data, so it's omitted
+/// rather than shown with an invented count.
 class AssistantScreen extends ConsumerStatefulWidget {
   const AssistantScreen({required this.elderId, super.key});
 
@@ -90,8 +95,8 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(height: SetuSpacing.xl),
-          const _BreathingOrb(),
+          const SizedBox(height: SetuSpacing.lg),
+          _BreathingOrb(elderId: widget.elderId),
           const SizedBox(height: SetuSpacing.xl),
           Builder(builder: (context) {
             final elder =
@@ -131,6 +136,8 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
                 ),
             ],
           ),
+          const SizedBox(height: SetuSpacing.lg),
+          _MemoryLaneCard(elderId: widget.elderId),
         ],
       ),
     );
@@ -208,16 +215,20 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
   }
 }
 
-/// A soft, slowly-breathing lavender orb — the companion's calm presence.
-/// Honours reduced-motion (renders a static orb).
-class _BreathingOrb extends StatefulWidget {
-  const _BreathingOrb();
+/// A soft, slowly-breathing lavender orb — the companion's calm presence,
+/// with a real mood pill (from the elder's own logged mood) floating on
+/// top, matching the Stitch design's "Calm Mood" chip. Honours
+/// reduced-motion (renders a static orb).
+class _BreathingOrb extends ConsumerStatefulWidget {
+  const _BreathingOrb({required this.elderId});
+
+  final String elderId;
 
   @override
-  State<_BreathingOrb> createState() => _BreathingOrbState();
+  ConsumerState<_BreathingOrb> createState() => _BreathingOrbState();
 }
 
-class _BreathingOrbState extends State<_BreathingOrb>
+class _BreathingOrbState extends ConsumerState<_BreathingOrb>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
       vsync: this, duration: const Duration(seconds: 4))
@@ -231,10 +242,13 @@ class _BreathingOrbState extends State<_BreathingOrb>
 
   @override
   Widget build(BuildContext context) {
+    final mood =
+        ref.watch(homeSummaryProvider(widget.elderId)).asData?.value.mood;
+
     final reduce = MediaQuery.of(context).disableAnimations;
     Widget orb(double scale) => Container(
-          width: 132 * scale,
-          height: 132 * scale,
+          width: 148 * scale,
+          height: 148 * scale,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: RadialGradient(colors: [
@@ -243,12 +257,108 @@ class _BreathingOrbState extends State<_BreathingOrb>
             ]),
           ),
           child: const Icon(Icons.auto_awesome,
-              size: 52, color: SetuColors.lavenderLight),
+              size: 56, color: SetuColors.lavenderLight),
         );
-    if (reduce) return orb(1);
-    return AnimatedBuilder(
-      animation: _c,
-      builder: (_, __) => orb(0.94 + _c.value * 0.12),
+
+    return SizedBox(
+      width: 176,
+      height: 176,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.center,
+        children: [
+          if (reduce) orb(1) else AnimatedBuilder(
+            animation: _c,
+            builder: (_, __) => orb(0.94 + _c.value * 0.12),
+          ),
+          if (mood != null && mood.isNotEmpty)
+            Positioned(
+              top: 4,
+              right: -8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: SetuSpacing.sm, vertical: 6),
+                decoration: BoxDecoration(
+                  color: SetuColors.paperRaisedLight,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: SetuColors.borderLight),
+                  boxShadow: const [
+                    BoxShadow(
+                        color: Color(0x1A000000), blurRadius: 8, offset: Offset(0, 2)),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.favorite,
+                        size: 14, color: SetuColors.accentLight),
+                    const SizedBox(width: 4),
+                    Text('${mood[0].toUpperCase()}${mood.substring(1)} mood',
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Prompts to look back at the elder's real memories feed — matches the
+/// Stitch "Memory Lane" mindfulness card, without inventing a specific
+/// memory (no real memory content is fetched here; the tap opens the real
+/// memories screen where actual entries live).
+class _MemoryLaneCard extends StatelessWidget {
+  const _MemoryLaneCard({required this.elderId});
+  final String elderId;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(SetuSpacing.lg),
+      decoration: BoxDecoration(
+        color: SetuColors.paperRaisedLight,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: SetuColors.borderLight),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.psychology_outlined,
+                  size: 16, color: SetuColors.lavenderLight),
+              const SizedBox(width: 6),
+              const Text('MINDFULNESS',
+                  style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
+                      color: SetuColors.lavenderLight)),
+            ],
+          ),
+          const SizedBox(height: SetuSpacing.sm),
+          Text('Memory Lane',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 4),
+          const Text('Would you like to look back at some warm moments together?',
+              style: TextStyle(color: SetuColors.mutedLight, height: 1.3)),
+          const SizedBox(height: SetuSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () => context.push('/elder/$elderId/memories'),
+              child: const Text('Yes, show me'),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
