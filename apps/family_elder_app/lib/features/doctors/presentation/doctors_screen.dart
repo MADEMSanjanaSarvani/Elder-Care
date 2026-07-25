@@ -13,14 +13,44 @@ final doctorsProvider =
       .list(specialty: specialty);
 });
 
-/// The doctor directory: browse SETU-empanelled doctors and book a
-/// video / audio / in-person consult for an elder.
-class DoctorsScreen extends ConsumerWidget {
+/// The doctor directory, matching the Stitch "doctor_consultations" design:
+/// a search bar over the same already-fetched doctor list (client-side
+/// filter, no new query), and restyled cards. Browse SETU-empanelled
+/// doctors and book a video / audio / in-person consult for an elder.
+///
+/// The Stitch mock also shows a review count next to the star rating
+/// ("4.9 (120+)") and a "Preparing for your call" checklist (connection
+/// test, health records, symptoms) — SETU's Doctor model has no review
+/// count field, and there's no pre-call prep feature behind that checklist,
+/// so neither is invented here.
+class DoctorsScreen extends ConsumerStatefulWidget {
   const DoctorsScreen({required this.elderId, super.key});
   final String elderId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DoctorsScreen> createState() => _DoctorsScreenState();
+}
+
+class _DoctorsScreenState extends ConsumerState<DoctorsScreen> {
+  final _searchController = TextEditingController();
+  String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      setState(() => _query = _searchController.text.trim().toLowerCase());
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final async = ref.watch(doctorsProvider(null));
     return Scaffold(
       appBar: AppBar(
@@ -29,29 +59,62 @@ class DoctorsScreen extends ConsumerWidget {
           IconButton(
             tooltip: 'My consultations',
             icon: const Icon(Icons.event_note_outlined),
-            onPressed: () => context.push('/elder/$elderId/consultations'),
+            onPressed: () => context.push('/elder/${widget.elderId}/consultations'),
           ),
         ],
       ),
       body: async.when(
         loading: () => const SetuLoading(),
         error: (e, _) => const SetuErrorState(),
-        data: (doctors) {
-          if (doctors.isEmpty) {
+        data: (allDoctors) {
+          if (allDoctors.isEmpty) {
             return const SetuEmptyState(
               icon: Icons.medical_services_outlined,
               title: 'No doctors listed yet',
               message: 'Doctors for your city will appear here soon.',
             );
           }
-          return ListView.separated(
+          final doctors = _query.isEmpty
+              ? allDoctors
+              : allDoctors
+                  .where((d) =>
+                      d.displayName.toLowerCase().contains(_query) ||
+                      d.specialty.toLowerCase().contains(_query))
+                  .toList();
+          return ListView(
             padding: const EdgeInsets.all(SetuSpacing.lg),
-            itemCount: doctors.length,
-            separatorBuilder: (_, __) => const SizedBox(height: SetuSpacing.md),
-            itemBuilder: (context, i) => _DoctorCard(
-              doctor: doctors[i],
-              onBook: () => _openBooking(context, ref, doctors[i]),
-            ),
+            children: [
+              Text('Expert Consultations',
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineSmall
+                      ?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 4),
+              const Text('Book a video, audio or in-person consult for your family.',
+                  style: TextStyle(color: SetuColors.mutedLight)),
+              const SizedBox(height: SetuSpacing.md),
+              TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  hintText: 'Search by name or specialty',
+                  prefixIcon: Icon(Icons.search),
+                ),
+              ),
+              const SizedBox(height: SetuSpacing.lg),
+              if (doctors.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: SetuSpacing.lg),
+                  child: Text('No doctors match your search.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: SetuColors.mutedLight)),
+                )
+              else
+                for (final d in doctors) ...[
+                  _DoctorCard(
+                      doctor: d, onBook: () => _openBooking(context, ref, d)),
+                  const SizedBox(height: SetuSpacing.md),
+                ],
+            ],
           );
         },
       ),
@@ -64,7 +127,7 @@ class DoctorsScreen extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (_) => _BookingSheet(elderId: elderId, doctor: doctor),
+      builder: (_) => _BookingSheet(elderId: widget.elderId, doctor: doctor),
     );
   }
 }
@@ -79,7 +142,7 @@ class _DoctorCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(SetuSpacing.lg),
       decoration: BoxDecoration(
-        color: SetuColors.paperLight,
+        color: SetuColors.paperRaisedLight,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: SetuColors.borderLight),
       ),
@@ -90,7 +153,7 @@ class _DoctorCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CircleAvatar(
-                radius: 26,
+                radius: 28,
                 backgroundColor: SetuColors.accentLight.withValues(alpha: 0.14),
                 backgroundImage: doctor.photoUrl != null
                     ? NetworkImage(doctor.photoUrl!)
@@ -110,7 +173,9 @@ class _DoctorCard extends StatelessWidget {
                             .titleMedium
                             ?.copyWith(fontWeight: FontWeight.w800)),
                     Text(doctor.specialty,
-                        style: const TextStyle(color: SetuColors.accentLight)),
+                        style: const TextStyle(
+                            color: SetuColors.accentLight,
+                            fontWeight: FontWeight.w600)),
                     if (doctor.qualification != null)
                       Text(doctor.qualification!,
                           style: const TextStyle(
@@ -119,13 +184,21 @@ class _DoctorCard extends StatelessWidget {
                 ),
               ),
               if (doctor.rating != null)
-                Row(children: [
-                  const Icon(Icons.star_rounded,
-                      size: 16, color: SetuColors.peachLight),
-                  const SizedBox(width: 2),
-                  Text(doctor.rating!.toStringAsFixed(1),
-                      style: const TextStyle(fontWeight: FontWeight.w700)),
-                ]),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: SetuColors.peachLight.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    const Icon(Icons.star_rounded,
+                        size: 15, color: SetuColors.peachLight),
+                    const SizedBox(width: 2),
+                    Text(doctor.rating!.toStringAsFixed(1),
+                        style: const TextStyle(fontWeight: FontWeight.w700)),
+                  ]),
+                ),
             ],
           ),
           const SizedBox(height: SetuSpacing.md),

@@ -33,10 +33,10 @@ git pull origin claude/elder-care-platform-mx27jo
 | 11 | emergency_sos_active | `features/sos/presentation/sos_screen.dart` | ✅ done |
 | 12 | premium_plans | `features/care_plans/presentation/care_plans_screen.dart` | ✅ done |
 | 13 | secure_payment | `features/payments/presentation/payment_flow_screens.dart` | ✅ done |
-| 14 | caregiver_marketplace | `features/booking/presentation/caregiver_select_screen.dart` | ⬜ |
-| 15 | caregiver_details | `features/booking/presentation/caregiver_select_screen.dart` (detail sheet) | ⬜ |
-| 16 | doctor_consultations | `features/doctors/presentation/doctors_screen.dart` | ⬜ |
-| 17 | family_circle_permissions | `features/family_access/presentation/family_access_screen.dart` | ⬜ |
+| 14 | caregiver_marketplace | `features/booking/presentation/caregiver_select_screen.dart` | ✅ done |
+| 15 | caregiver_details | `features/booking/presentation/caregiver_select_screen.dart` (detail sheet) | ✅ done |
+| 16 | doctor_consultations | `features/doctors/presentation/doctors_screen.dart` | ✅ done |
+| 17 | family_circle_permissions | `features/family_access/presentation/family_access_screen.dart` | ✅ done |
 | 18 | login | `features/auth/presentation/login_screen.dart` | ⬜ |
 | 19 | create_account | `features/auth/presentation/login_screen.dart` (sign-up mode) | ⬜ |
 | 20 | forgot_password | `features/auth/presentation/login_screen.dart` (reset flow) | ⬜ |
