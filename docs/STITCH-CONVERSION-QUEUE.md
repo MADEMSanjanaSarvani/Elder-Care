@@ -37,11 +37,11 @@ git pull origin claude/elder-care-platform-mx27jo
 | 15 | caregiver_details | `features/booking/presentation/caregiver_select_screen.dart` (detail sheet) | ✅ done |
 | 16 | doctor_consultations | `features/doctors/presentation/doctors_screen.dart` | ✅ done |
 | 17 | family_circle_permissions | `features/family_access/presentation/family_access_screen.dart` | ✅ done |
-| 18 | login | `features/auth/presentation/login_screen.dart` | ⬜ |
-| 19 | create_account | `features/auth/presentation/login_screen.dart` (sign-up mode) | ⬜ |
-| 20 | forgot_password | `features/auth/presentation/login_screen.dart` (reset flow) | ⬜ |
-| 21 | role_selection | `features/auth/presentation/choose_role_screen.dart` | ⬜ |
-| 22 | splash_onboarding | `features/onboarding/presentation/onboarding_screen.dart` | ⬜ |
+| 18 | login | `features/auth/presentation/login_screen.dart` | ✅ done |
+| 19 | create_account | `features/auth/presentation/login_screen.dart` (sign-up mode) | ✅ done |
+| 20 | forgot_password | `features/auth/presentation/login_screen.dart` (reset flow) | ✅ done |
+| 21 | role_selection | `features/auth/presentation/choose_role_screen.dart` | ✅ done |
+| 22 | splash_onboarding | `features/onboarding/presentation/onboarding_screen.dart` | ✅ done (already matched — verified against the design, left as-is) |
 | 23 | add_elder_profile | `showAddElderDialog` in `features/family_home/presentation/family_home_screen.dart` | ⬜ |
 | 24 | action_successful | `core/action_success.dart` | ⬜ |
 | 25 | caregiver_dashboard | `features/job_queue/presentation/job_queue_screen.dart` | ⬜ |

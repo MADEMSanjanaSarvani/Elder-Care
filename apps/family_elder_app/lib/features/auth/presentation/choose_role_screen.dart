@@ -12,6 +12,11 @@ import '../data/auth_repository.dart';
 /// so role selection has to live on the far side of that redirect to be
 /// reliable. Picking a role writes the profile and drops the user into the
 /// right home.
+///
+/// Matches the Stitch "role_selection" design: big rounded role cards with
+/// a first-person description and an arrow-led action label, plus the
+/// "Because Distance Should Never Mean Less Care." line already used on
+/// the onboarding splash (the same real copy, not a new tagline).
 class ChooseRoleScreen extends ConsumerStatefulWidget {
   const ChooseRoleScreen({super.key});
 
@@ -56,21 +61,21 @@ class _ChooseRoleScreenState extends ConsumerState<ChooseRoleScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 8),
-                  Center(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: Image.asset('assets/icon/icon.png',
-                          width: 68, height: 68),
-                    ),
-                  ),
-                  const SizedBox(height: SetuSpacing.lg),
+                  Text('SETU',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                          color: SetuColors.accentLight,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1)),
+                  const SizedBox(height: SetuSpacing.md),
                   Text('Welcome to SETU',
                       textAlign: TextAlign.center,
-                      style: theme.textTheme.headlineSmall),
+                      style: theme.textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 6),
                   Text(
-                    'One last step — tell us who you are so we can set up the '
-                    'right home for you.',
+                    'Please select the role that best describes your primary '
+                    'use of the platform.',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium
                         ?.copyWith(color: SetuColors.mutedLight, height: 1.5),
@@ -102,29 +107,52 @@ class _ChooseRoleScreenState extends ConsumerState<ChooseRoleScreen> {
                   _RoleCard(
                     icon: Icons.family_restroom,
                     color: SetuColors.accentLight,
-                    title: "I'm a family member",
-                    subtitle: 'See and manage care for your parent or elder.',
+                    title: 'Family Member',
+                    subtitle:
+                        'I want to stay connected and monitor the well-being '
+                        'of my loved ones from anywhere.',
+                    actionLabel: 'Select Profile',
                     busy: _busy,
                     onTap: () => _choose('family_member'),
                   ),
-                  const SizedBox(height: SetuSpacing.sm),
+                  const SizedBox(height: SetuSpacing.md),
                   _RoleCard(
                     icon: Icons.elderly,
                     color: SetuColors.peachLight,
-                    title: "I'm the senior",
-                    subtitle: 'A simple, large-text app made just for me.',
+                    title: 'Elderly User',
+                    subtitle:
+                        'I need a simple, accessible way to manage my health '
+                        'and reach out for assistance if needed.',
+                    actionLabel: 'Get Started',
                     busy: _busy,
                     onTap: () => _choose('elder'),
                   ),
-                  const SizedBox(height: SetuSpacing.sm),
+                  const SizedBox(height: SetuSpacing.md),
                   _RoleCard(
                     icon: Icons.medical_services_outlined,
                     color: SetuColors.lavenderLight,
-                    title: "I'm a caregiver",
-                    subtitle: 'My visits, check-ins and earnings.',
+                    title: 'Verified Caregiver',
+                    subtitle:
+                        'I am a professional providing care and need tools to '
+                        'efficiently coordinate and monitor tasks.',
+                    actionLabel: 'Register Credentials',
                     busy: _busy,
                     onTap: () => _choose('caregiver'),
                   ),
+                  const SizedBox(height: SetuSpacing.xl),
+                  Text('MISSION STATEMENT',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: SetuColors.mutedLight,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1)),
+                  const SizedBox(height: 4),
+                  Text('"Because Distance Should Never Mean Less Care."',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                          color: SetuColors.mutedLight,
+                          fontStyle: FontStyle.italic)),
                   const SizedBox(height: SetuSpacing.lg),
                   TextButton(
                     onPressed: _busy
@@ -151,6 +179,7 @@ class _RoleCard extends StatelessWidget {
     required this.color,
     required this.title,
     required this.subtitle,
+    required this.actionLabel,
     required this.busy,
     required this.onTap,
   });
@@ -159,44 +188,63 @@ class _RoleCard extends StatelessWidget {
   final Color color;
   final String title;
   final String subtitle;
+  final String actionLabel;
   final bool busy;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
       onTap: busy ? null : onTap,
       child: Container(
-        padding: const EdgeInsets.all(SetuSpacing.md),
+        padding: const EdgeInsets.all(SetuSpacing.lg),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: color.withValues(alpha: 0.06),
-          border: Border.all(color: color.withValues(alpha: 0.28)),
+          borderRadius: BorderRadius.circular(20),
+          color: SetuColors.paperRaisedLight,
+          border: Border.all(color: SetuColors.borderLight),
+          boxShadow: const [
+            BoxShadow(
+                color: Color(0x0A000000), blurRadius: 12, offset: Offset(0, 4)),
+          ],
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.all(SetuSpacing.sm),
-              decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.14),
-                  shape: BoxShape.circle),
-              child: Icon(icon, color: color, size: 24),
+            Row(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.14),
+                      shape: BoxShape.circle),
+                  child: Icon(icon, color: color, size: 28),
+                ),
+                const SizedBox(width: SetuSpacing.md),
+                Expanded(
+                  child: Text(title,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(fontWeight: FontWeight.w800)),
+                ),
+              ],
             ),
-            const SizedBox(width: SetuSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 2),
-                  Text(subtitle,
-                      style: const TextStyle(
-                          fontSize: 12.5, color: SetuColors.mutedLight)),
-                ],
-              ),
+            const SizedBox(height: SetuSpacing.sm),
+            Text(subtitle,
+                style: const TextStyle(color: SetuColors.mutedLight, height: 1.4)),
+            const SizedBox(height: SetuSpacing.md),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(actionLabel,
+                    style: TextStyle(color: color, fontWeight: FontWeight.w700)),
+                const SizedBox(width: 4),
+                Icon(Icons.arrow_forward, color: color, size: 18),
+              ],
             ),
-            const Icon(Icons.chevron_right, color: SetuColors.mutedLight),
           ],
         ),
       ),

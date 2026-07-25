@@ -5,12 +5,27 @@ import 'package:setu_core/setu_core.dart';
 
 import '../../../core/app_build.dart';
 import '../../../core/providers.dart';
+import '../../legal/legal_content.dart';
+import '../../legal/presentation/legal_screen.dart';
 import '../data/auth_repository.dart';
 
 enum _AuthMode { phone, email }
 
 enum _LoginStep { enter, enterCode }
 
+/// Matches the Stitch "login" / "create_account" / "forgot_password"
+/// designs: a warm circular app-icon badge, the SETU wordmark, and a
+/// rounded card holding the real auth form. Every control here is the
+/// same real one from before — Email/Phone tabs, Log in/Create account
+/// toggle, the phone-OTP step, Google sign-in, password reset — just
+/// restyled to match.
+///
+/// The Stitch login mock leads with "Get Security Code" (implying a
+/// passwordless phone-only flow) and offers Face ID / Touch ID; the
+/// create_account mock offers "Continue with Apple". None of that exists
+/// in SETU (email+password and phone-OTP are the only sign-in paths, and
+/// there's no biometric or Apple sign-in wired up), so those aren't
+/// reproduced — only Google sign-in, which is real.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -184,13 +199,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
   }
 
-  Future<void> _forgotPassword() {
-    final email = _emailController.text.trim();
-    if (email.isEmpty || !_emailRegex.hasMatch(email)) {
-      setState(() =>
-          _error = 'Enter your email above first, then tap "Forgot password".');
-      return Future.value();
-    }
+  Future<void> _sendPasswordReset(String email) {
     return _run(() async {
       await _repo.sendPasswordReset(email);
       setState(() => _notice =
@@ -212,6 +221,117 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
   }
 
+  Future<void> _showForgotPasswordSheet() async {
+    final controller = TextEditingController(text: _emailController.text.trim());
+    String? sheetError;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: SetuColors.paperLight,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              left: SetuSpacing.lg,
+              right: SetuSpacing.lg,
+              top: SetuSpacing.lg,
+              bottom: MediaQuery.of(sheetContext).viewInsets.bottom + SetuSpacing.lg,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 44,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: SetuSpacing.lg),
+                    decoration: BoxDecoration(
+                        color: SetuColors.borderLight,
+                        borderRadius: BorderRadius.circular(999)),
+                  ),
+                ),
+                Text('Forgot Password?',
+                    style: Theme.of(sheetContext)
+                        .textTheme
+                        .headlineSmall
+                        ?.copyWith(fontWeight: FontWeight.w800)),
+                const SizedBox(height: SetuSpacing.xs),
+                const Text(
+                    'No worries — it happens to the best of us. We\'ll help '
+                    'you get back into your care circle.',
+                    style: TextStyle(color: SetuColors.mutedLight, height: 1.4)),
+                const SizedBox(height: SetuSpacing.lg),
+                TextField(
+                  controller: controller,
+                  keyboardType: TextInputType.emailAddress,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                      labelText: 'Email', prefixIcon: Icon(Icons.mail_outline)),
+                ),
+                if (sheetError != null) ...[
+                  const SizedBox(height: SetuSpacing.sm),
+                  Text(sheetError!,
+                      style: const TextStyle(
+                          color: SetuColors.sosLight, fontSize: 13)),
+                ],
+                const SizedBox(height: SetuSpacing.lg),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: _busy
+                        ? null
+                        : () async {
+                            final email = controller.text.trim();
+                            if (email.isEmpty || !_emailRegex.hasMatch(email)) {
+                              setSheetState(() => sheetError =
+                                  'Please enter a valid email address.');
+                              return;
+                            }
+                            Navigator.of(sheetContext).pop();
+                            await _sendPasswordReset(email);
+                          },
+                    icon: const Icon(Icons.send_outlined),
+                    label: const Text('Send Reset Link'),
+                  ),
+                ),
+                const SizedBox(height: SetuSpacing.md),
+                Container(
+                  padding: const EdgeInsets.all(SetuSpacing.md),
+                  decoration: BoxDecoration(
+                    color: SetuColors.paperRaisedLight,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: SetuColors.borderLight),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.shield_outlined,
+                          size: 18, color: SetuColors.mutedLight),
+                      const SizedBox(width: SetuSpacing.sm),
+                      const Expanded(
+                        child: Text(
+                            'Your security matters. If you don\'t receive an '
+                            'email within a few minutes, check your spam folder.',
+                            style: TextStyle(
+                                color: SetuColors.mutedLight,
+                                fontSize: 12.5,
+                                height: 1.4)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -228,10 +348,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 children: [
                   const SizedBox(height: 12),
                   Center(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(22),
-                      child: Image.asset('assets/icon/icon.png',
-                          width: 84, height: 84),
+                    child: Container(
+                      width: 96,
+                      height: 96,
+                      decoration: BoxDecoration(
+                        color: SetuColors.accentLight.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: Image.asset('assets/icon/icon.png',
+                              width: 64, height: 64),
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: SetuSpacing.lg),
@@ -261,80 +391,124 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       textAlign: TextAlign.center,
                       style: theme.textTheme.labelSmall
                           ?.copyWith(color: SetuColors.mutedLight)),
-                  const SizedBox(height: SetuSpacing.md),
-                  Text(
-                    'Book trusted caregivers, track medicines, get daily '
-                    'check-ins, and one-tap emergency help — everything to '
-                    'care for your parents, together, from anywhere.',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium
-                        ?.copyWith(color: SetuColors.mutedLight, height: 1.5),
-                  ),
-                  const SizedBox(height: SetuSpacing.md),
-                  const Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _MiniFeature(Icons.volunteer_activism_outlined, 'Caregivers'),
-                      _MiniFeature(Icons.medication_outlined, 'Medicines'),
-                      _MiniFeature(Icons.favorite_outline, 'Check-ins'),
-                      _MiniFeature(Icons.sos_outlined, 'SOS help'),
-                    ],
-                  ),
                   const SizedBox(height: SetuSpacing.xl),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(SetuSpacing.lg),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          SizedBox(
-                            width: double.infinity,
-                            child: SegmentedButton<_AuthMode>(
-                              segments: const [
-                                ButtonSegment(
-                                    value: _AuthMode.email,
-                                    label: Text('Email'),
-                                    icon: Icon(Icons.mail_outline)),
-                                ButtonSegment(
-                                    value: _AuthMode.phone,
-                                    label: Text('Phone'),
-                                    icon: Icon(Icons.phone_outlined)),
-                              ],
-                              selected: {_mode},
-                              onSelectionChanged:
-                                  _busy ? null : (s) => _setMode(s.first),
-                            ),
+                  Container(
+                    padding: const EdgeInsets.all(SetuSpacing.lg),
+                    decoration: BoxDecoration(
+                      color: SetuColors.paperRaisedLight,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: SetuColors.borderLight),
+                      boxShadow: const [
+                        BoxShadow(
+                            color: Color(0x0F944A18),
+                            blurRadius: 24,
+                            offset: Offset(0, 8)),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                            _mode == _AuthMode.email
+                                ? (_signUp ? 'Create Account' : 'Welcome Back')
+                                : 'Sign in with phone',
+                            style: theme.textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 2),
+                        Text(
+                            _mode == _AuthMode.email
+                                ? (_signUp
+                                    ? 'Begin your journey in the care circle today.'
+                                    : 'Sign in to your care circle.')
+                                : 'We\'ll text you a one-time code.',
+                            style: const TextStyle(color: SetuColors.mutedLight)),
+                        const SizedBox(height: SetuSpacing.lg),
+                        SizedBox(
+                          width: double.infinity,
+                          child: SegmentedButton<_AuthMode>(
+                            segments: const [
+                              ButtonSegment(
+                                  value: _AuthMode.email,
+                                  label: Text('Email'),
+                                  icon: Icon(Icons.mail_outline)),
+                              ButtonSegment(
+                                  value: _AuthMode.phone,
+                                  label: Text('Phone'),
+                                  icon: Icon(Icons.phone_outlined)),
+                            ],
+                            selected: {_mode},
+                            onSelectionChanged:
+                                _busy ? null : (s) => _setMode(s.first),
                           ),
-                          const SizedBox(height: SetuSpacing.md),
-                          if (_error != null) _banner(_error!, isError: true),
-                          if (_notice != null) _banner(_notice!),
-                          ..._buildFields(),
-                          const SizedBox(height: SetuSpacing.md),
-                          Row(children: const [
-                            Expanded(child: Divider()),
-                            Padding(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: SetuSpacing.sm),
-                              child: Text('or',
-                                  style:
-                                      TextStyle(color: SetuColors.mutedLight)),
-                            ),
-                            Expanded(child: Divider()),
-                          ]),
-                          const SizedBox(height: SetuSpacing.md),
-                          OutlinedButton.icon(
-                            onPressed: _busy ? null : _google,
-                            icon: const Icon(Icons.g_mobiledata, size: 28),
-                            label: const Text('Continue with Google'),
+                        ),
+                        const SizedBox(height: SetuSpacing.md),
+                        if (_error != null) _banner(_error!, isError: true),
+                        if (_notice != null) _banner(_notice!),
+                        ..._buildFields(),
+                        const SizedBox(height: SetuSpacing.md),
+                        Row(children: const [
+                          Expanded(child: Divider()),
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: SetuSpacing.sm),
+                            child: Text('OR CONTINUE WITH',
+                                style: TextStyle(
+                                    color: SetuColors.mutedLight,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.6)),
                           ),
-                        ],
-                      ),
+                          Expanded(child: Divider()),
+                        ]),
+                        const SizedBox(height: SetuSpacing.md),
+                        OutlinedButton.icon(
+                          onPressed: _busy ? null : _google,
+                          icon: const Icon(Icons.g_mobiledata, size: 28),
+                          label: const Text('Continue with Google'),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: SetuSpacing.lg),
+                  Center(
+                    child: TextButton(
+                      onPressed: _busy
+                          ? null
+                          : () => setState(() {
+                                _mode = _AuthMode.email;
+                                _signUp = !_signUp;
+                                _error = null;
+                                _notice = null;
+                              }),
+                      child: Text.rich(TextSpan(children: [
+                        TextSpan(
+                            text: _signUp
+                                ? 'Already a member? '
+                                : 'New to SETU? ',
+                            style: const TextStyle(color: SetuColors.mutedLight)),
+                        TextSpan(
+                            text: _signUp ? 'Log in' : 'Create Account',
+                            style: const TextStyle(
+                                color: SetuColors.accentLight,
+                                fontWeight: FontWeight.w700)),
+                      ])),
+                    ),
+                  ),
+                  const SizedBox(height: SetuSpacing.sm),
+                  Center(
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                              builder: (_) => LegalScreen(
+                                  title: 'Privacy Policy',
+                                  body: kPrivacyPolicy,
+                                  updated: kPrivacyPolicyUpdated))),
+                      child: const Text('Privacy Policy',
+                          style: TextStyle(
+                              color: SetuColors.mutedLight, fontSize: 12.5)),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -415,7 +589,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         autofillHints:
             _signUp ? const [AutofillHints.newPassword] : const [AutofillHints.password],
         decoration: InputDecoration(
-          labelText: 'Password',
+          labelText: _signUp ? 'Strong password' : 'Password',
           prefixIcon: const Icon(Icons.lock_outline),
           suffixIcon: IconButton(
             icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined),
@@ -435,11 +609,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         const SizedBox(height: SetuSpacing.xs),
         const Text('Password must be at least 6 characters.',
             style: TextStyle(fontSize: 12, color: SetuColors.mutedLight)),
+        const SizedBox(height: SetuSpacing.sm),
+        const Text.rich(TextSpan(
+          style: TextStyle(fontSize: 12, color: SetuColors.mutedLight, height: 1.4),
+          children: [
+            TextSpan(text: 'By creating an account, you agree to SETU\'s '),
+            TextSpan(
+                text: 'Terms of Service',
+                style: TextStyle(
+                    color: SetuColors.accentLight, fontWeight: FontWeight.w600)),
+            TextSpan(text: ' and '),
+            TextSpan(
+                text: 'Privacy Policy',
+                style: TextStyle(
+                    color: SetuColors.accentLight, fontWeight: FontWeight.w600)),
+            TextSpan(text: '.'),
+          ],
+        )),
       ] else ...[
         Align(
           alignment: Alignment.centerRight,
           child: TextButton(
-            onPressed: _busy ? null : _forgotPassword,
+            onPressed: _busy ? null : _showForgotPasswordSheet,
             child: const Text('Forgot password?'),
           ),
         ),
@@ -450,7 +641,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         child: Text(_busy
             ? 'Please wait…'
             : _signUp
-                ? 'Create account'
+                ? 'Join the Care Circle'
                 : 'Log in'),
       ),
     ];
@@ -490,39 +681,5 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           onPressed: _busy ? null : _sendCode,
           child: Text(_busy ? 'Please wait…' : 'Send code')),
     ];
-  }
-}
-
-/// A small feature pill used on the welcome/login header to tell newcomers
-/// what SETU is at a glance.
-class _MiniFeature extends StatelessWidget {
-  const _MiniFeature(this.icon, this.label);
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-      decoration: BoxDecoration(
-        color: SetuColors.accentLight.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-            color: SetuColors.accentLight.withValues(alpha: 0.22)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 15, color: SetuColors.accentLight),
-          const SizedBox(width: 6),
-          Text(label,
-              style: const TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
-                  color: SetuColors.accentLight)),
-        ],
-      ),
-    );
   }
 }
