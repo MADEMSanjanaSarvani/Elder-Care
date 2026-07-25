@@ -1,0 +1,34 @@
+# Repo-wide ignores. The per-app .gitignore files cover build output; this
+# one exists to keep secrets out of git no matter which folder they land in.
+
+# ---- Signing keys -------------------------------------------------------
+# The upload keystore IS the app's identity on Google Play. If it leaks,
+# anyone can publish updates as you; if it's committed and the repo ever
+# goes public, it's compromised permanently. It lives on your machine and
+# in GitHub Actions secrets — never here.
+*.jks
+*.keystore
+*.p12
+*.pepk
+key.properties
+keystore.b64
+
+# ---- Service credentials ------------------------------------------------
+.env
+.env.*
+!.env.example
+*service-account*.json
+google-services.json.bak
+
+# ---- OS / editor noise --------------------------------------------------
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+*.iml
+
+# ---- Local scratch ------------------------------------------------------
+/dist/
+/tmp/
+*.log
