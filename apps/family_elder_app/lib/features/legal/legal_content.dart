@@ -44,7 +44,7 @@ so each person can reach only what they're entitled to. Uploaded medical
 files are stored privately and served through short-lived signed links.
 
 CONTACT
-Questions or requests: privacy@carehive.in
+Questions or requests: sanjanasarvani2111@gmail.com
 ''';
 
 const String kTermsOfService = '''
@@ -82,5 +82,5 @@ We may update these terms and will notify you of material changes. You may
 stop using SETU and request account deletion at any time.
 
 CONTACT
-support@carehive.in
+sanjanasarvani2111@gmail.com
 ''';
