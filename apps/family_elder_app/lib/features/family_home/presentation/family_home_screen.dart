@@ -26,11 +26,11 @@ final homeSummaryProvider =
   return HomeSummaryRepository(ref.watch(supabaseClientProvider)).fetch(elderId);
 });
 
-/// Timeline-first dashboard (PRD Part 3 §17). Redesigned to the SETU
-/// design system: an avatar header, a friendly "Today" status card, a clean
-/// grid of the primary actions, and everything secondary tucked under
-/// "More" — clarity over density. Consent/privacy stay one tap away (trust
-/// is a feature, not a buried setting).
+/// Timeline-first dashboard (PRD Part 3 §17), matching the Stitch
+/// "family_dashboard" design: a warm greeting, a bento-style "today" grid
+/// (medicines / mood / check-in), a SETU Memories hero, live caregiver
+/// tracking, an AI insight card, then the full action grid. Consent/privacy
+/// stay one tap away (trust is a feature, not a buried setting).
 class FamilyHomeScreen extends ConsumerWidget {
   const FamilyHomeScreen({super.key});
 
@@ -45,10 +45,10 @@ class FamilyHomeScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(SetuSpacing.lg),
           children: [
             const _GreetingHeader(),
-            const SizedBox(height: SetuSpacing.md),
+            const SizedBox(height: SetuSpacing.lg),
             for (final elder in elders) ...[
-              _ElderCard(elder: elder),
-              const SizedBox(height: SetuSpacing.lg),
+              _ElderSection(elder: elder),
+              const SizedBox(height: SetuSpacing.xl),
             ],
             OutlinedButton.icon(
               onPressed: () => showAddElderDialog(context, ref),
@@ -65,7 +65,7 @@ class FamilyHomeScreen extends ConsumerWidget {
 }
 
 /// A warm, personalised greeting at the top of the dashboard (matches the
-/// Stitch "Good evening, {name}" header).
+/// Stitch "Good morning, {name}" header).
 class _GreetingHeader extends ConsumerWidget {
   const _GreetingHeader();
 
@@ -84,7 +84,7 @@ class _GreetingHeader extends ConsumerWidget {
       first != null ? '$greeting, $first.' : '$greeting.',
       style: Theme.of(context)
           .textTheme
-          .headlineSmall
+          .headlineMedium
           ?.copyWith(fontWeight: FontWeight.w800),
     );
   }
@@ -374,16 +374,21 @@ class _NoElders extends ConsumerWidget {
   }
 }
 
-class _ElderCard extends ConsumerStatefulWidget {
-  const _ElderCard({required this.elder});
+/// One elder's full dashboard: header, "is safe" + mini map, the day's
+/// bento grid, live caregiver tracking, health & activity, AI insight,
+/// SETU Memories, suggestions, then the action grid. Flat, stacked
+/// sections — no enclosing card — matching the Stitch family_dashboard
+/// screen's layout.
+class _ElderSection extends ConsumerStatefulWidget {
+  const _ElderSection({required this.elder});
 
   final ElderProfile elder;
 
   @override
-  ConsumerState<_ElderCard> createState() => _ElderCardState();
+  ConsumerState<_ElderSection> createState() => _ElderSectionState();
 }
 
-class _ElderCardState extends ConsumerState<_ElderCard> {
+class _ElderSectionState extends ConsumerState<_ElderSection> {
   bool _showMore = false;
 
   String _initials(String name) {
@@ -424,98 +429,96 @@ class _ElderCardState extends ConsumerState<_ElderCard> {
       _Action(Icons.shield_outlined, 'Privacy centre', 'privacy', sage),
     ];
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(SetuSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Elder header: avatar + name (multi-elder households need this;
+        // the Stitch mock assumes a single elder).
+        Row(
           children: [
-            // Header: avatar + name
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor:
-                      SetuColors.accentLight.withValues(alpha: 0.15),
-                  child: Text(_initials(elder.displayName),
-                      style: const TextStyle(
-                          color: SetuColors.accentLight,
-                          fontWeight: FontWeight.w700)),
-                ),
-                const SizedBox(width: SetuSpacing.md),
-                Expanded(
-                  child: Text(elder.displayName,
-                      style: Theme.of(context).textTheme.titleLarge),
-                ),
-              ],
+            CircleAvatar(
+              radius: 22,
+              backgroundColor: SetuColors.accentLight.withValues(alpha: 0.15),
+              child: Text(_initials(elder.displayName),
+                  style: const TextStyle(
+                      color: SetuColors.accentLight,
+                      fontWeight: FontWeight.w700)),
             ),
-            const SizedBox(height: SetuSpacing.md),
-            _LiveTripBanner(elderId: id),
-            const _LocationCard(),
-            const SizedBox(height: SetuSpacing.md),
-            const _AiInsightCard(),
-            const SizedBox(height: SetuSpacing.md),
-            _HealthScoreCard(elderId: id),
-            const SizedBox(height: SetuSpacing.md),
-            // Weekly activity graph (real timeline data).
-            WeeklyActivityChart(elderId: id),
-            const SizedBox(height: SetuSpacing.md),
-            // Today at a glance (family_dashboard design).
-            _TodayGlance(elderId: id, name: elder.displayName),
-            const SizedBox(height: SetuSpacing.md),
-            SuggestionsCard(elderId: id),
-            const SizedBox(height: SetuSpacing.md),
-            // Primary actions grid
-            GridView.count(
-              crossAxisCount: 3,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: SetuSpacing.sm,
-              crossAxisSpacing: SetuSpacing.sm,
-              childAspectRatio: 0.92,
-              children: [
-                for (final a in primary)
-                  _ActionTile(action: a, elderId: id),
-              ],
+            const SizedBox(width: SetuSpacing.md),
+            Expanded(
+              child: Text(elder.displayName,
+                  style: Theme.of(context).textTheme.titleLarge),
             ),
-            // More (collapsed)
-            const SizedBox(height: SetuSpacing.xs),
-            InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: () => setState(() => _showMore = !_showMore),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: SetuSpacing.sm),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(_showMore ? 'Show less' : 'More',
-                        style: const TextStyle(
-                            color: SetuColors.accentLight,
-                            fontWeight: FontWeight.w600)),
-                    Icon(
-                        _showMore
-                            ? Icons.keyboard_arrow_up
-                            : Icons.keyboard_arrow_down,
-                        color: SetuColors.accentLight),
-                  ],
-                ),
-              ),
-            ),
-            if (_showMore)
-              GridView.count(
-                crossAxisCount: 3,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: SetuSpacing.sm,
-                crossAxisSpacing: SetuSpacing.sm,
-                childAspectRatio: 0.92,
-                children: [
-                  for (final a in more) _ActionTile(action: a, elderId: id),
-                ],
-              ),
           ],
         ),
-      ),
+        const SizedBox(height: SetuSpacing.md),
+        // "{name} is safe" + mini "at home" map snippet (Stitch welcome
+        // section).
+        _StatusRow(elderId: id, name: elder.displayName),
+        const SizedBox(height: SetuSpacing.md),
+        _LiveTripBanner(elderId: id),
+        // Bento grid: medicines today (full width) + mood / check-in.
+        _BentoGrid(elderId: id),
+        const SizedBox(height: SetuSpacing.md),
+        _HealthScoreCard(elderId: id),
+        const SizedBox(height: SetuSpacing.md),
+        WeeklyActivityChart(elderId: id),
+        const SizedBox(height: SetuSpacing.md),
+        _AiInsightCard(elderId: id),
+        const SizedBox(height: SetuSpacing.md),
+        _MemoriesCard(elderId: id, name: elder.displayName),
+        const SizedBox(height: SetuSpacing.md),
+        SuggestionsCard(elderId: id),
+        const SizedBox(height: SetuSpacing.md),
+        // Primary actions grid
+        GridView.count(
+          crossAxisCount: 3,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: SetuSpacing.sm,
+          crossAxisSpacing: SetuSpacing.sm,
+          childAspectRatio: 0.92,
+          children: [
+            for (final a in primary)
+              _ActionTile(action: a, elderId: id),
+          ],
+        ),
+        // More (collapsed)
+        const SizedBox(height: SetuSpacing.xs),
+        InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => setState(() => _showMore = !_showMore),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: SetuSpacing.sm),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(_showMore ? 'Show less' : 'More',
+                    style: const TextStyle(
+                        color: SetuColors.accentLight,
+                        fontWeight: FontWeight.w600)),
+                Icon(
+                    _showMore
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                    color: SetuColors.accentLight),
+              ],
+            ),
+          ),
+        ),
+        if (_showMore)
+          GridView.count(
+            crossAxisCount: 3,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: SetuSpacing.sm,
+            crossAxisSpacing: SetuSpacing.sm,
+            childAspectRatio: 0.92,
+            children: [
+              for (final a in more) _ActionTile(action: a, elderId: id),
+            ],
+          ),
+      ],
     );
   }
 }
@@ -572,35 +575,100 @@ class _ActionTile extends StatelessWidget {
   }
 }
 
-/// AI Wellness Insight card (redesign home_screen_family): a warm, plain-
-/// language read on the elder's day, framed as the AI companion's voice.
-class _AiInsightCard extends StatelessWidget {
-  const _AiInsightCard();
+/// "{name} is safe" status line with a small "AT HOME" map snippet, matching
+/// the Stitch dashboard's welcome + map row.
+class _StatusRow extends ConsumerWidget {
+  const _StatusRow({required this.elderId, required this.name});
+
+  final String elderId;
+  final String name;
+
+  String get _first => name.trim().split(' ').first;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(homeSummaryProvider(elderId)).asData?.value;
+    final safe = s?.isSafe ?? true;
+    final color = safe ? SetuColors.verifiedLight : SetuColors.peachLight;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: SetuSpacing.sm),
+              Flexible(
+                child: Text('$_first is safe',
+                    style: TextStyle(color: color, fontWeight: FontWeight.w700),
+                    overflow: TextOverflow.ellipsis),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: SetuSpacing.md),
+        const _MapSnippet(),
+      ],
+    );
+  }
+}
+
+/// A small, decorative "at home" map snippet (matches the Stitch dashboard's
+/// map thumbnail). A calm reassurance chip rather than a live GPS claim.
+class _MapSnippet extends StatelessWidget {
+  const _MapSnippet();
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(SetuSpacing.lg),
+      width: 108,
+      height: 64,
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: SetuColors.paperRaisedLight,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: SetuColors.lavenderLight.withValues(alpha: 0.35)),
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            SetuColors.verifiedLight.withValues(alpha: 0.18),
+            SetuColors.accentLight.withValues(alpha: 0.12),
+          ],
+        ),
+        border: Border.all(color: SetuColors.borderLight),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Row(children: const [
-            Icon(Icons.auto_awesome, size: 18, color: SetuColors.lavenderLight),
-            SizedBox(width: 8),
-            Text('AI Wellness Insight',
-                style: TextStyle(
-                    color: SetuColors.lavenderLight,
-                    fontWeight: FontWeight.w800)),
-          ]),
-          const SizedBox(height: SetuSpacing.sm),
-          const Text(
-            '"They had a peaceful morning, took their medicines on time, and '
-            'activity is a little higher than usual today."',
-            style: TextStyle(height: 1.5, fontSize: 15),
+          Positioned.fill(child: CustomPaint(painter: _GridPainter())),
+          Positioned(
+            left: 6,
+            bottom: 6,
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.75),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.6)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(Icons.home_rounded, size: 12, color: SetuColors.accentLight),
+                  SizedBox(width: 3),
+                  Text('AT HOME',
+                      style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.4,
+                          color: SetuColors.inkLight)),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -608,8 +676,338 @@ class _AiInsightCard extends StatelessWidget {
   }
 }
 
-/// Health Score card (redesign home_screen_family): a single reassuring
-/// number with a ring, derived from today's medicines + check-in.
+class _GridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = SetuColors.borderLight.withValues(alpha: 0.5)
+      ..strokeWidth = 1;
+    const step = 26.0;
+    for (double x = 0; x < size.width; x += step) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+    for (double y = 0; y < size.height; y += step) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// "Today at a glance" bento grid — a full-width "medicines taken" tile plus
+/// a mood and check-in tile side by side. Matches the Stitch dashboard's
+/// bento section, using only real data (no invented "next dose" time or
+/// step counts — those aren't tracked yet).
+class _BentoGrid extends ConsumerWidget {
+  const _BentoGrid({required this.elderId});
+
+  final String elderId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(homeSummaryProvider(elderId));
+    return async.when(
+      loading: () =>
+          const SizedBox(height: 140, child: Center(child: SetuLoading())),
+      error: (e, s) => const SizedBox.shrink(),
+      data: (summary) {
+        return Padding(
+          padding: const EdgeInsets.only(top: SetuSpacing.md),
+          child: Column(
+            children: [
+              // Medicines today (full width "daily task" tile).
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(SetuSpacing.md),
+                decoration: BoxDecoration(
+                  color: SetuColors.peachLight.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(20),
+                  border:
+                      Border.all(color: SetuColors.peachLight.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SetuIconChip(
+                            icon: Icons.medication_outlined,
+                            color: SetuColors.peachLight),
+                        const SizedBox(height: SetuSpacing.sm),
+                        const Text('DAILY TASK',
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.6,
+                                color: SetuColors.peachLight)),
+                      ],
+                    ),
+                    const SizedBox(width: SetuSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Medicines Taken',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: SetuColors.mutedLight,
+                                  fontSize: 13)),
+                          Text(
+                            summary.medsTotal == 0
+                                ? 'None scheduled'
+                                : '${summary.medsTaken}/${summary.medsTotal}',
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineLarge
+                                ?.copyWith(
+                                    color: SetuColors.peachLight,
+                                    fontWeight: FontWeight.w800),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: SetuSpacing.sm),
+              // Mood + check-in, side by side.
+              Row(
+                children: [
+                  Expanded(
+                    child: _BentoTile(
+                      icon: Icons.sentiment_satisfied_alt_outlined,
+                      color: SetuColors.lavenderLight,
+                      label: 'MOOD',
+                      value: summary.mood == null
+                          ? '—'
+                          : summary.mood![0].toUpperCase() +
+                              summary.mood!.substring(1),
+                    ),
+                  ),
+                  const SizedBox(width: SetuSpacing.sm),
+                  Expanded(
+                    child: _BentoTile(
+                      icon: Icons.check_circle_outline,
+                      color: SetuColors.verifiedLight,
+                      label: 'CHECK-IN',
+                      value: summary.checkedIn ? 'Done' : 'Pending',
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// A single square bento tile — icon, small caps label, and a bold value.
+class _BentoTile extends StatelessWidget {
+  const _BentoTile({
+    required this.icon,
+    required this.color,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+          vertical: SetuSpacing.md, horizontal: SetuSpacing.sm),
+      decoration: BoxDecoration(
+        color: SetuColors.paperRaisedLight,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: SetuColors.borderLight),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 28),
+          const SizedBox(height: SetuSpacing.sm),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.6,
+                  color: SetuColors.mutedLight)),
+          const SizedBox(height: 2),
+          Text(value,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w800)),
+        ],
+      ),
+    );
+  }
+}
+
+/// SETU Memories hero card — a warm, gradient "moment" card that deep-links
+/// to the elder's full memories feed. Matches the Stitch dashboard's
+/// full-bleed memories section (no real photo asset is bundled, so a warm
+/// gradient stands in for the elder's photo).
+class _MemoriesCard extends StatelessWidget {
+  const _MemoriesCard({required this.elderId, required this.name});
+
+  final String elderId;
+  final String name;
+
+  String get _first => name.trim().split(' ').first;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(24),
+      onTap: () => context.push('/elder/$elderId/memories'),
+      child: Container(
+        height: 200,
+        width: double.infinity,
+        padding: const EdgeInsets.all(SetuSpacing.lg),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              SetuColors.lavenderLight.withValues(alpha: 0.85),
+              SetuColors.accentLight.withValues(alpha: 0.85),
+            ],
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(Icons.auto_awesome, size: 16, color: Colors.white),
+                SizedBox(width: 6),
+                Text('SETU MEMORIES',
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.6,
+                        color: Colors.white70)),
+              ],
+            ),
+            const SizedBox(height: SetuSpacing.xs),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Warm moments from $_first\'s day',
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineMedium
+                              ?.copyWith(
+                                  color: Colors.white, fontWeight: FontWeight.w800)),
+                      const SizedBox(height: 4),
+                      const Text('Tap to see the highlights',
+                          style: TextStyle(color: Colors.white70, fontSize: 13)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: SetuSpacing.md),
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: const BoxDecoration(
+                      color: Colors.white, shape: BoxShape.circle),
+                  child: const Icon(Icons.chevron_right,
+                      color: SetuColors.accentLight),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// AI Wellness Insight card (matches the Stitch dashboard's "AI Insight"
+/// panel): a warm, plain-language read on the elder's day, framed as the AI
+/// companion's voice, with a "View full report" entry into the existing
+/// wellness summary screen.
+class _AiInsightCard extends StatelessWidget {
+  const _AiInsightCard({required this.elderId});
+
+  final String elderId;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(24),
+      onTap: () => context.push('/elder/$elderId/wellness-summary'),
+      child: Container(
+        padding: const EdgeInsets.all(SetuSpacing.lg),
+        decoration: BoxDecoration(
+          color: SetuColors.lavenderLight.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: SetuColors.lavenderLight.withValues(alpha: 0.35)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: const [
+              Icon(Icons.auto_awesome, size: 18, color: SetuColors.lavenderLight),
+              SizedBox(width: 8),
+              Text('AI INSIGHT',
+                  style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
+                      color: SetuColors.lavenderLight)),
+            ]),
+            const SizedBox(height: SetuSpacing.sm),
+            Text(
+              'They had a peaceful morning, took their medicines on time, and '
+              'activity is a little higher than usual today.',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(height: 1.4, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: SetuSpacing.md),
+            Row(
+              children: [
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: SetuSpacing.md, vertical: SetuSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: SetuColors.lavenderLight,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: const Text('View full report',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Health Score card: a single reassuring number with a ring, derived from
+/// today's medicines + check-in.
 class _HealthScoreCard extends ConsumerWidget {
   const _HealthScoreCard({required this.elderId});
   final String elderId;
@@ -692,7 +1090,8 @@ class _HealthScoreCard extends ConsumerWidget {
 }
 
 /// Live "caregiver on the way" banner — appears only while a trip is active,
-/// tapping through to the full real-time tracking view.
+/// tapping through to the full real-time tracking view. Styled after the
+/// Stitch dashboard's dashed-border caregiver tracking card.
 class _LiveTripBanner extends ConsumerWidget {
   const _LiveTripBanner({required this.elderId});
   final String elderId;
@@ -702,316 +1101,128 @@ class _LiveTripBanner extends ConsumerWidget {
     final trip = ref.watch(activeTripProvider(elderId)).asData?.value;
     if (trip == null) return const SizedBox.shrink();
     final arrived = trip.status == TripStatus.arrived;
-    final color =
-        arrived ? SetuColors.verifiedLight : SetuColors.accentLight;
     return Padding(
       padding: const EdgeInsets.only(bottom: SetuSpacing.md),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         onTap: () => context.push('/track/${trip.bookingId}'),
-        child: Container(
-          padding: const EdgeInsets.all(SetuSpacing.md),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withValues(alpha: 0.30)),
-          ),
-          child: Row(
-            children: [
-              SetuIconChip(
-                  icon: arrived
-                      ? Icons.doorbell_outlined
-                      : Icons.directions_car_filled_outlined,
-                  color: color),
-              const SizedBox(width: SetuSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: CustomPaint(
+          painter: _DashedBorderPainter(
+              color: SetuColors.lavenderLight.withValues(alpha: 0.6),
+              radius: 20),
+          child: Container(
+            padding: const EdgeInsets.all(SetuSpacing.md),
+            decoration: BoxDecoration(
+              color: SetuColors.lavenderLight.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              children: [
+                Stack(
                   children: [
-                    Text(arrived ? 'Caregiver has arrived' : 'Caregiver on the way',
-                        style: const TextStyle(fontWeight: FontWeight.w700)),
-                    Text(
-                        arrived
-                            ? 'At the door now'
-                            : trip.etaMinutes != null
-                                ? 'About ${trip.etaMinutes} min away · tap to track'
-                                : 'Tap to track live',
-                        style: const TextStyle(
-                            color: SetuColors.mutedLight, fontSize: 12.5)),
+                    SetuIconChip(
+                      icon: Icons.person,
+                      color: SetuColors.lavenderLight,
+                      size: 26,
+                    ),
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: SetuColors.lavenderLight,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Icon(
+                            arrived
+                                ? Icons.doorbell_outlined
+                                : Icons.directions_car_filled_outlined,
+                            color: Colors.white,
+                            size: 11),
+                      ),
+                    ),
                   ],
                 ),
-              ),
-              const Icon(Icons.chevron_right, color: SetuColors.mutedLight),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// A soft map-style "safe zone" card (matches the Stitch dashboard's location
-/// panel). A calm reassurance band rather than a live GPS claim.
-class _LocationCard extends StatelessWidget {
-  const _LocationCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 108,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            SetuColors.verifiedLight.withValues(alpha: 0.16),
-            SetuColors.accentLight.withValues(alpha: 0.10),
-          ],
-        ),
-        border: Border.all(color: SetuColors.borderLight),
-      ),
-      child: Stack(
-        children: [
-          // Subtle "map grid" texture.
-          Positioned.fill(
-            child: CustomPaint(painter: _GridPainter()),
-          ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: const EdgeInsets.all(SetuSpacing.lg),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: const BoxDecoration(
-                        color: SetuColors.verifiedLight,
-                        shape: BoxShape.circle),
-                    child: const Icon(Icons.home_rounded,
-                        color: Colors.white, size: 22),
-                  ),
-                  const SizedBox(width: SetuSpacing.md),
-                  Column(
+                const SizedBox(width: SetuSpacing.md),
+                Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('At home',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w800)),
-                      const Text('Safe zone',
+                      const Text('CAREGIVER',
                           style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.6,
+                              color: SetuColors.lavenderLight)),
+                      Text(arrived ? 'Caregiver has arrived' : 'Caregiver on the way',
+                          style: const TextStyle(fontWeight: FontWeight.w700)),
+                      Text(
+                          arrived
+                              ? 'At the door now'
+                              : trip.etaMinutes != null
+                                  ? 'About ${trip.etaMinutes} min away'
+                                  : 'Tap to track live',
+                          style: const TextStyle(
                               color: SetuColors.mutedLight, fontSize: 12.5)),
                     ],
                   ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _GridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = SetuColors.borderLight.withValues(alpha: 0.5)
-      ..strokeWidth = 1;
-    const step = 26.0;
-    for (double x = 0; x < size.width; x += step) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
-    }
-    for (double y = 0; y < size.height; y += step) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-/// "Today at a glance" — the emotional heart of the family dashboard: a "safe"
-/// reassurance line, medicines taken today, mood, and a SETU Memories entry.
-class _TodayGlance extends ConsumerWidget {
-  const _TodayGlance({required this.elderId, required this.name});
-
-  final String elderId;
-  final String name;
-
-  String get _first => name.trim().split(' ').first;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final async = ref.watch(homeSummaryProvider(elderId));
-    return async.when(
-      loading: () => const SizedBox(
-          height: 96, child: Center(child: SetuLoading())),
-      error: (e, s) => const SizedBox.shrink(),
-      data: (s) {
-        final safe = s.isSafe;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(safe ? Icons.verified_user : Icons.info_outline,
-                    size: 18,
-                    color: safe
-                        ? SetuColors.verifiedLight
-                        : SetuColors.peachLight),
-                const SizedBox(width: 6),
-                Text('$_first is safe',
-                    style: TextStyle(
-                        color: safe
-                            ? SetuColors.verifiedLight
-                            : SetuColors.peachLight,
-                        fontWeight: FontWeight.w700)),
-              ],
-            ),
-            const SizedBox(height: SetuSpacing.md),
-            // Medicines taken today (peach "daily task" card).
-            Container(
-              padding: const EdgeInsets.all(SetuSpacing.md),
-              decoration: BoxDecoration(
-                color: SetuColors.peachLight.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  const SetuIconChip(
-                      icon: Icons.medication_outlined,
-                      color: SetuColors.peachLight),
-                  const SizedBox(width: SetuSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Medicines today',
-                            style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: SetuColors.mutedLight,
-                                fontSize: 13)),
-                        Text(
-                          s.medsTotal == 0
-                              ? 'None scheduled'
-                              : '${s.medsTaken} / ${s.medsTotal} taken',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineMedium
-                              ?.copyWith(color: SetuColors.peachLight),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: SetuSpacing.sm),
-            Row(
-              children: [
-                Expanded(
-                  child: _MiniStat(
-                    icon: Icons.sentiment_satisfied_alt_outlined,
-                    color: SetuColors.lavenderLight,
-                    label: 'Mood',
-                    value: s.mood == null
-                        ? '—'
-                        : s.mood![0].toUpperCase() + s.mood!.substring(1),
-                  ),
                 ),
                 const SizedBox(width: SetuSpacing.sm),
-                Expanded(
-                  child: _MiniStat(
-                    icon: Icons.check_circle_outline,
-                    color: SetuColors.verifiedLight,
-                    label: 'Check-in',
-                    value: s.checkedIn ? 'Done' : 'Pending',
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: SetuSpacing.md, vertical: SetuSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: SetuColors.lavenderLight,
+                    borderRadius: BorderRadius.circular(999),
                   ),
+                  child: const Text('Live Track',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12.5)),
                 ),
               ],
             ),
-            const SizedBox(height: SetuSpacing.sm),
-            // SETU Memories entry.
-            InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: () => context.push('/elder/$elderId/memories'),
-              child: Container(
-                padding: const EdgeInsets.all(SetuSpacing.md),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [
-                    SetuColors.lavenderLight.withValues(alpha: 0.16),
-                    SetuColors.accentLight.withValues(alpha: 0.10),
-                  ]),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Row(
-                  children: [
-                    SetuIconChip(
-                        icon: Icons.auto_awesome,
-                        color: SetuColors.lavenderLight),
-                    SizedBox(width: SetuSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('SETU Memories',
-                              style: TextStyle(fontWeight: FontWeight.w700)),
-                          Text('Warm moments from their day',
-                              style: TextStyle(
-                                  color: SetuColors.mutedLight, fontSize: 12.5)),
-                        ],
-                      ),
-                    ),
-                    Icon(Icons.chevron_right, color: SetuColors.mutedLight),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+          ),
+        ),
+      ),
     );
   }
 }
 
-class _MiniStat extends StatelessWidget {
-  const _MiniStat(
-      {required this.icon,
-      required this.color,
-      required this.label,
-      required this.value});
+/// Paints a soft dashed rounded-rect border, matching the Stitch caregiver
+/// tracking card's `border-dashed` treatment (Flutter has no built-in
+/// dashed border).
+class _DashedBorderPainter extends CustomPainter {
+  const _DashedBorderPainter({required this.color, required this.radius});
 
-  final IconData icon;
   final Color color;
-  final String label;
-  final String value;
+  final double radius;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(SetuSpacing.md),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 22),
-          const SizedBox(height: SetuSpacing.sm),
-          Text(label,
-              style: const TextStyle(
-                  color: SetuColors.mutedLight, fontSize: 12.5)),
-          Text(value,
-              style: const TextStyle(
-                  fontWeight: FontWeight.w700, fontSize: 16)),
-        ],
-      ),
-    );
+  void paint(Canvas canvas, Size size) {
+    final rrect = RRect.fromRectAndRadius(
+        Offset.zero & size, Radius.circular(radius));
+    final path = Path()..addRRect(rrect);
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4;
+    const dashWidth = 6.0;
+    const dashGap = 4.0;
+    for (final metric in path.computeMetrics()) {
+      var distance = 0.0;
+      while (distance < metric.length) {
+        final next = distance + dashWidth;
+        canvas.drawPath(
+            metric.extractPath(distance, next.clamp(0, metric.length)), paint);
+        distance = next + dashGap;
+      }
+    }
   }
+
+  @override
+  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.radius != radius;
 }
