@@ -47,7 +47,7 @@ git pull origin claude/elder-care-platform-mx27jo
 | 25 | caregiver_dashboard | `features/job_queue/presentation/job_queue_screen.dart` | ✅ done |
 | 26 | visit_task_checklist | `features/visit_tools/presentation/visit_tools_section.dart` | ✅ done |
 | 27 | otp_verification | `features/otp_visit/presentation/otp_visit_screen.dart` | ✅ done |
-| 28 | (bonus) trip tracking | `features/trips/presentation/trip_tracking_screen.dart` | ⬜ |
+| 28 | (bonus) trip tracking — no Stitch export exists; styled to match | `features/trips/presentation/trip_tracking_screen.dart` | ✅ done |
 
 All paths are under `apps/family_elder_app/lib/`.
 
