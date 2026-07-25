@@ -21,10 +21,10 @@ git pull origin claude/elder-care-platform-mx27jo
 | # | Stitch design | Target file | Status |
 |---|---|---|---|
 | 1 | family_dashboard | `features/family_home/presentation/family_home_screen.dart` | ✅ done |
-| 2 | elder_home_screen | `features/elder_home/presentation/elder_home_screen.dart` | ⬜ |
-| 3 | daily_timeline_peace_of_mind (1+2) | `features/timeline/presentation/timeline_screen.dart` | ⬜ |
-| 4 | wellness_summary (1+2) | `features/wellness/presentation/wellness_summary_screen.dart` | ⬜ |
-| 5 | elder_wellness_activities | `features/wellness/presentation/wellness_activities_screen.dart` | ⬜ |
+| 2 | elder_home_screen | `features/elder_home/presentation/elder_home_screen.dart` | ✅ done |
+| 3 | daily_timeline_peace_of_mind (1+2) | `features/timeline/presentation/timeline_screen.dart` | ✅ done |
+| 4 | wellness_summary (1+2) | `features/wellness/presentation/wellness_summary_screen.dart` | ✅ done |
+| 5 | elder_wellness_activities | `features/wellness/presentation/wellness_activities_screen.dart` | ✅ done |
 | 6 | notification_center + no_notifications | `features/notifications/presentation/notification_inbox_screen.dart` | ⬜ |
 | 7 | settings_dashboard | `features/settings/presentation/settings_screen.dart` | ⬜ |
 | 8 | ai_companion | `features/assistant/presentation/assistant_screen.dart` | ⬜ |

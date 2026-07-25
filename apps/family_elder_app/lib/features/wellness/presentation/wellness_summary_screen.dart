@@ -6,11 +6,19 @@ import '../../../core/providers.dart';
 import '../../family_home/presentation/family_home_screen.dart' show homeSummaryProvider;
 import 'weekly_activity_chart.dart';
 
-/// Family-facing Wellness Summary (Stitch `wellness_summary`): a big wellness
-/// ring, an AI daily-insight line, and stat tiles. The score and every tile
-/// are derived from the SAME real data the home dashboard uses
-/// (medications taken today + the daily check-in) — no invented vitals — so
-/// what the family sees here always agrees with the rest of the app.
+/// Family-facing Wellness Summary, matching the Stitch `wellness_summary`
+/// design (both frames): a glass "AI Daily Insights" card with real-data
+/// chips, a big wellness ring, a 2x2 bento grid, and the real weekly trend
+/// chart. The score and every tile are derived from the SAME real data the
+/// home dashboard uses (medications taken today, the daily check-in, mood,
+/// and logged timeline activity) — no invented vitals — so what the family
+/// sees here always agrees with the rest of the app.
+///
+/// The Stitch mock also shows Sleep Quality, Hydration, Steps and Resting
+/// Heart Rate tiles — SETU doesn't track any wearable/vitals data, so those
+/// are omitted rather than filled with invented numbers. Activity and Mood
+/// are wired to the nearest real values instead (weekly timeline event
+/// count, and the elder's own logged mood).
 class WellnessSummaryScreen extends ConsumerWidget {
   const WellnessSummaryScreen({required this.elderId, super.key});
 
@@ -19,6 +27,8 @@ class WellnessSummaryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final summaryAsync = ref.watch(homeSummaryProvider(elderId));
+    final weeklyActivity =
+        ref.watch(weeklyActivityProvider(elderId)).asData?.value;
     final elderAsync = ref.watch(elderProfileByIdProvider(elderId));
     final first = elderAsync.maybeWhen(
       data: (p) => (p?['display_name'] as String?)?.trim().split(' ').first,
@@ -49,30 +59,35 @@ class WellnessSummaryScreen extends ConsumerWidget {
               medsTotal: s.medsTotal,
               checkedIn: checkedIn);
 
+          final weeklyTotal =
+              weeklyActivity?.fold<int>(0, (a, b) => a + b);
+
           return ListView(
             padding: const EdgeInsets.all(SetuSpacing.lg),
             children: [
+              _InsightCard(
+                  insight: insight,
+                  medsTaken: s.medsTaken,
+                  medsTotal: s.medsTotal,
+                  checkedIn: checkedIn),
+              const SizedBox(height: SetuSpacing.lg),
               _RingCard(score: score, label: label),
-              const SizedBox(height: SetuSpacing.lg),
-              _InsightCard(insight: insight),
-              const SizedBox(height: SetuSpacing.lg),
-              WeeklyActivityChart(elderId: elderId),
               const SizedBox(height: SetuSpacing.lg),
               Row(
                 children: [
                   Expanded(
-                    child: _StatTile(
+                    child: _BentoTile(
                       icon: Icons.medication_rounded,
                       tint: SetuColors.peachLight,
                       value: s.medsTotal == 0
                           ? '—'
                           : '${s.medsTaken}/${s.medsTotal}',
-                      label: 'Medicines today',
+                      label: 'MEDICINES TODAY',
                     ),
                   ),
                   const SizedBox(width: SetuSpacing.md),
                   Expanded(
-                    child: _StatTile(
+                    child: _BentoTile(
                       icon: checkedIn
                           ? Icons.check_circle
                           : Icons.pending_outlined,
@@ -80,19 +95,43 @@ class WellnessSummaryScreen extends ConsumerWidget {
                           ? SetuColors.verifiedLight
                           : SetuColors.peachLight,
                       value: checkedIn ? 'Done' : 'Pending',
-                      label: 'Daily check-in',
+                      label: 'DAILY CHECK-IN',
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: SetuSpacing.md),
-              _StatTile(
-                icon: Icons.favorite_rounded,
-                tint: SetuColors.accentLight,
-                value: '$score%',
-                label: 'Overall wellness score',
-                wide: true,
+              Row(
+                children: [
+                  Expanded(
+                    child: _BentoTile(
+                      icon: Icons.directions_walk,
+                      tint: SetuColors.accentLight,
+                      value: weeklyTotal == null ? '—' : '$weeklyTotal',
+                      label: 'ACTIVITY THIS WEEK',
+                    ),
+                  ),
+                  const SizedBox(width: SetuSpacing.md),
+                  Expanded(
+                    child: _BentoTile(
+                      icon: Icons.sentiment_satisfied_alt_outlined,
+                      tint: SetuColors.lavenderLight,
+                      value: s.mood == null
+                          ? '—'
+                          : s.mood![0].toUpperCase() + s.mood!.substring(1),
+                      label: 'MOOD STATUS',
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: SetuSpacing.lg),
+              Text('Weekly Trend',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: SetuSpacing.md),
+              WeeklyActivityChart(elderId: elderId),
             ],
           );
         },
@@ -126,6 +165,110 @@ class WellnessSummaryScreen extends ConsumerWidget {
         ? 'The daily check-in is complete.'
         : 'The daily check-in is still pending — a quick call would be lovely.');
     return parts.join(' ');
+  }
+}
+
+/// Glass "AI Daily Insights" card (matches the Stitch design's top summary
+/// panel), with real-data status chips instead of the mock's fabricated
+/// "Activity 9/10" / "Sleep 98%" pills.
+class _InsightCard extends StatelessWidget {
+  const _InsightCard({
+    required this.insight,
+    required this.medsTaken,
+    required this.medsTotal,
+    required this.checkedIn,
+  });
+
+  final String insight;
+  final int medsTaken;
+  final int medsTotal;
+  final bool checkedIn;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(SetuSpacing.lg),
+      decoration: BoxDecoration(
+        color: SetuColors.paperRaisedLight,
+        borderRadius: BorderRadius.circular(20),
+        border: Border(
+          left: BorderSide(color: SetuColors.accentLight, width: 4),
+          top: BorderSide(color: SetuColors.borderLight),
+          right: BorderSide(color: SetuColors.borderLight),
+          bottom: BorderSide(color: SetuColors.borderLight),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.smart_toy, color: SetuColors.accentLight, size: 20),
+              const SizedBox(width: SetuSpacing.sm),
+              Text('DAILY INSIGHTS',
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.8,
+                      color: SetuColors.accentLight)),
+            ],
+          ),
+          const SizedBox(height: SetuSpacing.sm),
+          Text(insight, style: const TextStyle(height: 1.45, fontSize: 15)),
+          const SizedBox(height: SetuSpacing.md),
+          Wrap(
+            spacing: SetuSpacing.sm,
+            runSpacing: SetuSpacing.sm,
+            children: [
+              _Chip(
+                icon: medsTotal > 0 && medsTaken >= medsTotal
+                    ? Icons.check_circle
+                    : Icons.medication_outlined,
+                label: medsTotal == 0
+                    ? 'No medicines today'
+                    : 'Medicines $medsTaken/$medsTotal',
+                color: SetuColors.peachLight,
+              ),
+              _Chip(
+                icon: checkedIn ? Icons.check_circle : Icons.pending_outlined,
+                label: checkedIn ? 'Checked in' : 'Check-in pending',
+                color: checkedIn
+                    ? SetuColors.verifiedLight
+                    : SetuColors.peachLight,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  const _Chip({required this.icon, required this.label, required this.color});
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 13, fontWeight: FontWeight.w700, color: color)),
+        ],
+      ),
+    );
   }
 }
 
@@ -182,17 +325,24 @@ class _RingCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: SetuSpacing.md),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.auto_awesome,
-                  size: 18, color: SetuColors.peachLight),
-              const SizedBox(width: 6),
-              Text(label,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: SetuColors.peachLight)),
-            ],
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: SetuColors.peachLight.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.auto_awesome,
+                    size: 18, color: SetuColors.peachLight),
+                const SizedBox(width: 6),
+                Text(label,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: SetuColors.peachLight)),
+              ],
+            ),
           ),
         ],
       ),
@@ -200,90 +350,49 @@ class _RingCard extends StatelessWidget {
   }
 }
 
-class _InsightCard extends StatelessWidget {
-  const _InsightCard({required this.insight});
-  final String insight;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(SetuSpacing.lg),
-      decoration: BoxDecoration(
-        color: SetuColors.lavenderLight.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(20),
-        border:
-            Border.all(color: SetuColors.lavenderLight.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.smart_toy_outlined,
-                  color: SetuColors.lavenderLight, size: 20),
-              const SizedBox(width: SetuSpacing.sm),
-              Text('Daily Insight',
-                  style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: SetuColors.lavenderLight)),
-            ],
-          ),
-          const SizedBox(height: SetuSpacing.sm),
-          Text(insight, style: const TextStyle(height: 1.45, fontSize: 15)),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatTile extends StatelessWidget {
-  const _StatTile({
+/// A 2x2 bento metric tile (matches the Stitch "Sleep Quality" / "Hydration"
+/// tile shape, applied to real metrics instead).
+class _BentoTile extends StatelessWidget {
+  const _BentoTile({
     required this.icon,
     required this.tint,
     required this.value,
     required this.label,
-    this.wide = false,
   });
 
   final IconData icon;
   final Color tint;
   final String value;
   final String label;
-  final bool wide;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(SetuSpacing.lg),
+      padding: const EdgeInsets.all(SetuSpacing.md),
       decoration: BoxDecoration(
-        color: SetuColors.paperRaisedLight,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: SetuColors.borderLight),
+        color: tint.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(20),
       ),
-      child: Row(
-        mainAxisAlignment:
-            wide ? MainAxisAlignment.start : MainAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-                color: tint.withValues(alpha: 0.15), shape: BoxShape.circle),
+                color: SetuColors.paperRaisedLight.withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(10)),
             child: Icon(icon, color: tint, size: 22),
           ),
-          const SizedBox(width: SetuSpacing.md),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(value,
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: tint)),
-              Text(label,
-                  style: const TextStyle(
-                      color: SetuColors.mutedLight, fontSize: 12.5)),
-            ],
-          ),
+          const SizedBox(height: SetuSpacing.sm),
+          Text(value,
+              style: TextStyle(
+                  fontSize: 22, fontWeight: FontWeight.w800, color: tint)),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.4,
+                  color: SetuColors.mutedLight)),
         ],
       ),
     );

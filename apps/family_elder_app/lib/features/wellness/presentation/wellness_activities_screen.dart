@@ -1,39 +1,82 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:setu_core/setu_core.dart';
 
-/// Elder Wellness Activities — a warm daily engagement hub (matched to the
-/// Stitch "Elder Wellness Activities" design): a health-score ring, a daily
-/// brain-game challenge, meditation, a walking goal, and story listening.
-/// Content is gentle and encouraging by design; the deeper data hooks (real
-/// step counts, AI story picks) layer in later without changing this layout.
-class WellnessActivitiesScreen extends StatelessWidget {
+import '../../family_home/data/home_summary_repository.dart' show HomeSummary;
+import '../../family_home/presentation/family_home_screen.dart' show homeSummaryProvider;
+
+/// Elder Wellness Activities — a warm daily engagement hub matching the
+/// Stitch "elder_wellness_activities" design: a real health-score ring, a
+/// daily brain-game challenge, meditation, a walking encouragement card, and
+/// story listening. Reachable from both the elder's own Home tab and the
+/// family dashboard, so text stays large and high-contrast throughout.
+///
+/// The Stitch mock's health score, "restful sleep" line, and "1,240/3k
+/// steps" walking goal are all fabricated vitals/step data SETU doesn't
+/// track. The ring is wired to the same real score (medicines + check-in)
+/// used everywhere else in the app, the insight line is derived from that
+/// same real data, and the walking card dropped its invented step count in
+/// favour of a plain encouragement message. Memory Games, Meditation, Story
+/// Listening and the AI prompt are static engagement content (not user
+/// data), unchanged from before, still wired to the "coming soon" snackbar.
+class WellnessActivitiesScreen extends ConsumerWidget {
   const WellnessActivitiesScreen({required this.elderId, super.key});
   final String elderId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = Theme.of(context).textTheme.scaledForElderMode();
+    final summary = ref.watch(homeSummaryProvider(elderId)).asData?.value;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Wellness')),
       body: ListView(
         padding: const EdgeInsets.all(SetuSpacing.lg),
         children: [
-          _healthScore(context),
+          _healthScore(context, t, summary),
           const SizedBox(height: SetuSpacing.lg),
-          _challengeCard(context),
+          _challengeCard(context, t),
           const SizedBox(height: SetuSpacing.md),
-          _meditationCard(context),
+          _meditationCard(context, t),
           const SizedBox(height: SetuSpacing.md),
-          _walkingCard(context),
+          _walkingCard(context, t),
           const SizedBox(height: SetuSpacing.md),
-          _storyCard(context),
+          _storyCard(context, t),
           const SizedBox(height: SetuSpacing.md),
-          _aiPromptCard(context),
+          _aiPromptCard(context, t),
         ],
       ),
     );
   }
 
-  Widget _healthScore(BuildContext context) {
+  Widget _healthScore(BuildContext context, TextTheme t, HomeSummary? s) {
+    final medsRatio = (s != null && s.medsTotal > 0)
+        ? s.medsTaken / s.medsTotal
+        : 1.0;
+    final checkedIn = s?.checkedIn ?? false;
+    final score =
+        (72 + medsRatio * 20 + (checkedIn ? 8 : 0)).round().clamp(0, 100);
+    final tag = score >= 90
+        ? 'OPTIMAL'
+        : score >= 75
+            ? 'GOOD'
+            : 'STEADY';
+
+    final parts = <String>[];
+    if (s == null) {
+      parts.add('Loading how your day is going...');
+    } else {
+      if (s.medsTotal > 0) {
+        parts.add(s.medsTaken >= s.medsTotal
+            ? "You've taken all your medicines today."
+            : '${s.medsTaken} of ${s.medsTotal} medicines taken so far.');
+      }
+      parts.add(checkedIn
+          ? "You've checked in today — thank you!"
+          : "Don't forget to check in today.");
+      parts.add("It's a perfect day for a light walk!");
+    }
+
     return Container(
       padding: const EdgeInsets.all(SetuSpacing.xl),
       decoration: BoxDecoration(
@@ -52,7 +95,7 @@ class WellnessActivitiesScreen extends StatelessWidget {
                   width: 128,
                   height: 128,
                   child: CircularProgressIndicator(
-                    value: 0.95,
+                    value: score / 100,
                     strokeWidth: 10,
                     backgroundColor:
                         SetuColors.accentLight.withValues(alpha: 0.12),
@@ -63,12 +106,12 @@ class WellnessActivitiesScreen extends StatelessWidget {
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('95%',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    Text('$score%',
+                        style: t.headlineMedium?.copyWith(
                             color: SetuColors.accentLight,
                             fontWeight: FontWeight.w800)),
-                    const Text('OPTIMAL',
-                        style: TextStyle(
+                    Text(tag,
+                        style: const TextStyle(
                             color: SetuColors.mutedLight,
                             fontSize: 11,
                             letterSpacing: 1.5,
@@ -80,10 +123,7 @@ class WellnessActivitiesScreen extends StatelessWidget {
           ),
           const SizedBox(height: SetuSpacing.lg),
           Text("Today's Health Score",
-              style: Theme.of(context)
-                  .textTheme
-                  .titleLarge
-                  ?.copyWith(fontWeight: FontWeight.w800)),
+              style: t.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: SetuSpacing.sm),
           Container(
             padding:
@@ -92,32 +132,34 @@ class WellnessActivitiesScreen extends StatelessWidget {
               color: SetuColors.lavenderLight.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(999),
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.auto_awesome,
+                const Icon(Icons.auto_awesome,
                     size: 16, color: SetuColors.lavenderLight),
-                SizedBox(width: 6),
-                Text('Everything looks great today.',
-                    style: TextStyle(
+                const SizedBox(width: 6),
+                Text(
+                    score >= 75
+                        ? 'Everything looks great today.'
+                        : 'A little attention would help today.',
+                    style: const TextStyle(
                         color: SetuColors.lavenderLight,
                         fontWeight: FontWeight.w600)),
               ],
             ),
           ),
           const SizedBox(height: SetuSpacing.sm),
-          const Text(
-            "Your vitals are stable, and you've had a restful sleep. It's a "
-            'perfect day for a light walk!',
+          Text(
+            parts.join(' '),
             textAlign: TextAlign.center,
-            style: TextStyle(color: SetuColors.mutedLight, height: 1.4),
+            style: t.bodyMedium?.copyWith(color: SetuColors.mutedLight, height: 1.4),
           ),
         ],
       ),
     );
   }
 
-  Widget _challengeCard(BuildContext context) {
+  Widget _challengeCard(BuildContext context, TextTheme t) {
     return Container(
       padding: const EdgeInsets.all(SetuSpacing.lg),
       decoration: BoxDecoration(
@@ -147,14 +189,11 @@ class WellnessActivitiesScreen extends StatelessWidget {
           ]),
           const SizedBox(height: SetuSpacing.sm),
           Text('Memory Games',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleLarge
-                  ?.copyWith(fontWeight: FontWeight.w800)),
+              style: t.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 4),
-          const Text(
+          Text(
               'Keep your mind sharp with fun visual puzzles designed just for you.',
-              style: TextStyle(color: SetuColors.mutedLight, height: 1.4)),
+              style: t.bodyMedium?.copyWith(color: SetuColors.mutedLight, height: 1.4)),
           const SizedBox(height: SetuSpacing.md),
           FilledButton.icon(
             onPressed: () => _soon(context),
@@ -166,67 +205,51 @@ class WellnessActivitiesScreen extends StatelessWidget {
     );
   }
 
-  Widget _meditationCard(BuildContext context) => _simpleCard(
+  Widget _meditationCard(BuildContext context, TextTheme t) => _simpleCard(
         context,
+        t: t,
         tint: SetuColors.lavenderLight,
         icon: Icons.self_improvement,
         title: 'Meditation',
         subtitle: 'Calm your mind for 10 minutes.',
       );
 
-  Widget _walkingCard(BuildContext context) {
+  Widget _walkingCard(BuildContext context, TextTheme t) {
     return Container(
       padding: const EdgeInsets.all(SetuSpacing.lg),
       decoration: BoxDecoration(
         color: SetuColors.peachDark.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              const Text('WALKING\nGOAL',
-                  style: TextStyle(
-                      color: SetuColors.mutedLight,
-                      fontSize: 11,
-                      letterSpacing: 1,
-                      fontWeight: FontWeight.w700,
-                      height: 1.2)),
-              const SizedBox(width: SetuSpacing.md),
-              Text('1,240 / 3k steps',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w800)),
-            ],
-          ),
-          const SizedBox(height: SetuSpacing.sm),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: 1240 / 3000,
-              minHeight: 8,
-              backgroundColor: SetuColors.paperLight,
-              valueColor:
-                  const AlwaysStoppedAnimation(SetuColors.accentLight),
+          const SetuIconChip(
+              icon: Icons.directions_walk, color: SetuColors.accentLight, size: 26),
+          const SizedBox(width: SetuSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('WALKING GOAL',
+                    style: TextStyle(
+                        color: SetuColors.mutedLight,
+                        fontSize: 11,
+                        letterSpacing: 1,
+                        fontWeight: FontWeight.w700)),
+                const SizedBox(height: 2),
+                Text('Morning Stroll',
+                    style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                Text('A short walk each day keeps you strong and steady.',
+                    style: t.bodyMedium?.copyWith(color: SetuColors.mutedLight)),
+              ],
             ),
           ),
-          const SizedBox(height: SetuSpacing.md),
-          Text('Morning Stroll',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w800)),
-          const Text('Track your progress and enjoy the fresh air.',
-              style: TextStyle(color: SetuColors.mutedLight)),
         ],
       ),
     );
   }
 
-  Widget _storyCard(BuildContext context) {
+  Widget _storyCard(BuildContext context, TextTheme t) {
     return Container(
       padding: const EdgeInsets.all(SetuSpacing.lg),
       decoration: BoxDecoration(
@@ -245,12 +268,9 @@ class WellnessActivitiesScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Story Listening',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w800)),
-                const Text('Traditional Folklore',
-                    style: TextStyle(color: SetuColors.mutedLight)),
+                    style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                Text('Traditional Folklore',
+                    style: t.bodyMedium?.copyWith(color: SetuColors.mutedLight)),
               ],
             ),
           ]),
@@ -264,7 +284,7 @@ class WellnessActivitiesScreen extends StatelessWidget {
               const Icon(Icons.play_circle_outline,
                   color: SetuColors.accentLight),
               const SizedBox(width: SetuSpacing.sm),
-              const Expanded(child: Text('The Golden River')),
+              Expanded(child: Text('The Golden River', style: t.bodyMedium)),
               const Text('15 min',
                   style: TextStyle(
                       color: SetuColors.mutedLight, fontSize: 12.5)),
@@ -275,7 +295,7 @@ class WellnessActivitiesScreen extends StatelessWidget {
     );
   }
 
-  Widget _aiPromptCard(BuildContext context) {
+  Widget _aiPromptCard(BuildContext context, TextTheme t) {
     return Container(
       padding: const EdgeInsets.all(SetuSpacing.lg),
       decoration: BoxDecoration(
@@ -298,9 +318,9 @@ class WellnessActivitiesScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                     '"Would you like to hear your favourite story from yesterday?"',
-                    style: TextStyle(height: 1.4, fontWeight: FontWeight.w600)),
+                    style: t.bodyMedium?.copyWith(height: 1.4, fontWeight: FontWeight.w600)),
                 const SizedBox(height: SetuSpacing.sm),
                 Row(children: [
                   FilledButton(
@@ -320,7 +340,8 @@ class WellnessActivitiesScreen extends StatelessWidget {
   }
 
   Widget _simpleCard(BuildContext context,
-      {required Color tint,
+      {required TextTheme t,
+      required Color tint,
       required IconData icon,
       required String title,
       required String subtitle}) {
@@ -338,12 +359,9 @@ class WellnessActivitiesScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title,
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w800)),
+                  style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
               Text(subtitle,
-                  style: const TextStyle(color: SetuColors.mutedLight)),
+                  style: t.bodyMedium?.copyWith(color: SetuColors.mutedLight)),
             ],
           ),
         ),

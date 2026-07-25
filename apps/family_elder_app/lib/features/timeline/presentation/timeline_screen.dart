@@ -12,9 +12,10 @@ final _timelineEventsProvider =
   return TimelineRepository(client).fetchEvents(elderId);
 });
 
-/// A real activity feed (PRD Part 4, Batch 1, Module 2) presented to the
-/// redesign's "Daily Peace of Mind" layout: a warm summary header, an AI
-/// recommendation card, then the day laid out as a connected timeline.
+/// A real activity feed (PRD Part 4, Batch 1, Module 2) presented to match
+/// the Stitch "daily_timeline_peace_of_mind" design: a glass AI summary
+/// card, then the day laid out as a connected, dashed-rail timeline with
+/// status pills.
 ///
 /// What shows here is exactly what the RLS policy lets this viewer see — a
 /// family member without consent for a category simply never receives those
@@ -46,8 +47,6 @@ class TimelineScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(SetuSpacing.lg),
               children: [
                 _PeaceOfMindHeader(name: firstName, events: events),
-                const SizedBox(height: SetuSpacing.md),
-                const _AiRecommendationCard(),
                 const SizedBox(height: SetuSpacing.lg),
                 Row(
                   children: [
@@ -91,7 +90,9 @@ class TimelineScreen extends ConsumerWidget {
   }
 }
 
-/// Warm summary derived from the day's real events, in the redesign's voice.
+/// Warm summary derived from the day's real events, in the redesign's voice
+/// — a glass card with an AI Recommendation nested inside, matching the
+/// Stitch "Daily Peace of Mind" / "Peace of Mind AI" panel.
 class _PeaceOfMindHeader extends StatelessWidget {
   const _PeaceOfMindHeader({required this.name, required this.events});
 
@@ -132,26 +133,35 @@ class _PeaceOfMindHeader extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(SetuSpacing.lg),
       decoration: BoxDecoration(
-        color: SetuColors.verifiedLight.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(24),
+        color: SetuColors.paperRaisedLight,
+        borderRadius: BorderRadius.circular(20),
+        border: Border(
+          left: BorderSide(color: SetuColors.accentLight, width: 4),
+          top: BorderSide(color: SetuColors.borderLight),
+          right: BorderSide(color: SetuColors.borderLight),
+          bottom: BorderSide(color: SetuColors.borderLight),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.auto_awesome,
-                  color: SetuColors.verifiedLight, size: 22),
+              const Icon(Icons.auto_awesome, color: SetuColors.accentLight, size: 20),
               const SizedBox(width: SetuSpacing.sm),
-              Text('Daily Peace of Mind',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              Text('DAILY PEACE OF MIND',
+                  style: TextStyle(
+                      fontSize: 12,
                       fontWeight: FontWeight.w800,
-                      color: SetuColors.verifiedLight)),
+                      letterSpacing: 0.8,
+                      color: SetuColors.accentLight)),
             ],
           ),
           const SizedBox(height: SetuSpacing.sm),
           Text(summary,
-              style: const TextStyle(height: 1.4, fontSize: 15)),
+              style: const TextStyle(height: 1.45, fontSize: 15.5)),
+          const SizedBox(height: SetuSpacing.md),
+          const _AiRecommendationCard(),
         ],
       ),
     );
@@ -166,12 +176,13 @@ class _AiRecommendationCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(SetuSpacing.md),
       decoration: BoxDecoration(
-        color: SetuColors.lavenderLight.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
+        color: SetuColors.lavenderLight.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
             color: SetuColors.lavenderLight.withValues(alpha: 0.35)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.all(10),
@@ -228,8 +239,11 @@ class _EmptyTimeline extends StatelessWidget {
   }
 }
 
-/// One event, rendered as a connected timeline node: a coloured icon dot with a
-/// dotted rail running to the next node, and a card holding the detail.
+/// One event, rendered as a connected timeline node: a big coloured icon
+/// medallion with a dashed rail running to the next node, and a card
+/// holding the detail plus a status pill (matches the Stitch dashboard's
+/// timeline nodes). The pill reflects only real event_type categories —
+/// nothing here is invented per-event data (no fabricated vitals/names).
 class _TimelineRow extends StatelessWidget {
   const _TimelineRow({required this.event, required this.isLast});
 
@@ -242,29 +256,30 @@ class _TimelineRow extends StatelessWidget {
     final occurredAt =
         DateTime.parse(event['occurred_at'] as String).toLocal();
     final color = _colorFor(type);
+    final pill = _pillFor(type);
 
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Rail: icon dot + dotted connector down to the next node.
+          // Rail: big icon medallion + dashed connector down to the next node.
           Column(
             children: [
               Container(
-                padding: const EdgeInsets.all(SetuSpacing.sm),
+                width: 56,
+                height: 56,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.14),
+                  color: color.withValues(alpha: 0.16),
                   shape: BoxShape.circle,
                   border: Border.all(color: color.withValues(alpha: 0.4)),
                 ),
-                child: Icon(_iconFor(type), color: color, size: 20),
+                child: Icon(_iconFor(type), color: color, size: 26),
               ),
               if (!isLast)
                 Expanded(
-                  child: Container(
-                    width: 2,
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    color: SetuColors.borderLight,
+                  child: CustomPaint(
+                    size: const Size(2, double.infinity),
+                    painter: _DashedLinePainter(color: SetuColors.borderLight),
                   ),
                 ),
             ],
@@ -299,6 +314,30 @@ class _TimelineRow extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(event['summary'] as String,
                         style: const TextStyle(height: 1.3)),
+                    if (pill != null) ...[
+                      const SizedBox(height: SetuSpacing.sm),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(pill.$1, size: 14, color: color),
+                            const SizedBox(width: 4),
+                            Text(pill.$2,
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.4,
+                                    color: color)),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -308,6 +347,32 @@ class _TimelineRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Paints a soft dashed vertical rail connecting timeline nodes (Flutter has
+/// no built-in dashed line).
+class _DashedLinePainter extends CustomPainter {
+  const _DashedLinePainter({required this.color});
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 2;
+    const dash = 4.0;
+    const gap = 4.0;
+    var y = 0.0;
+    while (y < size.height) {
+      canvas.drawLine(
+          Offset(size.width / 2, y), Offset(size.width / 2, y + dash), paint);
+      y += dash + gap;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedLinePainter oldDelegate) =>
+      oldDelegate.color != color;
 }
 
 String _titleFor(String eventType) {
@@ -363,6 +428,23 @@ Color _colorFor(String eventType) {
       return SetuColors.sosLight; // urgent
     default:
       return SetuColors.lavenderLight; // neutral/scheduled
+  }
+}
+
+/// A small status pill for the handful of event types with a clear
+/// real-world status (icon, label). Returns null for neutral/scheduled
+/// events so we never invent a status that isn't actually known.
+(IconData, String)? _pillFor(String eventType) {
+  switch (eventType) {
+    case 'visit_completed':
+    case 'checkin_completed':
+      return (Icons.check_circle, 'Completed');
+    case 'checkin_missed':
+      return (Icons.warning_amber_rounded, 'Missed');
+    case 'sos_triggered':
+      return (Icons.priority_high_rounded, 'Urgent');
+    default:
+      return null;
   }
 }
 
