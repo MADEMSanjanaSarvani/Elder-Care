@@ -1,10 +1,16 @@
-"""Generate the full SETU launcher-icon asset set from one vector definition.
+"""Generate the full SETU launcher-icon asset set.
 
-The mark: two lobes side by side (an infinity) with a third loop woven
-diagonally through them, drawn as thick terracotta rings on warm cream.
-SETU means "bridge" — the knot ties two sides together with no loose end.
+The mark: three sheltering arcs curving over a heart — someone is watching
+over them. That is the promise SETU sells ("your parents' safety net"), so
+the icon says protection rather than spelling out the name.
 
-Outputs (all regenerated from scratch, no hand-editing):
+Drawn as real SVG and rasterised with rsvg-convert, because stroke joins
+and curve quality matter at 48px and a raster-primitive drawing library
+cannot hold a uniform stroke around a curve.
+
+Requires: librsvg2-bin  (apt-get install -y librsvg2-bin)
+
+Outputs:
   assets/icon/icon.png                        1024  legacy + source of truth
   assets/icon/foreground.png                  1024  adaptive foreground
   res/mipmap-*/ic_launcher.png                48-192
@@ -14,88 +20,69 @@ Outputs (all regenerated from scratch, no hand-editing):
 Run:  python3 tools/build_app_icon.py .
 """
 import os
+import subprocess
 import sys
-from PIL import Image, ImageDraw, ImageFont
+import tempfile
 
-CREAM = (245, 237, 223, 255)
-TERRA = (200, 121, 47, 255)
-FONT_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-SS = 8  # supersample factor
+CREAM = "#F5EDDF"
+TERRA = "#C8792F"
 
-# Knot geometry, as fractions of the canvas edge.
-DX, A, B, SW = 0.115, 0.185, 0.155, 0.030      # the two lobes
-DA, DB, DTILT = 0.255, 0.115, -38              # the diagonal loop
+# Arc radii (outermost first) and their relative weight/opacity falloff, as
+# fractions of a 1024px canvas.
+ARCS = ((228, 1.00, 1.00), (158, 0.88, 0.80), (92, 0.76, 0.62))
 
 
-def _ring(S, cx, cy, a, b, sw, ang):
-    layer = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-    ImageDraw.Draw(layer).ellipse([cx - a, cy - b, cx + a, cy + b],
-                                  outline=TERRA, width=sw)
-    return layer.rotate(ang, resample=Image.BICUBIC, center=(cx, cy))
+def svg(size=1024, *, wordmark=True, scale=1.0, tile=True):
+    c = size / 2
+    s = size / 1024.0 * scale
+    # With the wordmark the mark lifts to make room; without it, it sits a
+    # touch low so the arcs+heart read as centred inside a round mask.
+    cy = c - (size * 0.085 if wordmark else -size * 0.012)
+    sw = 36 * s
+
+    body = []
+    if tile:
+        body.append(f'<rect width="{size}" height="{size}" '
+                    f'rx="{size * 0.225:.1f}" fill="{CREAM}"/>')
+    for rr, wf, op in ARCS:
+        r = rr * s
+        body.append(
+            f'<path d="M {c - r:.1f} {cy + 60 * s:.1f} '
+            f'A {r:.1f} {r * 0.92:.1f} 0 0 1 {c + r:.1f} {cy + 60 * s:.1f}" '
+            f'fill="none" stroke="{TERRA}" stroke-width="{sw * wf:.1f}" '
+            f'stroke-linecap="round" opacity="{op:.2f}"/>')
+
+    hx, hy, hr = c, cy + 132 * s, 56 * s
+    body.append(
+        f'<path d="M {hx:.1f} {hy + hr * 1.10:.1f} '
+        f'C {hx - hr * 1.70:.1f} {hy - hr * 0.30:.1f} '
+        f'{hx - hr * 0.55:.1f} {hy - hr * 1.30:.1f} {hx:.1f} {hy - hr * 0.35:.1f} '
+        f'C {hx + hr * 0.55:.1f} {hy - hr * 1.30:.1f} '
+        f'{hx + hr * 1.70:.1f} {hy - hr * 0.30:.1f} '
+        f'{hx:.1f} {hy + hr * 1.10:.1f} Z" fill="{TERRA}"/>')
+
+    if wordmark:
+        body.append(
+            f'<text x="{c:.1f}" y="{size * 0.80:.1f}" text-anchor="middle" '
+            f'font-family="DejaVu Sans" font-weight="bold" '
+            f'font-size="{size * 0.15:.1f}" '
+            f'letter-spacing="{size * 0.028:.1f}" fill="{TERRA}" '
+            f'dx="{size * 0.014:.1f}">SETU</text>')
+
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" '
+            f'height="{size}" viewBox="0 0 {size} {size}">'
+            + "".join(body) + '</svg>')
 
 
-def knot(S, scale=1.0):
-    """Two lobes + a diagonal loop, woven over-under at their crossings."""
-    c = S / 2
-    dx, a, b = S * DX * scale, S * A * scale, S * B * scale
-    sw = max(1, int(S * SW * scale))
-    left = _ring(S, c - dx, c, a, b, sw, 0)
-    diag = _ring(S, c, c, S * DA * scale, S * DB * scale, sw, DTILT)
-    right = _ring(S, c + dx, c, a, b, sw, 0)
-
-    out = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-    for layer in (left, diag, right):
-        out.alpha_composite(layer)
-
-    # Bring earlier layers back to the front at chosen crossings so the
-    # strands genuinely alternate over/under instead of simply stacking.
-    def bring_forward(layer, pts):
-        mask = Image.new("L", (S, S), 0)
-        md = ImageDraw.Draw(mask)
-        r = sw * 1.5
-        for px, py in pts:
-            md.ellipse([px - r, py - r, px + r, py + r], fill=255)
-        out.paste(layer, (0, 0),
-                  Image.composite(layer.getchannel("A"), mask, mask))
-
-    bring_forward(diag, [(c - dx - a * 0.55, c + b * 0.30),
-                         (c + dx + a * 0.55, c - b * 0.30)])
-    bring_forward(left, [(c, c - b * 0.75), (c, c + b * 0.75)])
-    return out
-
-
-def icon(N):
-    """Cream rounded tile + knot + letter-spaced SETU wordmark."""
-    S = N * SS
-    card = Image.new("RGBA", (S, S), CREAM)
-    card.alpha_composite(knot(S), (0, int(-S * 0.075)))
-
-    d = ImageDraw.Draw(card)
-    f = ImageFont.truetype(FONT_BOLD, int(S * 0.145))
-    track = int(S * 0.024)
-    widths = [d.textlength(ch, font=f) for ch in "SETU"]
-    x = (S - (sum(widths) + track * 3)) / 2
-    for ch, w in zip("SETU", widths):
-        d.text((x, S * 0.635), ch, font=f, fill=TERRA)
-        x += w + track
-
-    mask = Image.new("L", (S, S), 0)
-    ImageDraw.Draw(mask).rounded_rectangle([0, 0, S - 1, S - 1],
-                                           radius=int(S * 0.225), fill=255)
-    card.putalpha(mask)
-    return card.resize((N, N), Image.LANCZOS)
-
-
-def foreground(N):
-    """Adaptive foreground: the knot only, inside the 66-of-108dp safe zone.
-
-    The wordmark is deliberately omitted — launchers mask adaptive icons to
-    circles/squircles and crop the outer third, which would clip text.
-    """
-    S = N * SS
-    layer = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-    layer.alpha_composite(knot(S, scale=0.88))
-    return layer.resize((N, N), Image.LANCZOS)
+def render(markup, px, out):
+    with tempfile.NamedTemporaryFile("w", suffix=".svg", delete=False) as f:
+        f.write(markup)
+        tmp = f.name
+    try:
+        subprocess.run(["rsvg-convert", "-w", str(px), "-h", str(px),
+                        tmp, "-o", out], check=True)
+    finally:
+        os.unlink(tmp)
 
 
 MIPMAP = {"mdpi": 48, "hdpi": 72, "xhdpi": 96, "xxhdpi": 144, "xxxhdpi": 192}
@@ -107,12 +94,18 @@ if __name__ == "__main__":
     app = f"{root}/apps/family_elder_app"
     res = f"{app}/android/app/src/main/res"
 
-    icon(1024).save(f"{app}/assets/icon/icon.png")
-    foreground(1024).save(f"{app}/assets/icon/foreground.png")
+    tile = svg(1024)
+    # Adaptive foreground: mark only, shrunk into the 66-of-108dp safe zone.
+    # No wordmark — launchers crop the outer third to fit round/squircle masks
+    # and would clip the text.
+    fore = svg(1024, wordmark=False, scale=0.74, tile=False)
+
+    render(tile, 1024, f"{app}/assets/icon/icon.png")
+    render(fore, 1024, f"{app}/assets/icon/foreground.png")
     for d, px in MIPMAP.items():
-        icon(px).save(f"{res}/mipmap-{d}/ic_launcher.png")
+        render(tile, px, f"{res}/mipmap-{d}/ic_launcher.png")
     for d, px in DRAWABLE.items():
         os.makedirs(f"{res}/drawable-{d}", exist_ok=True)
-        foreground(px).save(f"{res}/drawable-{d}/ic_launcher_foreground.png")
-    icon(512).save(f"{root}/docs/store/icon-512-family-elder.png")
+        render(fore, px, f"{res}/drawable-{d}/ic_launcher_foreground.png")
+    render(tile, 512, f"{root}/docs/store/icon-512-family-elder.png")
     print("generated all icon assets")

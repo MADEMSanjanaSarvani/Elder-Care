@@ -4,7 +4,7 @@ description: >
   (PRD Part 3 §17/§18): family mode (dashboard, booking, consent
   management) and elder mode (large-text, voice-first, three-action home).
 publish_to: "none"
-version: 0.2.2+16
+version: 0.2.3+17
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
