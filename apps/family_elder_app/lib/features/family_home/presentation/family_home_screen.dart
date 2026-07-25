@@ -92,9 +92,22 @@ class _GreetingHeader extends ConsumerWidget {
 
 /// Family onboarding: create the elder you care for and link yourself, via
 /// the family-add-elder function (RLS blocks the direct client path).
+/// Matches the Stitch "add_elder_profile" design: an icon-avatar header, an
+/// info box explaining why the details are collected, and labelled fields.
+///
+/// The Stitch mock is a 4-step wizard (profile photo, DOB, gender, primary
+/// language across separate screens). SETU has no photo-upload path and the
+/// family-add-elder function doesn't accept a gender field, so this stays a
+/// single step with only the fields the function actually reads: name and
+/// relationship (already wired), plus date of birth and primary language —
+/// both already accepted by the function (`dob`, `primary_language`) but
+/// previously never sent from this dialog.
 Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
   final nameController = TextEditingController();
   final relationshipController = TextEditingController();
+  DateTime? dob;
+  String language = 'en';
+  const languages = {'en': 'English', 'hi': 'हिन्दी (Hindi)', 'te': 'తెలుగు (Telugu)'};
 
   final submitted = await showModalBottomSheet<bool>(
     context: context,
@@ -103,83 +116,153 @@ Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
     ),
-    builder: (context) => Padding(
-      padding: EdgeInsets.only(
-        left: SetuSpacing.lg,
-        right: SetuSpacing.lg,
-        top: SetuSpacing.md,
-        bottom: MediaQuery.of(context).viewInsets.bottom + SetuSpacing.lg,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 44,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: SetuSpacing.md),
-              decoration: BoxDecoration(
-                  color: SetuColors.borderLight,
-                  borderRadius: BorderRadius.circular(999)),
-            ),
-          ),
-          Row(
+    builder: (context) => StatefulBuilder(
+      builder: (context, setSheetState) => Padding(
+        padding: EdgeInsets.only(
+          left: SetuSpacing.lg,
+          right: SetuSpacing.lg,
+          top: SetuSpacing.md,
+          bottom: MediaQuery.of(context).viewInsets.bottom + SetuSpacing.lg,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                    color: SetuColors.accentLight.withValues(alpha: 0.14),
-                    shape: BoxShape.circle),
-                child: const Icon(Icons.elderly_outlined,
-                    color: SetuColors.accentLight),
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: SetuSpacing.md),
+                  decoration: BoxDecoration(
+                      color: SetuColors.borderLight,
+                      borderRadius: BorderRadius.circular(999)),
+                ),
               ),
-              const SizedBox(width: SetuSpacing.md),
-              Expanded(
-                child: Column(
+              Center(
+                child: Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                      color: SetuColors.accentLight.withValues(alpha: 0.14),
+                      shape: BoxShape.circle),
+                  child: const Icon(Icons.elderly_outlined,
+                      color: SetuColors.accentLight, size: 34),
+                ),
+              ),
+              const SizedBox(height: SetuSpacing.md),
+              Text('Tell us about your loved one',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 2),
+              const Text('They join your care circle right away.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: SetuColors.mutedLight)),
+              const SizedBox(height: SetuSpacing.lg),
+              const Text('Full name',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              const SizedBox(height: SetuSpacing.sm),
+              TextField(
+                controller: nameController,
+                autofocus: true,
+                textCapitalization: TextCapitalization.words,
+                decoration: const InputDecoration(
+                    hintText: 'e.g. Lakshmi',
+                    prefixIcon: Icon(Icons.person_outline)),
+              ),
+              const SizedBox(height: SetuSpacing.md),
+              const Text('Relationship (optional)',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              const SizedBox(height: SetuSpacing.sm),
+              TextField(
+                controller: relationshipController,
+                textCapitalization: TextCapitalization.words,
+                decoration: const InputDecoration(
+                    hintText: 'e.g. Mother',
+                    prefixIcon: Icon(Icons.diversity_1_outlined)),
+              ),
+              const SizedBox(height: SetuSpacing.md),
+              const Text('Date of birth (optional)',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              const SizedBox(height: SetuSpacing.sm),
+              InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: dob ??
+                        DateTime.now().subtract(const Duration(days: 365 * 65)),
+                    firstDate: DateTime(1900),
+                    lastDate: DateTime.now(),
+                  );
+                  if (picked != null) setSheetState(() => dob = picked);
+                },
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.cake_outlined)),
+                  child: Text(
+                      dob == null
+                          ? 'mm/dd/yyyy'
+                          : '${dob!.month}/${dob!.day}/${dob!.year}',
+                      style: TextStyle(
+                          color: dob == null
+                              ? Theme.of(context).hintColor
+                              : SetuColors.inkLight)),
+                ),
+              ),
+              const SizedBox(height: SetuSpacing.md),
+              const Text('Primary language',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              const SizedBox(height: SetuSpacing.sm),
+              DropdownButtonFormField<String>(
+                initialValue: language,
+                decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.language_outlined)),
+                items: [
+                  for (final entry in languages.entries)
+                    DropdownMenuItem(value: entry.key, child: Text(entry.value)),
+                ],
+                onChanged: (v) {
+                  if (v != null) setSheetState(() => language = v);
+                },
+              ),
+              const SizedBox(height: SetuSpacing.md),
+              Container(
+                padding: const EdgeInsets.all(SetuSpacing.md),
+                decoration: BoxDecoration(
+                  color: SetuColors.peachLight.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Add someone you care for',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
-                            ?.copyWith(fontWeight: FontWeight.w800)),
-                    const Text('They join your care circle right away.',
-                        style: TextStyle(color: SetuColors.mutedLight)),
+                    Icon(Icons.info_outline, size: 18, color: SetuColors.peachLight),
+                    SizedBox(width: SetuSpacing.sm),
+                    Expanded(
+                      child: Text(
+                          'We use these details to help SETU\'s AI understand '
+                          'cultural nuances and provide better companionship.',
+                          style: TextStyle(
+                              color: SetuColors.mutedLight, fontSize: 12.5, height: 1.4)),
+                    ),
                   ],
+                ),
+              ),
+              const SizedBox(height: SetuSpacing.lg),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text('Add to care circle'),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: SetuSpacing.lg),
-          const Text('Their name',
-              style: TextStyle(fontWeight: FontWeight.w700)),
-          const SizedBox(height: SetuSpacing.sm),
-          TextField(
-            controller: nameController,
-            autofocus: true,
-            textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(hintText: 'e.g. Lakshmi'),
-          ),
-          const SizedBox(height: SetuSpacing.md),
-          const Text('Relationship (optional)',
-              style: TextStyle(fontWeight: FontWeight.w700)),
-          const SizedBox(height: SetuSpacing.sm),
-          TextField(
-            controller: relationshipController,
-            textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(hintText: 'e.g. Mother'),
-          ),
-          const SizedBox(height: SetuSpacing.lg),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: () => Navigator.of(context).pop(true),
-              icon: const Icon(Icons.person_add_alt_1),
-              label: const Text('Add to care circle'),
-            ),
-          ),
-        ],
+        ),
       ),
     ),
   );
@@ -193,6 +276,10 @@ Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
     await client.functions.invoke('family-add-elder', body: {
       'display_name': name,
       'relationship': relationshipController.text.trim(),
+      'primary_language': language,
+      if (dob != null)
+        'dob':
+            '${dob!.year.toString().padLeft(4, '0')}-${dob!.month.toString().padLeft(2, '0')}-${dob!.day.toString().padLeft(2, '0')}',
     });
     // Wait for the fresh list so the new person is actually on screen before
     // we say "added" — no more "did it save?" ambiguity.

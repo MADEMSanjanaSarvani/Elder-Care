@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:setu_core/setu_core.dart';
 
 /// Full-screen success confirmation (Stitch `action_successful`): a soft
-/// floating check, a headline + reassurance line, a primary continue action
-/// and an optional secondary action. Reusable for any "you're all set" moment
-/// — adding an elder, completing setup, finishing a booking.
+/// floating check in SETU's warm brand colour, a bold headline + reassurance
+/// line, a primary continue action and an optional secondary action.
+/// Reusable for any "you're all set" moment — adding an elder, completing
+/// setup, finishing a booking.
+///
+/// The Stitch mock's checkmark badge overlays a real photo of the elder and
+/// caregiver together; since this screen is shared across many unrelated
+/// "done!" moments (not just adding an elder), there's no single photo that
+/// would be honest to show generically, so the badge stays icon-only.
 class ActionSuccessScreen extends StatelessWidget {
   const ActionSuccessScreen({
     required this.title,
@@ -36,15 +42,19 @@ class ActionSuccessScreen extends StatelessWidget {
           child: Column(
             children: [
               const Spacer(flex: 2),
-              // Soft haloed check.
+              // Soft haloed check, in SETU's warm brand colour (matches the
+              // Stitch design's accent-toned badge).
               Container(
-                width: 120,
-                height: 120,
+                width: 132,
+                height: 132,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
+                  border: Border.all(
+                      color: SetuColors.accentLight.withValues(alpha: 0.18),
+                      width: 6),
                   gradient: RadialGradient(colors: [
-                    SetuColors.verifiedLight.withValues(alpha: 0.22),
-                    SetuColors.verifiedLight.withValues(alpha: 0.06),
+                    SetuColors.accentLight.withValues(alpha: 0.18),
+                    SetuColors.accentLight.withValues(alpha: 0.05),
                   ]),
                 ),
                 child: Center(
@@ -52,7 +62,7 @@ class ActionSuccessScreen extends StatelessWidget {
                     width: 76,
                     height: 76,
                     decoration: const BoxDecoration(
-                        color: SetuColors.verifiedLight,
+                        color: SetuColors.accentLight,
                         shape: BoxShape.circle),
                     child: const Icon(Icons.check_rounded,
                         color: Colors.white, size: 44),
@@ -63,7 +73,7 @@ class ActionSuccessScreen extends StatelessWidget {
               Text(title,
                   textAlign: TextAlign.center,
                   style: t.headlineMedium
-                      ?.copyWith(fontWeight: FontWeight.w800)),
+                      ?.copyWith(fontWeight: FontWeight.w900)),
               const SizedBox(height: SetuSpacing.sm),
               Text(message,
                   textAlign: TextAlign.center,

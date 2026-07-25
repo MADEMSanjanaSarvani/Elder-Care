@@ -42,11 +42,11 @@ git pull origin claude/elder-care-platform-mx27jo
 | 20 | forgot_password | `features/auth/presentation/login_screen.dart` (reset flow) | ✅ done |
 | 21 | role_selection | `features/auth/presentation/choose_role_screen.dart` | ✅ done |
 | 22 | splash_onboarding | `features/onboarding/presentation/onboarding_screen.dart` | ✅ done (already matched — verified against the design, left as-is) |
-| 23 | add_elder_profile | `showAddElderDialog` in `features/family_home/presentation/family_home_screen.dart` | ⬜ |
-| 24 | action_successful | `core/action_success.dart` | ⬜ |
-| 25 | caregiver_dashboard | `features/job_queue/presentation/job_queue_screen.dart` | ⬜ |
-| 26 | visit_task_checklist | `features/visit_tools/presentation/visit_tools_section.dart` | ⬜ |
-| 27 | otp_verification | `features/otp_visit/presentation/otp_visit_screen.dart` | ⬜ |
+| 23 | add_elder_profile | `showAddElderDialog` in `features/family_home/presentation/family_home_screen.dart` | ✅ done |
+| 24 | action_successful | `core/action_success.dart` | ✅ done |
+| 25 | caregiver_dashboard | `features/job_queue/presentation/job_queue_screen.dart` | ✅ done |
+| 26 | visit_task_checklist | `features/visit_tools/presentation/visit_tools_section.dart` | ✅ done |
+| 27 | otp_verification | `features/otp_visit/presentation/otp_visit_screen.dart` | ✅ done |
 | 28 | (bonus) trip tracking | `features/trips/presentation/trip_tracking_screen.dart` | ⬜ |
 
 All paths are under `apps/family_elder_app/lib/`.

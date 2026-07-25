@@ -8,6 +8,15 @@ import '../data/otp_visit_repository.dart';
 
 /// One-handed use standing in a doorway (PRD Part 3 §17): a single OTP
 /// field and a single action button, nothing else competing for attention.
+/// Matches the Stitch "otp_verification" design: a shield/lock icon badge,
+/// a bold headline, and a big centred code field — restyled visually, same
+/// single-field `_otpController` feeding the same real startVisit/endVisit
+/// calls as before.
+///
+/// The Stitch mock's subtitle says "we've sent a code to your mobile" and
+/// shows a resend countdown — SETU's real flow has no SMS-to-caregiver step;
+/// the family member reads the code out at the door, and there's no resend
+/// function to back a countdown, so neither is reproduced.
 class OtpVisitScreen extends ConsumerStatefulWidget {
   const OtpVisitScreen({required this.bookingId, super.key});
 
@@ -96,56 +105,131 @@ class _OtpVisitScreenState extends ConsumerState<OtpVisitScreen> {
       body: ListView(
         padding: const EdgeInsets.all(SetuSpacing.lg),
         children: [
-            const Text('Ask the family for the visit code to start or end.'),
-            const SizedBox(height: SetuSpacing.md),
-            TextField(
-              controller: _otpController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Visit code'),
+          Center(
+            child: Container(
+              width: 84,
+              height: 84,
+              decoration: BoxDecoration(
+                color: SetuColors.peachLight.withValues(alpha: 0.16),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.shield_outlined,
+                  color: SetuColors.accentLight, size: 36),
+            ),
+          ),
+          const SizedBox(height: SetuSpacing.lg),
+          Text('Verify Your Identity',
+              textAlign: TextAlign.center,
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineSmall
+                  ?.copyWith(fontWeight: FontWeight.w800)),
+          const SizedBox(height: SetuSpacing.sm),
+          const Text(
+              'Ask the family for the visit code to keep their data secure. '
+              'The same code both starts and ends the visit.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: SetuColors.mutedLight, height: 1.4)),
+          const SizedBox(height: SetuSpacing.xl),
+          TextField(
+            controller: _otpController,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+                fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: 10),
+            decoration: const InputDecoration(labelText: 'Visit code'),
+          ),
+          const SizedBox(height: SetuSpacing.lg),
+          if (_error != null) ...[
+            Container(
+              padding: const EdgeInsets.all(SetuSpacing.sm),
+              decoration: BoxDecoration(
+                color: SetuColors.sosLight.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: SetuColors.sosLight.withValues(alpha: 0.4)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.error_outline,
+                      size: 18, color: SetuColors.sosLight),
+                  const SizedBox(width: SetuSpacing.sm),
+                  Expanded(
+                      child: Text(_error!,
+                          style: const TextStyle(color: SetuColors.sosLight))),
+                ],
+              ),
             ),
             const SizedBox(height: SetuSpacing.md),
-            if (_error != null) ...[
-              Text(_error!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
-              const SizedBox(height: SetuSpacing.sm),
-            ],
-            if (_message != null) ...[
-              Text(_message!,
-                  style: TextStyle(
-                      color: Theme.of(context).colorScheme.secondary)),
-              const SizedBox(height: SetuSpacing.sm),
-            ],
-            FilledButton(
-                onPressed: _busy ? null : _start,
-                child: const Text('Start visit')),
-            const SizedBox(height: SetuSpacing.sm),
-            OutlinedButton(
-                onPressed: _busy ? null : _end, child: const Text('End visit')),
-            if (_visitEnded && !_summarySubmitted) ...[
-              const SizedBox(height: SetuSpacing.lg),
-              const Divider(),
-              const SizedBox(height: SetuSpacing.md),
-              const Text(
-                  'What happened during the visit? (a few lines is enough)'),
-              const SizedBox(height: SetuSpacing.sm),
-              TextField(
-                controller: _notesController,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  hintText:
-                      'e.g. Helped with breakfast, went for a short walk, blood pressure checked...',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: SetuSpacing.sm),
-              FilledButton.icon(
-                onPressed: _busy ? null : _submitSummary,
-                icon: const Icon(Icons.send_outlined),
-                label: const Text('Send visit summary to family'),
-              ),
-            ],
-            VisitToolsSection(bookingId: widget.bookingId),
           ],
+          if (_message != null) ...[
+            Container(
+              padding: const EdgeInsets.all(SetuSpacing.sm),
+              decoration: BoxDecoration(
+                color: SetuColors.verifiedLight.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+                border:
+                    Border.all(color: SetuColors.verifiedLight.withValues(alpha: 0.4)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle_outline,
+                      size: 18, color: SetuColors.verifiedLight),
+                  const SizedBox(width: SetuSpacing.sm),
+                  Expanded(
+                      child: Text(_message!,
+                          style: const TextStyle(color: SetuColors.verifiedLight))),
+                ],
+              ),
+            ),
+            const SizedBox(height: SetuSpacing.md),
+          ],
+          FilledButton.icon(
+            onPressed: _busy ? null : _start,
+            icon: const Icon(Icons.arrow_forward),
+            label: const Text('Start visit'),
+          ),
+          const SizedBox(height: SetuSpacing.sm),
+          OutlinedButton(
+              onPressed: _busy ? null : _end, child: const Text('End visit')),
+          const SizedBox(height: SetuSpacing.lg),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.lock_outline, size: 14, color: SetuColors.mutedLight),
+              const SizedBox(width: 6),
+              Text('SECURED BY SETU AUTHENTICATION',
+                  style: TextStyle(
+                      color: SetuColors.mutedLight,
+                      fontSize: 10.5,
+                      letterSpacing: 0.8,
+                      fontWeight: FontWeight.w700)),
+            ],
+          ),
+          if (_visitEnded && !_summarySubmitted) ...[
+            const SizedBox(height: SetuSpacing.lg),
+            const Divider(),
+            const SizedBox(height: SetuSpacing.md),
+            const Text(
+                'What happened during the visit? (a few lines is enough)'),
+            const SizedBox(height: SetuSpacing.sm),
+            TextField(
+              controller: _notesController,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                hintText:
+                    'e.g. Helped with breakfast, went for a short walk, blood pressure checked...',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: SetuSpacing.sm),
+            FilledButton.icon(
+              onPressed: _busy ? null : _submitSummary,
+              icon: const Icon(Icons.send_outlined),
+              label: const Text('Send visit summary to family'),
+            ),
+          ],
+          VisitToolsSection(bookingId: widget.bookingId),
+        ],
       ),
     );
   }

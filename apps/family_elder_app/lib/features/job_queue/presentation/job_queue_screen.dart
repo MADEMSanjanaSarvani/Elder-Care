@@ -10,6 +10,16 @@ import 'pending_verification_screen.dart';
 
 /// A job list first, everything else second (PRD Part 3 §17) — this is
 /// the caregiver's home screen, not a tab buried under something else.
+/// Matches the Stitch "caregiver_dashboard" design: a "Next Visit" hero
+/// card, bento stat tiles, and a compact upcoming-schedule list.
+///
+/// The Stitch mock's hero card shows the elder's name and photo, a
+/// distance + ETA ("2km away · 8 mins"), a medication summary, and a
+/// weekly earnings total — SETU's Booking model has none of that (no
+/// elder-name join, no distance/ETA tracking, no per-visit medication
+/// summary, and earnings totals live behind their own screen), so the
+/// hero card here shows only real fields: time and status, with a
+/// shortcut into the same real navigation/visit actions already below.
 class JobQueueScreen extends ConsumerWidget {
   const JobQueueScreen({super.key});
 
@@ -60,6 +70,7 @@ class _JobList extends ConsumerWidget {
       body: bookingsAsync.when(
         data: (bookings) {
           if (bookings.isEmpty) return const _NoJobs();
+          final next = _nextActionable(bookings);
           return RefreshIndicator(
             onRefresh: () async {
               ref.invalidate(myBookingsProvider);
@@ -89,6 +100,10 @@ class _JobList extends ConsumerWidget {
                   );
                 }),
                 const SizedBox(height: SetuSpacing.lg),
+                if (next != null) ...[
+                  _NextVisitCard(booking: next),
+                  const SizedBox(height: SetuSpacing.lg),
+                ],
                 // Bento stat row (Stitch caregiver dashboard): quick glance at
                 // today's load, completed visits and a tap-through to earnings.
                 Row(
@@ -123,6 +138,8 @@ class _JobList extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: SetuSpacing.lg),
+                const _DailyAtmosphereCard(),
+                const SizedBox(height: SetuSpacing.lg),
                 Builder(builder: (context) {
                   final start = DateTime.now()
                       .subtract(const Duration(days: 6));
@@ -144,6 +161,12 @@ class _JobList extends ConsumerWidget {
                   );
                 }),
                 const SizedBox(height: SetuSpacing.lg),
+                Text('Upcoming Schedule',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w800)),
+                const SizedBox(height: SetuSpacing.sm),
                 for (final booking in bookings)
                   _JobCard(booking: booking),
               ],
@@ -153,6 +176,138 @@ class _JobList extends ConsumerWidget {
         loading: () => const SetuLoading(),
         error: (err, stack) =>
             const SetuErrorState(),
+      ),
+    );
+  }
+
+  /// The soonest booking a caregiver can still act on (assigned/confirmed
+  /// or already in progress) — real data, no invented ETA/distance.
+  Booking? _nextActionable(List<Booking> bookings) {
+    final actionable = bookings
+        .where((b) =>
+            b.status == BookingStatus.matched ||
+            b.status == BookingStatus.confirmed ||
+            b.status == BookingStatus.inProgress)
+        .toList()
+      ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
+    return actionable.isEmpty ? null : actionable.first;
+  }
+}
+
+/// The prominent "Next Visit" hero card (matches the Stitch dashboard's
+/// hero), showing only real fields — time and status — with a shortcut
+/// into the same real navigation/visit-start actions used in the full job
+/// list below.
+class _NextVisitCard extends StatelessWidget {
+  const _NextVisitCard({required this.booking});
+  final Booking booking;
+
+  @override
+  Widget build(BuildContext context) {
+    final canStart = booking.status == BookingStatus.matched ||
+        booking.status == BookingStatus.confirmed;
+    final inProgress = booking.status == BookingStatus.inProgress;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(SetuSpacing.lg),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            SetuColors.accentLight.withValues(alpha: 0.14),
+            SetuColors.accentLight.withValues(alpha: 0.04),
+          ],
+        ),
+        border: Border.all(color: SetuColors.accentLight.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: inProgress ? SetuColors.verifiedLight : SetuColors.accentLight,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+                inProgress ? 'IN PROGRESS' : 'NEXT VISIT',
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.6)),
+          ),
+          const SizedBox(height: SetuSpacing.sm),
+          Text(_statusLabel(booking.status),
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              const Icon(Icons.schedule, size: 16, color: SetuColors.mutedLight),
+              const SizedBox(width: 6),
+              Text(_friendlyTime(booking.scheduledAt.toLocal()),
+                  style: const TextStyle(color: SetuColors.mutedLight)),
+            ],
+          ),
+          const SizedBox(height: SetuSpacing.lg),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () => canStart
+                  ? context.push('/caregiver/trip/${booking.id}')
+                  : context.push('/booking/${booking.id}'),
+              icon: Icon(canStart
+                  ? Icons.directions_car_filled_outlined
+                  : Icons.play_arrow),
+              label: Text(canStart ? 'Start Navigation' : 'Continue visit'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A generic, non-data reassurance line (matches the Stitch dashboard's
+/// "Daily Atmosphere" card) — the same kind of decorative AI-voice copy
+/// already used elsewhere in the app (e.g. the family dashboard's AI
+/// insight card), not derived from any real per-caregiver signal.
+class _DailyAtmosphereCard extends StatelessWidget {
+  const _DailyAtmosphereCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(SetuSpacing.md),
+      decoration: BoxDecoration(
+        color: SetuColors.lavenderLight.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: SetuColors.lavenderLight.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.auto_awesome, size: 18, color: SetuColors.lavenderLight),
+          const SizedBox(width: SetuSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Daily Atmosphere',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: SetuColors.lavenderLight)),
+                const Text('The care network is currently stable and calm.',
+                    style: TextStyle(color: SetuColors.mutedLight, fontSize: 13)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
