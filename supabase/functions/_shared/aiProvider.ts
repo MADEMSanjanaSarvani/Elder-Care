@@ -38,7 +38,7 @@ export interface AiProvider {
 export function aiProvider(): AiProvider | null {
   const gemini = Deno.env.get("GEMINI_API_KEY") ?? "";
   if (gemini) {
-    return {
+    return announce({
       name: "gemini",
       chatUrl:
         "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
@@ -46,20 +46,43 @@ export function aiProvider(): AiProvider | null {
       model: "gemini-2.5-flash",
       fastModel: "gemini-2.5-flash-lite",
       trainsOnData: true,
-    };
+    });
   }
   const openai = Deno.env.get("OPENAI_API_KEY") ?? "";
   if (openai) {
-    return {
+    return announce({
       name: "openai",
       chatUrl: "https://api.openai.com/v1/chat/completions",
       apiKey: openai,
       model: "gpt-4o",
       fastModel: "gpt-4o-mini",
       trainsOnData: false,
-    };
+    });
   }
+  console.warn("[ai] no GEMINI_API_KEY or OPENAI_API_KEY set — AI disabled");
   return null;
+}
+
+/**
+ * Says which provider was chosen, once per isolate, in the function logs.
+ *
+ * Which key is in effect is otherwise invisible: both providers speak the same
+ * protocol, so a working answer looks identical either way, and a stale isolate
+ * still holding the old key is indistinguishable from a new one. This turns
+ * "did the secret take effect?" from a guess into one line in the Supabase log
+ * viewer.
+ *
+ * It also states the training posture out loud, because "Gemini free tier" and
+ * "families' medication lists" are two facts that must never quietly drift
+ * apart — see docs/business/SETU-ai-provider.md. Never logs the key itself.
+ */
+function announce(provider: AiProvider): AiProvider {
+  console.log(
+    `[ai] provider=${provider.name} model=${provider.model} ` +
+      `classifier=${provider.fastModel} ` +
+      `trains_on_data=${provider.trainsOnData}`,
+  );
+  return provider;
 }
 
 /**
