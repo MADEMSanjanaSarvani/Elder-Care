@@ -35,7 +35,7 @@ jobs:
           deno-version: v2.x
       - run: deno check functions/*/index.ts functions/_shared/*.ts
       - run: deno lint functions/
-      - run: deno test --allow-net=api.openai.com functions/_shared/
+      - run: deno test --allow-net=api.openai.com,generativelanguage.googleapis.com functions/_shared/
 
   migrate:
     needs: check

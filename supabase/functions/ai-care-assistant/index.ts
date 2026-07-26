@@ -20,8 +20,9 @@ import { supabaseAdmin, requireUser } from "../_shared/supabaseAdmin.ts";
 import { supabaseAsUser } from "../_shared/supabaseAsUser.ts";
 import { corsHeaders, jsonResponse, errorResponse } from "../_shared/cors.ts";
 import { runGuardrail, isMedicalQuestion, CLINICAL_REDIRECT, MEDICAL_DISCLAIMER } from "../_shared/aiGuardrail.ts";
+import { aiProvider, aiErrorMessage } from "../_shared/aiProvider.ts";
 
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
+const provider = aiProvider();
 
 const SYSTEM_PROMPT = `You are the care assistant for an elder-care app. You help a family member or elder
 with operational questions about care: upcoming visits, the medication list, appointments, who is on the
@@ -58,7 +59,7 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
   // Clean, user-friendly signal when the AI isn't provisioned yet, rather
   // than leaking a confusing OpenAI 401 to the app. The UI shows this text.
-  if (!OPENAI_API_KEY) {
+  if (!provider) {
     return errorResponse("The assistant isn't available yet — it's still being set up.", 503);
   }
 
@@ -138,28 +139,20 @@ Deno.serve(async (req) => {
 
     // Bounded tool loop — the model may call a few tools, then must answer.
     for (let round = 0; round < 4; round++) {
-      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      const res = await fetch(provider.chatUrl, {
         method: "POST",
-        headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "gpt-4o", temperature: 0.2, messages, tools: TOOLS, tool_choice: "auto" }),
+        headers: { Authorization: `Bearer ${provider.apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model: provider.model, temperature: 0.2, messages, tools: TOOLS, tool_choice: "auto" }),
       });
       if (!res.ok) {
-        // Dumping OpenAI's raw JSON into a chat bubble helps nobody. The
-        // three failures that happen in practice each have a specific fix,
-        // so name it — "insufficient_quota" especially, which means the key
-        // is valid but the account has no credit. That is where every new
-        // OpenAI project starts, and it is the most likely reason the
-        // assistant appears "broken" on a first run.
+        // Dumping the provider's raw JSON into a chat bubble helps nobody, and
+        // the failures that actually happen each have one specific fix.
+        // aiErrorMessage names it per provider — running out of free Gemini
+        // quota for the day and running out of OpenAI credit look identical
+        // over the wire and need completely different things done about them.
         const body = await res.text();
-        console.error("openai error", res.status, body);
-        const friendly = res.status === 429 && body.includes("insufficient_quota")
-          ? "The assistant is out of credit. Add a little balance to the OpenAI account and it will start working again."
-          : res.status === 429
-            ? "The assistant is busy right now. Please try again in a moment."
-            : res.status === 401
-              ? "The assistant's API key isn't valid. Check OPENAI_API_KEY in the Supabase secrets."
-              : "The assistant is having trouble right now. Please try again shortly.";
-        return errorResponse(friendly, 502);
+        console.error(`${provider.name} error`, res.status, body);
+        return errorResponse(aiErrorMessage(provider, res.status, body), 502);
       }
       const completion = await res.json();
       const choice = completion.choices?.[0]?.message;
@@ -168,7 +161,7 @@ Deno.serve(async (req) => {
       const toolCalls = choice?.tool_calls ?? [];
       if (toolCalls.length === 0) {
         const rawOutput: string = choice?.content ?? "";
-        const guardrail = await runGuardrail(rawOutput, OPENAI_API_KEY);
+        const guardrail = await runGuardrail(rawOutput, provider);
         const reply = guardrail.flagged
           ? "I want to be careful here — this needs a person to review before I answer. Please check with the elder's clinician if it's medical."
           : `${rawOutput}\n\n${MEDICAL_DISCLAIMER}`;

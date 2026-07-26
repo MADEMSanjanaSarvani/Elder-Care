@@ -3,6 +3,7 @@
 // This module is layer 2 (the output guardrail) — layer 1 is the scoped
 // system prompt in each function, layer 3 is the mandatory disclaimer,
 // layer 4 is the ai_interactions log this all feeds.
+import type { AiProvider } from "./aiProvider.ts";
 
 export interface GuardrailResult {
   flagged: boolean;
@@ -23,7 +24,7 @@ const DOSAGE_OR_DIAGNOSIS_PATTERNS: RegExp[] = [
 
 // Exported for direct unit testing (aiGuardrail.test.ts) — this is the
 // half of the guardrail that's actually deterministic and testable
-// without a live OpenAI key; modelClassify below isn't.
+// without a live model key; modelClassify below isn't.
 export function patternMatch(text: string): GuardrailResult {
   for (const pattern of DOSAGE_OR_DIAGNOSIS_PATTERNS) {
     if (pattern.test(text)) {
@@ -37,12 +38,12 @@ export function patternMatch(text: string): GuardrailResult {
 // FLAGGED — deliberately a different, narrower prompt than the generation
 // call, so a prompt-injection attempt that fools the generation call still
 // has to separately fool this one.
-async function modelClassify(text: string, openaiApiKey: string): Promise<GuardrailResult> {
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+async function modelClassify(text: string, provider: AiProvider): Promise<GuardrailResult> {
+  const res = await fetch(provider.chatUrl, {
     method: "POST",
-    headers: { Authorization: `Bearer ${openaiApiKey}`, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${provider.apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model: provider.fastModel,
       temperature: 0,
       messages: [
         {
@@ -69,10 +70,10 @@ async function modelClassify(text: string, openaiApiKey: string): Promise<Guardr
   return { flagged: false };
 }
 
-export async function runGuardrail(text: string, openaiApiKey: string): Promise<GuardrailResult> {
+export async function runGuardrail(text: string, provider: AiProvider): Promise<GuardrailResult> {
   const patternResult = patternMatch(text);
   if (patternResult.flagged) return patternResult;
-  return await modelClassify(text, openaiApiKey);
+  return await modelClassify(text, provider);
 }
 
 // PRD Part 7, Batch 4, Module 13 (AI Care Assistant), input side: a fast

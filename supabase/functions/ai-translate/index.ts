@@ -9,8 +9,9 @@
 import { supabaseAdmin, requireUser } from "../_shared/supabaseAdmin.ts";
 import { corsHeaders, jsonResponse, errorResponse } from "../_shared/cors.ts";
 import { runGuardrail } from "../_shared/aiGuardrail.ts";
+import { aiProvider } from "../_shared/aiProvider.ts";
 
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
+const provider = aiProvider();
 
 const SYSTEM_PROMPT = `Translate the user's message to the requested target language.
 Rules you must follow exactly:
@@ -21,18 +22,18 @@ Rules you must follow exactly:
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
-  if (!OPENAI_API_KEY) return errorResponse("Translation isn't available yet — it's still being set up.", 503);
+  if (!provider) return errorResponse("Translation isn't available yet — it's still being set up.", 503);
 
   try {
     const user = await requireUser(req);
     const { text, target_language, elder_id, booking_id } = await req.json();
     if (!text || !target_language) return errorResponse("text and target_language are required");
 
-    const completionRes = await fetch("https://api.openai.com/v1/chat/completions", {
+    const completionRes = await fetch(provider.chatUrl, {
       method: "POST",
-      headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${provider.apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "gpt-4o",
+        model: provider.model,
         temperature: 0,
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
@@ -44,7 +45,7 @@ Deno.serve(async (req) => {
     const completion = await completionRes.json();
     const translated: string = completion.choices?.[0]?.message?.content ?? "";
 
-    const guardrail = await runGuardrail(translated, OPENAI_API_KEY);
+    const guardrail = await runGuardrail(translated, provider);
 
     if (elder_id) {
       const admin = supabaseAdmin();

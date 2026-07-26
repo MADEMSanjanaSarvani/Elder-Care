@@ -13,9 +13,10 @@
 import { supabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { corsHeaders, jsonResponse, errorResponse } from "../_shared/cors.ts";
 import { runGuardrail, MEDICAL_DISCLAIMER } from "../_shared/aiGuardrail.ts";
+import { aiProvider } from "../_shared/aiProvider.ts";
 
 const REPORTS_SWEEP_SHARED_SECRET = Deno.env.get("REPORTS_SWEEP_SHARED_SECRET")!;
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
+const provider = aiProvider();
 
 const PERIOD_DAYS = 7;
 
@@ -34,7 +35,7 @@ Deno.serve(async (req) => {
   if (providedSecret !== REPORTS_SWEEP_SHARED_SECRET) return errorResponse("Invalid credentials", 401);
   // Background job: if the AI isn't provisioned, no-op cleanly rather than
   // erroring, so the scheduler doesn't record failures before setup.
-  if (!OPENAI_API_KEY) return jsonResponse({ processed: 0, note: "OPENAI_API_KEY not set; skipped." });
+  if (!provider) return jsonResponse({ processed: 0, note: "No GEMINI_API_KEY or OPENAI_API_KEY set; skipped." });
 
   const admin = supabaseAdmin();
   const now = new Date();
@@ -81,11 +82,11 @@ Deno.serve(async (req) => {
       ...(events ?? []).map((e) => `${e.occurred_at.slice(0, 10)}: ${e.summary}`),
     ].join("\n");
 
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    const res = await fetch(provider.chatUrl, {
       method: "POST",
-      headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${provider.apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "gpt-4o",
+        model: provider.model,
         temperature: 0.3,
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
@@ -100,7 +101,7 @@ Deno.serve(async (req) => {
     const completion = await res.json();
     const rawOutput: string = completion.choices?.[0]?.message?.content ?? "";
 
-    const guardrail = await runGuardrail(rawOutput, OPENAI_API_KEY);
+    const guardrail = await runGuardrail(rawOutput, provider);
     const reportText = guardrail.flagged ? rawOutput : `${rawOutput}\n\n${MEDICAL_DISCLAIMER}`;
 
     await admin.from("ai_visit_reports").insert({

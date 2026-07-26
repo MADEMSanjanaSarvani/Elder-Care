@@ -8,6 +8,17 @@
 // Deliberately dependency-free — see testUtil.ts for why.
 import { assertEquals, assertStringIncludes } from "./testUtil.ts";
 import { patternMatch, runGuardrail, isMedicalQuestion } from "./aiGuardrail.ts";
+import type { AiProvider } from "./aiProvider.ts";
+// A stand-in provider so the classifier layer can be exercised without a live
+// key. The fetch call is stubbed in each test, so only the shape matters.
+const FAKE_PROVIDER: AiProvider = {
+  name: "openai",
+  chatUrl: "https://api.openai.com/v1/chat/completions",
+  apiKey: "fake-key",
+  model: "gpt-4o",
+  fastModel: "gpt-4o-mini",
+  trainsOnData: false,
+};
 
 Deno.test("patternMatch: flags an explicit dosage-change instruction", () => {
   const result = patternMatch("You should increase the dose to twice daily.");
@@ -46,7 +57,7 @@ Deno.test("runGuardrail: pattern-flagged text short-circuits before any network 
     throw new Error("fetch should not have been called");
   };
   try {
-    const result = await runGuardrail("You should double the dose immediately.", "fake-key");
+    const result = await runGuardrail("You should double the dose immediately.", FAKE_PROVIDER);
     assertEquals(result.flagged, true);
     assertEquals(fetchCalled, false);
   } finally {
@@ -61,7 +72,7 @@ Deno.test("runGuardrail: falls back to the model classifier for text the regex l
       new Response(JSON.stringify({ choices: [{ message: { content: "SAFE" } }] }), { status: 200 }),
     );
   try {
-    const result = await runGuardrail("Had a lovely afternoon walk.", "fake-key");
+    const result = await runGuardrail("Had a lovely afternoon walk.", FAKE_PROVIDER);
     assertEquals(result.flagged, false);
   } finally {
     globalThis.fetch = originalFetch;
@@ -72,7 +83,7 @@ Deno.test("runGuardrail: fails closed if the classifier call itself errors", asy
   const originalFetch = globalThis.fetch;
   globalThis.fetch = () => Promise.resolve(new Response("service unavailable", { status: 500 }));
   try {
-    const result = await runGuardrail("Some ambiguous text the regex layer didn't catch.", "fake-key");
+    const result = await runGuardrail("Some ambiguous text the regex layer didn't catch.", FAKE_PROVIDER);
     assertEquals(result.flagged, true);
     assertStringIncludes(result.reason ?? "", "failing closed");
   } finally {
