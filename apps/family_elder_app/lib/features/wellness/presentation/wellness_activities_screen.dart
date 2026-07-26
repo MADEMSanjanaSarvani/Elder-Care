@@ -5,6 +5,7 @@ import 'package:setu_core/setu_core.dart';
 import '../../family_home/data/home_summary_repository.dart' show HomeSummary;
 import '../../family_home/presentation/family_home_screen.dart' show homeSummaryProvider;
 import 'memory_game_screen.dart';
+import 'breathing_screen.dart';
 import 'stories_screen.dart';
 
 /// Elder Wellness Activities — a warm daily engagement hub matching the
@@ -19,8 +20,9 @@ import 'stories_screen.dart';
 /// used everywhere else in the app, the insight line is derived from that
 /// same real data, and the walking card dropped its invented step count in
 /// favour of a plain encouragement message. Memory Games opens a real,
-/// playable card-matching game; Meditation and Story Listening remain static
-/// engagement content. The mock's "would you like to hear yesterday's story"
+/// playable card-matching game, Meditation opens a real paced-breathing
+/// exercise, and Story Listening opens a real catalogue of folk tales — all
+/// three used to be static cards that did nothing when tapped. The mock's "would you like to hear yesterday's story"
 /// prompt was dropped — both its buttons only raised a "coming soon"
 /// snackbar, and a card that pretends to converse is worse than no card.
 class WellnessActivitiesScreen extends ConsumerWidget {
@@ -210,13 +212,25 @@ class WellnessActivitiesScreen extends ConsumerWidget {
     );
   }
 
-  Widget _meditationCard(BuildContext context, TextTheme t) => _simpleCard(
-        context,
-        t: t,
-        tint: SetuColors.lavenderLight,
-        icon: Icons.self_improvement,
-        title: 'Meditation',
-        subtitle: 'Calm your mind for 10 minutes.',
+  /// Opens a real paced-breathing exercise. It used to be a static card that
+  /// said "calm your mind for 10 minutes" and did nothing when tapped.
+  ///
+  /// Breathing rather than guided meditation because guided meditation needs a
+  /// recorded voice and a licence, while paced breathing needs neither and
+  /// works with no network at all.
+  Widget _meditationCard(BuildContext context, TextTheme t) => InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+          builder: (_) => const BreathingScreen(),
+        )),
+        child: _simpleCard(
+          context,
+          t: t,
+          tint: SetuColors.lavenderLight,
+          icon: Icons.self_improvement,
+          title: 'Breathing',
+          subtitle: 'Slow, guided breaths — 2 to 10 minutes.',
+        ),
       );
 
   Widget _walkingCard(BuildContext context, TextTheme t) {
