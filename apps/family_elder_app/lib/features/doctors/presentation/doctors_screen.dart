@@ -9,10 +9,16 @@ import '../data/doctors_repository.dart';
 import 'consultations_screen.dart';
 import '../../../core/illustrations.dart';
 
-final doctorsProvider =
-    FutureProvider.family<List<Doctor>, String?>((ref, specialty) async {
+/// The directory for the elder's own city.
+///
+/// Keyed on the elder rather than taken globally: a family in Vizag must see
+/// Vizag clinics, and showing them a hospital in Hyderabad they could never
+/// reach is worse than showing them nothing.
+final doctorsForElderProvider =
+    FutureProvider.family<List<Doctor>, String>((ref, elderId) async {
+  final elder = await ref.watch(elderProfileByIdProvider(elderId).future);
   return DoctorsRepository(ref.watch(supabaseClientProvider))
-      .list(specialty: specialty);
+      .list(regionId: elder?['region_id'] as String?);
 });
 
 /// The doctor directory, matching the Stitch "doctor_consultations" design:
@@ -54,7 +60,7 @@ class _DoctorsScreenState extends ConsumerState<DoctorsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final async = ref.watch(doctorsProvider(null));
+    final async = ref.watch(doctorsForElderProvider(widget.elderId));
     return Scaffold(
       appBar: AppBar(
         title: const Text('Consult a doctor'),

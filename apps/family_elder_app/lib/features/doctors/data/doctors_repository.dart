@@ -199,8 +199,22 @@ class DoctorsRepository {
   DoctorsRepository(this._client);
   final SupabaseClient _client;
 
-  Future<List<Doctor>> list({String? specialty}) async {
-    var query = _client.from('doctors').select().eq('active', true);
+  /// The directory for one city.
+  ///
+  /// Two filters are not optional. `region_id` keeps a family in Vizag from
+  /// being shown a clinic in Hyderabad they could never reach, and
+  /// `consent_status` keeps out any practitioner who has not agreed to be
+  /// listed — a doctor who never said yes must never appear, so it is
+  /// enforced here rather than left to whoever writes the next screen.
+  Future<List<Doctor>> list({String? specialty, String? regionId}) async {
+    var query = _client
+        .from('doctors')
+        .select()
+        .eq('active', true)
+        .eq('consent_status', 'consented');
+    if (regionId != null && regionId.isNotEmpty) {
+      query = query.eq('region_id', regionId);
+    }
     if (specialty != null && specialty.isNotEmpty) {
       query = query.eq('specialty', specialty);
     }
