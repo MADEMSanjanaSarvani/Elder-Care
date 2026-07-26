@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/providers.dart';
 import '../data/doctors_repository.dart';
@@ -35,6 +36,7 @@ class DoctorsScreen extends ConsumerStatefulWidget {
 class _DoctorsScreenState extends ConsumerState<DoctorsScreen> {
   final _searchController = TextEditingController();
   String _query = '';
+  String? _specialty;
 
   @override
   void initState() {
@@ -76,31 +78,44 @@ class _DoctorsScreenState extends ConsumerState<DoctorsScreen> {
               message: 'Doctors for your city will appear here soon.',
             );
           }
-          final doctors = _query.isEmpty
+          final bySpecialty = _specialty == null
               ? allDoctors
-              : allDoctors
+              : allDoctors.where((d) => d.specialty == _specialty).toList();
+          final doctors = _query.isEmpty
+              ? bySpecialty
+              : bySpecialty
                   .where((d) =>
                       d.displayName.toLowerCase().contains(_query) ||
-                      d.specialty.toLowerCase().contains(_query))
+                      d.specialty.toLowerCase().contains(_query) ||
+                      (d.clinicName ?? '').toLowerCase().contains(_query))
                   .toList();
           return ListView(
             padding: const EdgeInsets.all(SetuSpacing.lg),
             children: [
-              Text('Expert Consultations',
+              Text('Find a doctor',
                   style: Theme.of(context)
                       .textTheme
                       .headlineSmall
                       ?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 4),
-              const Text('Book a video, audio or in-person consult for your family.',
+              const Text(
+                  'Who to see and where. Book a caregiver to take them, or '
+                  'just call the clinic yourself.',
                   style: TextStyle(color: SetuColors.mutedLight)),
               const SizedBox(height: SetuSpacing.md),
               TextField(
                 controller: _searchController,
                 decoration: const InputDecoration(
-                  hintText: 'Search by name or specialty',
+                  hintText: 'Search by name, specialty or hospital',
                   prefixIcon: Icon(Icons.search),
                 ),
+              ),
+              const SizedBox(height: SetuSpacing.md),
+              _SpecialtyFilter(
+                specialties: {for (final d in allDoctors) d.specialty}.toList()
+                  ..sort(),
+                selected: _specialty,
+                onChanged: (s) => setState(() => _specialty = s),
               ),
               const SizedBox(height: SetuSpacing.lg),
               if (doctors.isEmpty)
@@ -215,23 +230,56 @@ class _DoctorCard extends StatelessWidget {
                 _chip(Icons.translate, l),
             ],
           ),
+          if (doctor.clinicName != null) ...[
+            const SizedBox(height: SetuSpacing.md),
+            _ClinicBlock(doctor: doctor),
+          ],
           const SizedBox(height: SetuSpacing.md),
           Row(
             children: [
-              Text('₹${doctor.consultFee.toStringAsFixed(0)}',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w800)),
-              const Text(' / consult',
-                  style: TextStyle(color: SetuColors.mutedLight)),
+              if (doctor.consultFee > 0) ...[
+                Text('₹${doctor.consultFee.toStringAsFixed(0)}',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w800)),
+                const Text(' / consult',
+                    style: TextStyle(color: SetuColors.mutedLight)),
+              ],
               const Spacer(),
-              FilledButton(onPressed: onBook, child: const Text('Book')),
+              if (doctor.phone != null)
+                IconButton(
+                  tooltip: 'Call the clinic',
+                  icon: const Icon(Icons.call_outlined),
+                  onPressed: () => launchUrl(Uri.parse('tel:${doctor.phone}')),
+                ),
+              if (doctor.address != null || doctor.lat != null)
+                IconButton(
+                  tooltip: 'Directions',
+                  icon: const Icon(Icons.directions_outlined),
+                  onPressed: () => _openMaps(doctor),
+                ),
+              const SizedBox(width: 4),
+              FilledButton(
+                onPressed: doctor.escortAvailable ? onBook : null,
+                child: Text(doctor.escortAvailable ? 'Take them' : 'No escort'),
+              ),
             ],
           ),
         ],
       ),
     );
+  }
+
+  /// Open the clinic in Google Maps — by coordinates when we have them,
+  /// otherwise by its address, which is what a hand-entered listing usually
+  /// has.
+  static void _openMaps(Doctor d) {
+    final q = (d.lat != null && d.lng != null)
+        ? '${d.lat},${d.lng}'
+        : Uri.encodeComponent('${d.clinicName ?? ''} ${d.address ?? ''}'.trim());
+    launchUrl(Uri.parse('https://www.google.com/maps/search/?api=1&query=$q'),
+        mode: LaunchMode.externalApplication);
   }
 
   Widget _chip(IconData icon, String text) => Container(
@@ -401,5 +449,153 @@ class _BookingSheetState extends ConsumerState<_BookingSheet> {
     final ampm = d.hour < 12 ? 'AM' : 'PM';
     final min = d.minute.toString().padLeft(2, '0');
     return '${d.day} ${months[d.month - 1]}, $h:$min $ampm';
+  }
+}
+
+/// Horizontal specialty filter, built from the specialties actually present
+/// in the directory rather than a hard-coded list — a fixed list would show
+/// "Cardiology" in a city where no cardiologist has been added yet.
+class _SpecialtyFilter extends StatelessWidget {
+  const _SpecialtyFilter({
+    required this.specialties,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final List<String> specialties;
+  final String? selected;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    if (specialties.length < 2) return const SizedBox.shrink();
+    return SizedBox(
+      height: 40,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: SetuSpacing.sm),
+            child: ChoiceChip(
+              label: const Text('All'),
+              selected: selected == null,
+              onSelected: (_) => onChanged(null),
+            ),
+          ),
+          for (final s in specialties)
+            Padding(
+              padding: const EdgeInsets.only(right: SetuSpacing.sm),
+              child: ChoiceChip(
+                label: Text(s),
+                selected: selected == s,
+                onSelected: (_) => onChanged(selected == s ? null : s),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Where the doctor sits and when — the part a family actually acts on,
+/// whether they book an escort or simply walk in.
+///
+/// When the consulting hours aren't known this says "call to confirm timings"
+/// rather than staying silent or implying the clinic is closed. Sending an
+/// elderly person across town to a shut clinic is the failure that matters
+/// here, so an unknown must never read as a fact.
+class _ClinicBlock extends StatelessWidget {
+  const _ClinicBlock({required this.doctor});
+  final Doctor doctor;
+
+  @override
+  Widget build(BuildContext context) {
+    final hours = doctor.hoursLabel;
+    final today = doctor.consultsToday;
+    return Container(
+      padding: const EdgeInsets.all(SetuSpacing.md),
+      decoration: BoxDecoration(
+        color: SetuColors.paperLight,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: SetuColors.borderLight),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.local_hospital_outlined,
+                  size: 18, color: SetuColors.accentLight),
+              const SizedBox(width: SetuSpacing.sm),
+              Expanded(
+                child: Text(doctor.clinicName!,
+                    style: const TextStyle(fontWeight: FontWeight.w700)),
+              ),
+              if (doctor.registrationVerified)
+                const Tooltip(
+                  message: 'Registration checked against the medical register',
+                  child: Icon(Icons.verified,
+                      size: 18, color: SetuColors.verifiedLight),
+                ),
+            ],
+          ),
+          if (doctor.address != null) ...[
+            const SizedBox(height: 3),
+            Padding(
+              padding: const EdgeInsets.only(left: 26),
+              child: Text(doctor.address!,
+                  style: const TextStyle(
+                      color: SetuColors.mutedLight, fontSize: 12.5)),
+            ),
+          ],
+          const SizedBox(height: SetuSpacing.sm),
+          Padding(
+            padding: const EdgeInsets.only(left: 26),
+            child: Row(
+              children: [
+                Icon(Icons.schedule,
+                    size: 15,
+                    color: hours == null
+                        ? SetuColors.peachLight
+                        : SetuColors.mutedLight),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    hours ?? 'Call to confirm timings',
+                    style: TextStyle(
+                        fontSize: 12.5,
+                        color: hours == null
+                            ? SetuColors.peachLight
+                            : SetuColors.mutedLight),
+                  ),
+                ),
+                if (hours != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: (today
+                              ? SetuColors.verifiedLight
+                              : SetuColors.mutedLight)
+                          .withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      today ? 'Sits today' : 'Not today',
+                      style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          color: today
+                              ? SetuColors.verifiedLight
+                              : SetuColors.mutedLight),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

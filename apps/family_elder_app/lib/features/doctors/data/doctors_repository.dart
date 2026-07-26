@@ -12,6 +12,17 @@ class Doctor {
     this.photoUrl,
     this.bio,
     this.rating,
+    this.clinicName,
+    this.address,
+    this.phone,
+    this.lat,
+    this.lng,
+    this.consultDays = const [],
+    this.consultStart,
+    this.consultEnd,
+    this.escortAvailable = true,
+    this.registrationNo,
+    this.registrationVerifiedAt,
   });
 
   final String id;
@@ -24,6 +35,52 @@ class Doctor {
   final String? photoUrl;
   final String? bio;
   final num? rating;
+
+  /// Where this doctor actually sits, and when.
+  final String? clinicName;
+  final String? address;
+  final String? phone;
+  final double? lat;
+  final double? lng;
+
+  /// ISO weekdays (1 = Monday ... 7 = Sunday). Empty means the hours aren't
+  /// known — shown as "call to confirm", never as closed.
+  final List<int> consultDays;
+  final String? consultStart;
+  final String? consultEnd;
+
+  /// Whether a SETU caregiver can accompany the elder to this clinic.
+  final bool escortAvailable;
+
+  final String? registrationNo;
+  final DateTime? registrationVerifiedAt;
+
+  /// True only once a human has checked the number against the NMC register.
+  /// Keyed off the timestamp, never off the number being present — an
+  /// unverified registration must not render as verified.
+  bool get registrationVerified => registrationVerifiedAt != null;
+
+  bool get hasHours =>
+      consultDays.isNotEmpty && consultStart != null && consultEnd != null;
+
+  /// Whether the doctor sits at this clinic today.
+  bool get consultsToday =>
+      hasHours && consultDays.contains(DateTime.now().weekday);
+
+  /// "Mon, Wed, Fri · 10:00-13:00", or null when the hours aren't known.
+  String? get hoursLabel {
+    if (!hasHours) return null;
+    const names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final days = ([...consultDays]..sort())
+        .where((d) => d >= 1 && d <= 7)
+        .map((d) => names[d - 1])
+        .join(', ');
+    return '$days · ${_hhmm(consultStart!)}-${_hhmm(consultEnd!)}';
+  }
+
+  /// Postgres returns time as "10:00:00"; families don't need the seconds.
+  static String _hhmm(String t) =>
+      t.length >= 5 ? t.substring(0, 5) : t;
 
   factory Doctor.fromMap(Map<String, dynamic> m) => Doctor(
         id: m['id'] as String,
@@ -38,6 +95,21 @@ class Doctor {
         photoUrl: m['photo_url'] as String?,
         bio: m['bio'] as String?,
         rating: m['rating'] as num?,
+        clinicName: m['clinic_name'] as String?,
+        address: m['address'] as String?,
+        phone: m['phone'] as String?,
+        lat: (m['lat'] as num?)?.toDouble(),
+        lng: (m['lng'] as num?)?.toDouble(),
+        consultDays: ((m['consult_days'] as List?) ?? const [])
+            .map((e) => (e as num).toInt())
+            .toList(),
+        consultStart: m['consult_start'] as String?,
+        consultEnd: m['consult_end'] as String?,
+        escortAvailable: (m['escort_available'] as bool?) ?? true,
+        registrationNo: m['registration_no'] as String?,
+        registrationVerifiedAt: m['registration_verified_at'] == null
+            ? null
+            : DateTime.tryParse(m['registration_verified_at'] as String),
       );
 }
 
