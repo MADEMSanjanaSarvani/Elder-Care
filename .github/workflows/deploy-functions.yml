@@ -60,13 +60,26 @@ jobs:
           fi
       - name: Link to the live project
         run: supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
-      # The remote DB was half-built by earlier partial deploys, so `db push`
-      # collides on objects that already exist. Since this project holds only
-      # test data (confirmed), reset it: drop everything, re-apply all 26
-      # migrations cleanly, then run seed.sql. `yes |` answers the destructive
-      # confirmation prompt non-interactively.
-      - name: Reset & rebuild the remote database (test data only)
-        run: yes | supabase db reset --linked
+      # Apply only the migrations the remote hasn't seen yet.
+      #
+      # This was `db reset --linked`, which drops the whole database and
+      # rebuilds it. That was right once: the remote had been half-built by
+      # earlier partial deploys, `db push` collided on objects that already
+      # existed, and the project held nothing but test data.
+      #
+      # It is wrong now, because it ran on EVERY push. Every commit destroyed
+      # whatever was in the database. Survivable while the only rows were test
+      # elders; catastrophic the moment a real family is onboarded, when an
+      # unrelated code change would wipe their parent's medications, visit
+      # history and consent record with no warning and no backup.
+      #
+      # The migration history is properly populated after the last successful
+      # reset, so `db push` now applies cleanly and additively.
+      #
+      # Note: seed.sql no longer runs automatically. Seed data is a one-time
+      # setup step, not something to re-apply on every deploy.
+      - name: Apply new migrations
+        run: supabase db push
 
   deploy:
     needs: migrate
