@@ -42,10 +42,14 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
   final _physicianContactController = TextEditingController();
   final _insuranceProviderController = TextEditingController();
   final _insurancePolicyController = TextEditingController();
+  final _heightController = TextEditingController();
+  final _weightController = TextEditingController();
 
   bool _loaded = false;
   bool _adminVisible = false;
   bool _saving = false;
+  String? _gender;
+  DateTime? _dob;
 
   HealthProfileRepository get _repo =>
       HealthProfileRepository(ref.read(supabaseClientProvider));
@@ -59,8 +63,18 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
   Future<void> _load() async {
     final health = await _repo.fetchHealthProfile(widget.elderId);
     final admin = await _repo.fetchAdministrativeProfile(widget.elderId);
+    // Gender and date of birth live on the identity record, not the health
+    // profile — read them here so the whole picture is on one screen.
+    final elder = await ref.read(elderProfileByIdProvider(widget.elderId).future);
     if (!mounted) return;
     setState(() {
+      _gender = elder?['gender'] as String?;
+      final dobRaw = elder?['dob'] as String?;
+      _dob = dobRaw == null ? null : DateTime.tryParse(dobRaw);
+      final h = health?['height_cm'];
+      final w = health?['weight_kg'];
+      _heightController.text = h == null ? '' : (h as num).toString();
+      _weightController.text = w == null ? '' : (w as num).toString();
       _bloodTypeController.text = health?['blood_type'] as String? ?? '';
       _allergiesController.text =
           ((health?['allergies'] as List?)?.cast<String>() ?? []).join(', ');
@@ -98,7 +112,13 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
         emergencyMedicalNotes: _emergencyNotesController.text.trim().isEmpty
             ? null
             : _emergencyNotesController.text.trim(),
+        heightCm: double.tryParse(_heightController.text.trim()),
+        weightKg: double.tryParse(_weightController.text.trim()),
       );
+      await _repo.saveGender(widget.elderId, _gender);
+      // The dashboard header and any screen showing age read the elder row,
+      // so refresh it rather than leaving stale values behind the save.
+      ref.invalidate(elderProfileByIdProvider(widget.elderId));
       await _repo.saveAdministrativeProfile(
         elderId: widget.elderId,
         updatedBy: userId,
@@ -201,6 +221,19 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: SetuSpacing.lg),
+
+          // Who they are: age, gender, height, weight. Age is derived from the
+          // date of birth rather than stored, so it can never drift out of
+          // date, and BMI is computed on read for the same reason.
+          _AboutSection(
+            dob: _dob,
+            gender: _gender,
+            heightController: _heightController,
+            weightController: _weightController,
+            onGender: (g) => setState(() => _gender = g),
+            onChanged: () => setState(() {}),
           ),
           const SizedBox(height: SetuSpacing.lg),
 
@@ -636,6 +669,170 @@ class _ContactRow extends StatelessWidget {
             tooltip: 'Call $name',
             onPressed: () => launchUrl(Uri.parse('tel:$phone')),
           ),
+      ],
+    );
+  }
+}
+
+/// Age, gender, height and weight — the "who is this person" block that sat
+/// above the medical detail.
+///
+/// Age is shown from the date of birth rather than stored as a number, and
+/// BMI is computed from height and weight on read. Both would otherwise go
+/// quietly stale: a stored age is wrong within a year, and a stored BMI is
+/// wrong the moment someone's weight changes.
+class _AboutSection extends StatelessWidget {
+  const _AboutSection({
+    required this.dob,
+    required this.gender,
+    required this.heightController,
+    required this.weightController,
+    required this.onGender,
+    required this.onChanged,
+  });
+
+  final DateTime? dob;
+  final String? gender;
+  final TextEditingController heightController;
+  final TextEditingController weightController;
+  final ValueChanged<String?> onGender;
+  final VoidCallback onChanged;
+
+  static const _genders = {
+    'female': 'Female',
+    'male': 'Male',
+    'other': 'Other',
+    'prefer_not_to_say': 'Prefer not to say',
+  };
+
+  int? get _age {
+    if (dob == null) return null;
+    final now = DateTime.now();
+    var years = now.year - dob!.year;
+    if (now.month < dob!.month ||
+        (now.month == dob!.month && now.day < dob!.day)) {
+      years--;
+    }
+    return years < 0 || years > 130 ? null : years;
+  }
+
+  String? get _bmi {
+    final h = double.tryParse(heightController.text.trim());
+    final w = double.tryParse(weightController.text.trim());
+    if (h == null || w == null || h <= 0) return null;
+    final m = h / 100;
+    return (w / (m * m)).toStringAsFixed(1);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final age = _age;
+    final bmi = _bmi;
+    return Container(
+      padding: const EdgeInsets.all(SetuSpacing.lg),
+      decoration: BoxDecoration(
+        color: SetuColors.paperRaisedLight,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: SetuColors.borderLight),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('ABOUT',
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.6,
+                  color: SetuColors.mutedLight)),
+          const SizedBox(height: SetuSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: _Stat(
+                  label: 'Age',
+                  value: age == null ? '—' : '$age',
+                  hint: age == null ? 'Add a date of birth' : 'years',
+                ),
+              ),
+              Expanded(
+                child: _Stat(
+                  label: 'BMI',
+                  value: bmi ?? '—',
+                  hint: bmi == null ? 'Needs height + weight' : 'calculated',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: SetuSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: heightController,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  onChanged: (_) => onChanged(),
+                  decoration: const InputDecoration(
+                      labelText: 'Height', suffixText: 'cm'),
+                ),
+              ),
+              const SizedBox(width: SetuSpacing.md),
+              Expanded(
+                child: TextField(
+                  controller: weightController,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  onChanged: (_) => onChanged(),
+                  decoration: const InputDecoration(
+                      labelText: 'Weight', suffixText: 'kg'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: SetuSpacing.md),
+          // `value:` rather than `initialValue:` — the latter only exists on
+          // very recent Flutter, and this has to build on the pinned range in
+          // pubspec (>=3.22.0). Deprecation is an info, not a build failure.
+          // ignore: deprecated_member_use
+          DropdownButtonFormField<String>(
+            value: gender,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: 'Gender'),
+            items: [
+              for (final e in _genders.entries)
+                DropdownMenuItem(value: e.key, child: Text(e.value)),
+            ],
+            onChanged: onGender,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Stat extends StatelessWidget {
+  const _Stat({required this.label, required this.value, required this.hint});
+
+  final String label;
+  final String value;
+  final String hint;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(
+                color: SetuColors.mutedLight, fontSize: 12.5)),
+        Text(value,
+            style: Theme.of(context)
+                .textTheme
+                .headlineSmall
+                ?.copyWith(fontWeight: FontWeight.w800)),
+        Text(hint,
+            style: const TextStyle(
+                color: SetuColors.mutedLight, fontSize: 11.5)),
       ],
     );
   }

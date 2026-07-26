@@ -30,6 +30,8 @@ class HealthProfileRepository {
     required List<String> allergies,
     required List<String> chronicConditions,
     String? emergencyMedicalNotes,
+    double? heightCm,
+    double? weightKg,
   }) async {
     await _client.from('elder_health_profile').upsert({
       'elder_id': elderId,
@@ -37,8 +39,18 @@ class HealthProfileRepository {
       'allergies': allergies,
       'chronic_conditions': chronicConditions,
       'emergency_medical_notes': emergencyMedicalNotes,
+      'height_cm': heightCm,
+      'weight_kg': weightKg,
       'updated_by': updatedBy,
     }, onConflict: 'elder_id');
+  }
+
+  /// Gender sits on the identity record, not the health profile, so it saves
+  /// separately from the medical fields above.
+  Future<void> saveGender(String elderId, String? gender) async {
+    await _client
+        .from('elder_profiles')
+        .update({'gender': gender}).eq('id', elderId);
   }
 
   Future<void> saveAdministrativeProfile({
