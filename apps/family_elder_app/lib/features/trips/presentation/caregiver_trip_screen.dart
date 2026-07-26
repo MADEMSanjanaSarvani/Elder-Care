@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/location.dart';
 import '../../../core/providers.dart';
 import '../data/trips_repository.dart';
 import 'trip_tracking_screen.dart';
@@ -60,18 +61,16 @@ class _CaregiverTripScreenState extends ConsumerState<CaregiverTripScreen> {
 
   Future<void> _pushOnce() async {
     try {
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-      if (permission != LocationPermission.always &&
-          permission != LocationPermission.whileInUse) {
-        return;
-      }
-      final pos = await Geolocator.getCurrentPosition(
-        locationSettings:
-            const LocationSettings(accuracy: LocationAccuracy.high),
-      ).timeout(const Duration(seconds: 8));
+      // A live fix only: pushing a stale position would tell the family the
+      // caregiver is somewhere they left an hour ago, which is worse than
+      // showing nothing. A missed ping is fine; the next tick catches up.
+      final located = await captureLocation(
+        accuracy: LocationAccuracy.high,
+        timeout: const Duration(seconds: 20),
+        allowStale: false,
+      );
+      final pos = located.position;
+      if (pos == null) return;
       await _repo.pushLocation(widget.bookingId,
           lat: pos.latitude, lng: pos.longitude);
     } catch (_) {

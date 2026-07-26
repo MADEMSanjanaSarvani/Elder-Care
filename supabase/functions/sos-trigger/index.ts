@@ -20,9 +20,15 @@ Deno.serve(async (req) => {
   try {
     const user = await requireUser(req);
     const { elder_id, lat, lng, ack_108_shown } = await req.json();
-    if (!elder_id || lat === undefined || lng === undefined) {
-      return errorResponse("elder_id, lat, and lng are required");
-    }
+    if (!elder_id) return errorResponse("elder_id is required");
+    // Coordinates are optional, and that is deliberate. They used to be
+    // mandatory, which meant a phone that could not find itself — indoors,
+    // GPS off, no fix yet — silently turned a pressed emergency button into a
+    // 400. The alert reaching the family and the operator matters more than
+    // knowing exactly where to send them; an operator who knows something is
+    // wrong and has to ask "where are you?" is far ahead of one who was never
+    // told at all.
+    const hasLocation = typeof lat === "number" && typeof lng === "number";
     if (!ack_108_shown) {
       return errorResponse("The 108-first screen must be shown before platform escalation runs", 422);
     }
@@ -54,7 +60,9 @@ Deno.serve(async (req) => {
       .insert({
         elder_id,
         triggered_by: user.id,
-        location: `SRID=4326;POINT(${lng} ${lat})`,
+        // Nullable in the schema; null here means the phone couldn't produce
+        // a fix, not that nobody looked.
+        location: hasLocation ? `SRID=4326;POINT(${lng} ${lat})` : null,
         status: "triggered",
         ack_108_shown_at: now,
       })
@@ -121,7 +129,7 @@ Deno.serve(async (req) => {
         notifiedUserIds.map((uid) => ({
           user_id: uid,
           type: "sos_triggered",
-          payload: { sos_event_id: sosEvent.id, elder_id, elder_name: elder.display_name, lat, lng, health_snapshot: healthSnapshot },
+          payload: { sos_event_id: sosEvent.id, elder_id, elder_name: elder.display_name, lat: hasLocation ? lat : null, lng: hasLocation ? lng : null, location_available: hasLocation, health_snapshot: healthSnapshot },
         }))
       );
     }
@@ -137,7 +145,7 @@ Deno.serve(async (req) => {
         opsUsers.map((o) => ({
           user_id: o.profile_id,
           type: "sos_ops_alert",
-          payload: { sos_event_id: sosEvent.id, elder_id, lat, lng, health_snapshot: healthSnapshot },
+          payload: { sos_event_id: sosEvent.id, elder_id, lat: hasLocation ? lat : null, lng: hasLocation ? lng : null, location_available: hasLocation, health_snapshot: healthSnapshot },
         }))
       );
     }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:setu_core/setu_core.dart';
 
+import '../../../core/location.dart';
 import '../../../core/providers.dart';
 import '../data/caregiver_registration_repository.dart';
 import '../../auth/data/auth_repository.dart';
@@ -83,34 +84,33 @@ class _CaregiverRegistrationScreenState
 
   /// Captures the caregiver's base location so families can find them by
   /// distance. Consent-based; if denied, they can still register (no distance).
+  ///
+  /// Everything about why this used to fail — an eight-second budget on a fix
+  /// that routinely takes thirty, no check that location services were even on,
+  /// and a raw TimeoutException shown to the caregiver — now lives in
+  /// captureLocation(), which returns a sentence instead of a stack trace.
   Future<void> _captureLocation() async {
     setState(() => _locating = true);
-    try {
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
+    final result = await captureLocation();
+    if (!mounted) return;
+    setState(() {
+      _locating = false;
+      if (result.ok) {
+        _latitude = result.position!.latitude;
+        _longitude = result.position!.longitude;
       }
-      if (permission == LocationPermission.always ||
-          permission == LocationPermission.whileInUse) {
-        final pos = await Geolocator.getCurrentPosition(
-          locationSettings:
-              const LocationSettings(accuracy: LocationAccuracy.medium),
-        ).timeout(const Duration(seconds: 8));
-        setState(() {
-          _latitude = pos.latitude;
-          _longitude = pos.longitude;
-        });
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Location permission denied.')));
-      }
-    } catch (err) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Could not get location: $err')));
-      }
-    } finally {
-      if (mounted) setState(() => _locating = false);
+    });
+    if (!result.ok) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(result.problem!),
+        duration: const Duration(seconds: 6),
+        action: result.needsSettings
+            ? SnackBarAction(
+                label: 'Settings',
+                onPressed: Geolocator.openAppSettings,
+              )
+            : null,
+      ));
     }
   }
 

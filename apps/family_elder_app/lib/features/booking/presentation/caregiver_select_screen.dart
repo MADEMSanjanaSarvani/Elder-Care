@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:setu_core/setu_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/location.dart';
 import '../../../core/providers.dart';
 import '../data/booking_repository.dart';
 import '../../../core/illustrations.dart';
@@ -103,24 +103,13 @@ class _CaregiverSelectScreenState extends ConsumerState<CaregiverSelectScreen> {
   /// If permission is denied or unavailable, we simply fall back to the
   /// best-rated ordering — location is a nicety, never a blocker.
   Future<List<Map<String, dynamic>>> _load() async {
-    double? lat, lng;
-    try {
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-      if (permission == LocationPermission.always ||
-          permission == LocationPermission.whileInUse) {
-        final pos = await Geolocator.getCurrentPosition(
-          locationSettings:
-              const LocationSettings(accuracy: LocationAccuracy.medium),
-        ).timeout(const Duration(seconds: 6));
-        lat = pos.latitude;
-        lng = pos.longitude;
-      }
-    } catch (_) {
-      // Ignore — proceed without distance.
-    }
+    // Distance is a nice-to-have for sorting, so a stale fix is fine and a
+    // failure is silent — the list still loads, just without "nearby".
+    final located = await captureLocation(
+      timeout: const Duration(seconds: 10),
+    );
+    final lat = located.position?.latitude;
+    final lng = located.position?.longitude;
     return _repo.fetchCaregiversForService(
       elderId: widget.elderId,
       serviceId: widget.service.id,

@@ -9,18 +9,22 @@ class SosRepository {
 
   final SupabaseClient _client;
 
+  /// [lat]/[lng] are nullable on purpose. A phone that cannot find itself —
+  /// indoors, GPS switched off, no fix yet — must never be able to stop an
+  /// emergency alert from reaching the family and the operator. Coordinates
+  /// make the response much better; they are not what makes it worth sending.
   Future<Map<String, dynamic>> trigger({
     required String elderId,
-    required double lat,
-    required double lng,
+    required double? lat,
+    required double? lng,
     required bool ack108Shown,
   }) async {
     final response = await _client.functions.invoke(
       'sos-trigger',
       body: {
         'elder_id': elderId,
-        'lat': lat,
-        'lng': lng,
+        if (lat != null && lng != null) 'lat': lat,
+        if (lat != null && lng != null) 'lng': lng,
         'ack_108_shown': ack108Shown
       },
     );

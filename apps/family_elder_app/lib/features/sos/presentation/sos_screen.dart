@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:setu_core/setu_core.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/location.dart';
 import '../../../core/providers.dart';
 import '../data/sos_repository.dart';
 
@@ -25,6 +26,11 @@ class _SosScreenState extends ConsumerState<SosScreen> {
   bool _notifying = false;
   bool _notified = false;
   bool _drilling = false;
+  /// True when the alert went out but the phone couldn't produce a location.
+  /// The confirmation screen must say so rather than claim responders can see
+  /// where you are — the one place in this app where a reassuring lie could
+  /// get somebody hurt.
+  bool _locationMissing = false;
   String? _error;
 
   Future<void> _call108() async {
@@ -70,15 +76,33 @@ class _SosScreenState extends ConsumerState<SosScreen> {
       _error = null;
     });
     try {
-      final position = await Geolocator.getCurrentPosition();
+      // The alert goes out whether or not the phone can find itself.
+      //
+      // This used to call getCurrentPosition() with no timeout at all, and a
+      // failure took the whole SOS down with it — so an elder indoors, or with
+      // location switched off, pressed the emergency button and nothing
+      // happened. A location is extremely useful here and it is not worth more
+      // than the alert itself: knowing something is wrong with no coordinates
+      // beats knowing nothing.
+      //
+      // Stale is accepted for the same reason. A fix from an hour ago is
+      // usually still the right building, and an operator with an approximate
+      // address is far ahead of one with none.
+      final result = await captureLocation(
+        accuracy: LocationAccuracy.high,
+        timeout: const Duration(seconds: 12),
+      );
       final repo = SosRepository(ref.read(supabaseClientProvider));
       await repo.trigger(
         elderId: widget.elderId,
-        lat: position.latitude,
-        lng: position.longitude,
+        lat: result.position?.latitude,
+        lng: result.position?.longitude,
         ack108Shown: true, // this screen is the 108-first screen
       );
-      setState(() => _notified = true);
+      setState(() {
+        _notified = true;
+        _locationMissing = !result.ok;
+      });
     } catch (err) {
       setState(() => _error = err.toString());
     } finally {
@@ -163,9 +187,13 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                   textAlign: TextAlign.center,
                   style: TextStyle(color: SetuColors.mutedLight)),
               const SizedBox(height: SetuSpacing.lg),
-              // Decorative "location shared" strip — the real trigger() call
-              // already sent live coordinates; this isn't a live map, just a
-              // reassurance that it happened (no fabricated street address).
+              // "Location shared" strip — the real trigger() call already sent
+              // the coordinates; this isn't a live map, just confirmation that
+              // it happened (no fabricated street address).
+              //
+              // When the fix failed it says so instead. Telling someone in an
+              // emergency that responders can see where they are, when nobody
+              // can, is the single worst lie this app could tell.
               Container(
                 height: 84,
                 decoration: BoxDecoration(
@@ -173,10 +201,15 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [
-                      SetuColors.verifiedLight.withValues(alpha: 0.16),
-                      SetuColors.accentLight.withValues(alpha: 0.10),
-                    ],
+                    colors: _locationMissing
+                        ? [
+                            SetuColors.peachLight.withValues(alpha: 0.18),
+                            SetuColors.paperLight,
+                          ]
+                        : [
+                            SetuColors.verifiedLight.withValues(alpha: 0.16),
+                            SetuColors.accentLight.withValues(alpha: 0.10),
+                          ],
                   ),
                   border: Border.all(color: SetuColors.borderLight),
                 ),
@@ -185,21 +218,35 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                     const SizedBox(width: SetuSpacing.md),
                     Container(
                       padding: const EdgeInsets.all(10),
-                      decoration: const BoxDecoration(
-                          color: SetuColors.verifiedLight, shape: BoxShape.circle),
-                      child: const Icon(Icons.my_location,
-                          color: Colors.white, size: 20),
+                      decoration: BoxDecoration(
+                          color: _locationMissing
+                              ? SetuColors.peachLight
+                              : SetuColors.verifiedLight,
+                          shape: BoxShape.circle),
+                      child: Icon(
+                          _locationMissing
+                              ? Icons.location_off_outlined
+                              : Icons.my_location,
+                          color: Colors.white,
+                          size: 20),
                     ),
                     const SizedBox(width: SetuSpacing.md),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('Live location sharing',
-                              style: TextStyle(fontWeight: FontWeight.w800)),
-                          Text('Responders can see where you are',
-                              style: TextStyle(
+                          Text(
+                              _locationMissing
+                                  ? 'Location not available'
+                                  : 'Live location sharing',
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w800)),
+                          Text(
+                              _locationMissing
+                                  ? 'Tell them where you are when they call'
+                                  : 'Responders can see where you are',
+                              style: const TextStyle(
                                   color: SetuColors.mutedLight, fontSize: 12.5)),
                         ],
                       ),
@@ -209,11 +256,13 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: SetuColors.verifiedLight,
+                        color: _locationMissing
+                            ? SetuColors.peachLight
+                            : SetuColors.verifiedLight,
                         borderRadius: BorderRadius.circular(999),
                       ),
-                      child: const Text('ACTIVE',
-                          style: TextStyle(
+                      child: Text(_locationMissing ? 'NO GPS' : 'ACTIVE',
+                          style: const TextStyle(
                               color: Colors.white,
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
