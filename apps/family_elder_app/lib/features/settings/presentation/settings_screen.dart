@@ -71,6 +71,11 @@ class SettingsScreen extends ConsumerWidget {
                   subtitle: 'Signed in',
                 ),
                 _NavRow(
+                  icon: Icons.lock_outline,
+                  label: 'Change password',
+                  onTap: () => _changePassword(context, ref),
+                ),
+                _NavRow(
                   icon: Icons.switch_account_outlined,
                   label: 'How you use SETU',
                   trailingText: _roleLabel(profile?['role'] as String?),
@@ -258,6 +263,82 @@ class SettingsScreen extends ConsumerWidget {
         error: (err, stack) => const SetuErrorState(),
       ),
     );
+  }
+
+  /// Set a new password from inside the app.
+  ///
+  /// Supabase's updateUser needs only the current session, not the old
+  /// password, so there is nothing to verify here — the session itself is the
+  /// proof. Requiring the old password anyway would be theatre, and would
+  /// lock out anyone who arrived through Google sign-in and has no password
+  /// to type.
+  Future<void> _changePassword(BuildContext context, WidgetRef ref) async {
+    final pw = TextEditingController();
+    final confirm = TextEditingController();
+    String? error;
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          title: const Text('Change password'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: pw,
+                obscureText: true,
+                decoration:
+                    const InputDecoration(labelText: 'New password'),
+              ),
+              const SizedBox(height: SetuSpacing.sm),
+              TextField(
+                controller: confirm,
+                obscureText: true,
+                decoration:
+                    const InputDecoration(labelText: 'Confirm new password'),
+              ),
+              if (error != null) ...[
+                const SizedBox(height: SetuSpacing.sm),
+                Text(error!,
+                    style: const TextStyle(color: SetuColors.sosLight)),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Cancel')),
+            FilledButton(
+              onPressed: () {
+                if (pw.text.length < 8) {
+                  setLocal(() => error = 'Use at least 8 characters.');
+                  return;
+                }
+                if (pw.text != confirm.text) {
+                  setLocal(() => error = 'The two passwords don\'t match.');
+                  return;
+                }
+                Navigator.of(ctx).pop(true);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (saved != true || !context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await AuthRepository(ref.read(supabaseClientProvider))
+          .updatePassword(pw.text);
+      messenger.showSnackBar(
+          const SnackBar(content: Text('Password updated.')));
+    } catch (err) {
+      messenger.showSnackBar(
+          SnackBar(content: Text('Could not change the password: $err')));
+    }
   }
 
   static String _roleLabel(String? role) => switch (role) {

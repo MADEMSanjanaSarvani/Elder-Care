@@ -59,6 +59,24 @@ class BookingRepository {
     return (res.data as Map).cast<String, dynamic>();
   }
 
+  /// Withdraws a visit request that was never paid for.
+  ///
+  /// A booking row has to exist before a payment link can reference it, so
+  /// it is created first and only becomes a real, dispatchable visit once the
+  /// money arrives. If the family backs out at the payment step the request
+  /// must not be left sitting in the queue looking live, or a caregiver could
+  /// be assigned to a visit nobody paid for.
+  ///
+  /// Scoped to the pre-confirmation states, so it can never cancel a visit
+  /// that is already confirmed, under way or finished.
+  Future<void> cancelUnpaidBooking(String bookingId) async {
+    await _client
+        .from('bookings')
+        .update({'status': 'cancelled'})
+        .eq('id', bookingId)
+        .inFilter('status', ['requested', 'matched']);
+  }
+
   /// Verifies the visit payment with Razorpay and marks it captured. Returns
   /// true once paid.
   Future<bool> confirmBookingPayment(

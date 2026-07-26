@@ -170,15 +170,20 @@ class _CaregiverSelectScreenState extends ConsumerState<CaregiverSelectScreen> {
       );
       if (!mounted) return;
       setState(() => _submitting = false);
-      // Offer to pay for the visit now (Razorpay). Optional — the booking is
-      // already placed; paying just confirms it up front.
-      await _offerPayment(booking.id);
+      // Payment gates the visit. The booking row exists only so the payment
+      // link has something to reference — it is a request, not a confirmed
+      // visit, and no caregiver is dispatched against it until the money
+      // arrives. If the family backs out, the request is withdrawn rather
+      // than left in the queue looking live.
+      final paid = await _collectPayment(booking.id);
       if (!mounted) return;
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(caregiverName == null
-            ? 'Requested — we\'ll match the best caregiver for ${widget.service.name}.'
-            : 'Requested $caregiverName for ${widget.service.name}.'),
+        content: Text(paid
+            ? (caregiverName == null
+                ? 'Confirmed — we\'ll match the best caregiver for ${widget.service.name}.'
+                : 'Confirmed $caregiverName for ${widget.service.name}.')
+            : 'Request withdrawn — nothing was booked and you were not charged.'),
       ));
     } catch (err) {
       if (!mounted) return;
@@ -188,68 +193,103 @@ class _CaregiverSelectScreenState extends ConsumerState<CaregiverSelectScreen> {
     }
   }
 
-  /// Optional pay-now step. Silently no-ops if payments aren't configured
-  /// (503) so booking still works without a gateway.
-  Future<void> _offerPayment(String bookingId) async {
+  /// Take payment for the visit. Returns true only when it is actually paid.
+  ///
+  /// There is no "pay later": an unpaid request is not a booking, and leaving
+  /// one in the queue means a caregiver could be dispatched to a visit nobody
+  /// paid for. Backing out withdraws the request instead.
+  ///
+  /// The one exception is a project with no payment gateway configured (503).
+  /// There, refusing to book would make the app unusable for a pilot that
+  /// hasn't wired Razorpay yet, so the request stands and the family is told
+  /// plainly that payment will be collected separately.
+  Future<bool> _collectPayment(String bookingId) async {
     final amount =
         '${widget.service.currency} ${widget.service.basePrice.toStringAsFixed(0)}';
-    final payNow = await showDialog<bool>(
+    final messenger = ScaffoldMessenger.of(context);
+
+    final proceed = await showDialog<bool>(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Pay for this visit?'),
+        title: const Text('Confirm and pay'),
         content: Text(
-            'Your request is placed. Pay $amount now to confirm the visit, '
-            'or pay later.'),
+            'Your visit is not booked until it is paid for. Pay $amount now '
+            'to confirm it.'),
         actions: [
           TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Pay later')),
+              child: const Text('Cancel request')),
           FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
               child: Text('Pay $amount')),
         ],
       ),
     );
-    if (payNow != true || !mounted) return;
 
-    final messenger = ScaffoldMessenger.of(context);
+    if (proceed != true) {
+      await _repo.cancelUnpaidBooking(bookingId);
+      return false;
+    }
+
     try {
       final link = await _repo.createBookingPaymentLink(bookingId: bookingId);
       await launchUrl(Uri.parse(link['short_url'] as String),
           mode: LaunchMode.externalApplication);
-      if (!mounted) return;
+      if (!mounted) return false;
+
       final done = await showDialog<bool>(
         context: context,
+        barrierDismissible: false,
         builder: (context) => AlertDialog(
           title: const Text('Finish your payment'),
           content: const Text(
-              'Complete the payment in your browser, then tap "I\'ve paid".'),
+              'Complete the payment in your browser, then tap "I\'ve paid". '
+              'If you did not pay, the request will be withdrawn.'),
           actions: [
             TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Later')),
+                child: const Text('I did not pay')),
             FilledButton(
                 onPressed: () => Navigator.of(context).pop(true),
                 child: const Text("I've paid")),
           ],
         ),
       );
-      if (done != true) return;
+
+      if (done != true) {
+        await _repo.cancelUnpaidBooking(bookingId);
+        return false;
+      }
+
       final paid = await _repo.confirmBookingPayment(
           linkId: link['link_id'] as String, bookingId: bookingId);
-      messenger.showSnackBar(SnackBar(
-          content: Text(paid
-              ? 'Payment received — visit confirmed.'
-              : "We couldn't confirm the payment yet.")));
-    } on FunctionException catch (e) {
-      if (e.status != 503) {
-        messenger.showSnackBar(
-            SnackBar(content: Text('Payment error: ${e.details ?? e.status}')));
+      if (!paid) {
+        // Razorpay hasn't recorded it. Don't cancel — the webhook may still
+        // land and confirm the visit — but don't claim it is booked either.
+        messenger.showSnackBar(const SnackBar(
+            content: Text(
+                'Payment not confirmed yet. If it went through, the visit '
+                'will confirm shortly — check Bookings.')));
       }
-      // 503 → payments not configured; skip silently.
+      return paid;
+    } on FunctionException catch (e) {
+      if (e.status == 503) {
+        messenger.showSnackBar(const SnackBar(
+            content: Text(
+                'Online payment isn\'t set up yet — our team will contact '
+                'you to arrange it.')));
+        return true;
+      }
+      await _repo.cancelUnpaidBooking(bookingId);
+      messenger.showSnackBar(
+          SnackBar(content: Text('Payment error: ${e.details ?? e.status}')));
+      return false;
     } catch (err) {
-      messenger
-          .showSnackBar(SnackBar(content: Text('Could not start payment: $err')));
+      await _repo.cancelUnpaidBooking(bookingId);
+      messenger.showSnackBar(
+          SnackBar(content: Text('Could not start payment: $err')));
+      return false;
     }
   }
 
