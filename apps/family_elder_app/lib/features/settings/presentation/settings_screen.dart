@@ -70,6 +70,13 @@ class SettingsScreen extends ConsumerWidget {
                   label: (name != null && name.isNotEmpty) ? name : 'Your account',
                   subtitle: 'Signed in',
                 ),
+                _NavRow(
+                  icon: Icons.switch_account_outlined,
+                  label: 'How you use SETU',
+                  trailingText: _roleLabel(profile?['role'] as String?),
+                  onTap: () => _changeRole(context, ref,
+                      current: profile?['role'] as String?),
+                ),
               ],
               footer: OutlinedButton.icon(
                 onPressed: () =>
@@ -251,6 +258,102 @@ class SettingsScreen extends ConsumerWidget {
         error: (err, stack) => const SetuErrorState(),
       ),
     );
+  }
+
+  static String _roleLabel(String? role) => switch (role) {
+        'elder' => 'Senior',
+        'caregiver' => 'Caregiver',
+        _ => 'Family member',
+      };
+
+  /// Let someone change how they use SETU after sign-up.
+  ///
+  /// The role picker only ever appeared once, on a brand-new account, so
+  /// anyone who chose wrongly — or who is both a daughter and a caregiver —
+  /// was stuck for good with no way back short of a new account. Switching
+  /// only rewrites `profiles.role`; elders, bookings and any caregiver
+  /// application all survive, so this is reversible and needs no warning.
+  Future<void> _changeRole(BuildContext context, WidgetRef ref,
+      {required String? current}) async {
+    const options = {
+      'family_member': (
+        'Family member',
+        'Look after a parent or relative',
+        Icons.diversity_1_outlined,
+      ),
+      'elder': (
+        'Senior',
+        'Use SETU for yourself, with larger text',
+        Icons.elderly_outlined,
+      ),
+      'caregiver': (
+        'Caregiver',
+        'Provide care and accept visits',
+        Icons.medical_services_outlined,
+      ),
+    };
+
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: SetuColors.paperLight,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(SetuSpacing.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('How do you use SETU?',
+                  style: Theme.of(ctx)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 4),
+              const Text(
+                'You can change this whenever you like — nothing is lost.',
+                style: TextStyle(color: SetuColors.mutedLight),
+              ),
+              const SizedBox(height: SetuSpacing.md),
+              for (final e in options.entries)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: SetuIconChip(
+                      icon: e.value.$3,
+                      color: e.key == current
+                          ? SetuColors.accentLight
+                          : SetuColors.mutedLight),
+                  title: Text(e.value.$1,
+                      style: const TextStyle(fontWeight: FontWeight.w700)),
+                  subtitle: Text(e.value.$2),
+                  trailing: e.key == current
+                      ? const Icon(Icons.check_circle,
+                          color: SetuColors.accentLight)
+                      : null,
+                  onTap: () => Navigator.of(ctx).pop(e.key),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (picked == null || picked == current || !context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await AuthRepository(ref.read(supabaseClientProvider)).updateRole(picked);
+      // The whole app shell is chosen from this value, so refresh it before
+      // telling the user anything — otherwise they're looking at the old home.
+      ref.invalidate(currentProfileProvider);
+      await ref.read(currentProfileProvider.future);
+      messenger.showSnackBar(SnackBar(
+          content: Text('You are now using SETU as a '
+              '${_roleLabel(picked).toLowerCase()}.')));
+    } catch (err) {
+      messenger.showSnackBar(
+          SnackBar(content: Text('Could not change that: $err')));
+    }
   }
 
   Future<void> _showLanguageSheet(BuildContext context, String current,

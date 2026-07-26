@@ -123,6 +123,19 @@ class AuthRepository {
     return row != null;
   }
 
+  /// Change which role this account uses, after the profile already exists.
+  ///
+  /// Only `profiles.role` moves. Nothing is deleted: a person who tries
+  /// "caregiver", finds it isn't for them and switches back to family still
+  /// has their elders, their bookings and their caregiver application intact.
+  /// Role picks the shell you see, not what you own — which also means this
+  /// is safely reversible, so it doesn't need a scary confirmation.
+  Future<void> updateRole(String role) async {
+    final user = _client.auth.currentUser;
+    if (user == null) throw StateError('Not signed in');
+    await _client.from('profiles').update({'role': role}).eq('id', user.id);
+  }
+
   /// Sign out of Supabase *and* Google.
   ///
   /// Signing out of Supabase alone leaves the Google session intact, so the
