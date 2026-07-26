@@ -17,6 +17,17 @@ final authStateProvider =
 /// never get the chance to choose a new password. Cleared once it's saved.
 final passwordRecoveryProvider = StateProvider<bool>((ref) => false);
 
+/// True while the user is deliberately going back to the role picker.
+///
+/// Role isn't a screen you navigate to — it's a column, and the router swaps
+/// whole shells based on it. So someone who picked "caregiver" and wanted to
+/// change their mind had no back button anywhere: the registration form was
+/// the root of the tree, Android back exited the app, and the only visible
+/// escape was Sign out. This flag lets the home router show the picker again
+/// without unpicking that design, and it is cleared the moment a role is
+/// chosen or the user backs out.
+final roleReselectProvider = StateProvider<bool>((ref) => false);
+
 /// The signed-in user's `profiles` row — null while signed out or before
 /// the row has been created (see `AuthRepository.completeSignIn`).
 final currentProfileProvider =

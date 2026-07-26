@@ -50,8 +50,14 @@ final routerProvider = Provider<GoRouter>((ref) {
   // flag the redirect below reads, so the user lands on "choose a new
   // password" rather than silently on the dashboard.
   ref.listen<AsyncValue<AuthState>>(authStateProvider, (_, next) {
-    if (next.asData?.value.event == AuthChangeEvent.passwordRecovery) {
+    final event = next.asData?.value.event;
+    if (event == AuthChangeEvent.passwordRecovery) {
       ref.read(passwordRecoveryProvider.notifier).state = true;
+    }
+    // Clear the "show me the role picker" flag on sign-out, so it can't
+    // follow a different account into the app on the next sign-in.
+    if (event == AuthChangeEvent.signedOut) {
+      ref.read(roleReselectProvider.notifier).state = false;
     }
   });
 
@@ -267,7 +273,14 @@ class HomeRouterScreen extends ConsumerWidget {
         // before showing any home. This is where sign-up lands (the router
         // redirects away from /login the instant a session exists, so the
         // role picker can't live on the login screen and be reliable).
-        if (profile == null) return const ChooseRoleScreen();
+        //
+        // Also shown when someone asks to go back and pick again — see
+        // roleReselectProvider. Picking a role swaps the entire shell, so
+        // "back" from a role has to be handled here rather than by a
+        // Navigator that has nothing on its stack to pop.
+        if (profile == null || ref.watch(roleReselectProvider)) {
+          return const ChooseRoleScreen();
+        }
         final role = profile['role'] as String?;
         // Each role gets its own bottom-navigation shell (SETU navigation).
         if (role == 'caregiver') return const CaregiverGate();

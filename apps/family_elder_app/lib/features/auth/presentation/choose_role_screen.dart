@@ -34,10 +34,19 @@ class _ChooseRoleScreenState extends ConsumerState<ChooseRoleScreen> {
       _error = null;
     });
     try {
-      await AuthRepository(ref.read(supabaseClientProvider))
-          .ensureProfile(role: role, preferredLanguage: 'en');
-      // Rebuild the home router so it now finds the fresh profile row.
+      final repo = AuthRepository(ref.read(supabaseClientProvider));
+      final existing = ref.read(currentProfileProvider).asData?.value;
+      if (existing == null) {
+        await repo.ensureProfile(role: role, preferredLanguage: 'en');
+      } else {
+        // Somebody changing their mind, not signing up. ensureProfile upserts
+        // the whole row, which would quietly reset their preferred language
+        // back to English — only the role should move here.
+        await repo.updateRole(role);
+      }
+      // Rebuild the home router so it finds the new role.
       ref.invalidate(currentProfileProvider);
+      ref.read(roleReselectProvider.notifier).state = false;
     } catch (err) {
       setState(() {
         _error = err.toString();
@@ -46,10 +55,27 @@ class _ChooseRoleScreenState extends ConsumerState<ChooseRoleScreen> {
     }
   }
 
+  /// Leaves the picker without changing anything — only meaningful when the
+  /// user already had a role and came back to look.
+  void _cancel() {
+    ref.read(roleReselectProvider.notifier).state = false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final currentRole =
+        ref.watch(currentProfileProvider).asData?.value?['role'] as String?;
+    final reselecting = currentRole != null;
     return Scaffold(
+      // Android back leaves the picker the same way the arrow does, instead of
+      // dropping the user out of the app entirely.
+      appBar: reselecting
+          ? AppBar(
+              leading: BackButton(onPressed: _busy ? null : _cancel),
+              title: const Text('Choose your role'),
+            )
+          : null,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -60,7 +86,7 @@ class _ChooseRoleScreenState extends ConsumerState<ChooseRoleScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 8),
+                  if (!reselecting) const SizedBox(height: 8),
                   Text('SETU',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.titleLarge?.copyWith(
@@ -113,6 +139,7 @@ class _ChooseRoleScreenState extends ConsumerState<ChooseRoleScreen> {
                         'of my loved ones from anywhere.',
                     actionLabel: 'Select Profile',
                     busy: _busy,
+                    selected: currentRole == 'family_member',
                     onTap: () => _choose('family_member'),
                   ),
                   const SizedBox(height: SetuSpacing.md),
@@ -125,6 +152,7 @@ class _ChooseRoleScreenState extends ConsumerState<ChooseRoleScreen> {
                         'and reach out for assistance if needed.',
                     actionLabel: 'Get Started',
                     busy: _busy,
+                    selected: currentRole == 'elder',
                     onTap: () => _choose('elder'),
                   ),
                   const SizedBox(height: SetuSpacing.md),
@@ -137,6 +165,7 @@ class _ChooseRoleScreenState extends ConsumerState<ChooseRoleScreen> {
                         'efficiently coordinate and monitor tasks.',
                     actionLabel: 'Register Credentials',
                     busy: _busy,
+                    selected: currentRole == 'caregiver',
                     onTap: () => _choose('caregiver'),
                   ),
                   const SizedBox(height: SetuSpacing.xl),
@@ -154,13 +183,18 @@ class _ChooseRoleScreenState extends ConsumerState<ChooseRoleScreen> {
                           color: SetuColors.mutedLight,
                           fontStyle: FontStyle.italic)),
                   const SizedBox(height: SetuSpacing.lg),
+                  // Sign out is the right escape on first run, when there is
+                  // nothing to go back to. Once a role exists, backing out is,
+                  // so offer that instead of asking them to log out to escape.
                   TextButton(
                     onPressed: _busy
                         ? null
-                        : () => AuthRepository(
-                                ref.read(supabaseClientProvider))
-                            .signOut(),
-                    child: const Text('Sign out'),
+                        : reselecting
+                            ? _cancel
+                            : () => AuthRepository(
+                                    ref.read(supabaseClientProvider))
+                                .signOut(),
+                    child: Text(reselecting ? 'Keep my current role' : 'Sign out'),
                   ),
                 ],
               ),
@@ -181,6 +215,7 @@ class _RoleCard extends StatelessWidget {
     required this.actionLabel,
     required this.busy,
     required this.onTap,
+    this.selected = false,
   });
 
   final IconData icon;
@@ -190,6 +225,10 @@ class _RoleCard extends StatelessWidget {
   final String actionLabel;
   final bool busy;
   final VoidCallback onTap;
+
+  /// The role the user is already on. Marked so returning to this screen
+  /// answers "what am I now?" without them having to remember.
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
@@ -201,7 +240,9 @@ class _RoleCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           color: SetuColors.paperRaisedLight,
-          border: Border.all(color: SetuColors.borderLight),
+          border: Border.all(
+              color: selected ? color : SetuColors.borderLight,
+              width: selected ? 2 : 1),
           boxShadow: const [
             BoxShadow(
                 color: Color(0x0A000000), blurRadius: 12, offset: Offset(0, 4)),
@@ -229,6 +270,21 @@ class _RoleCard extends StatelessWidget {
                           .titleLarge
                           ?.copyWith(fontWeight: FontWeight.w800)),
                 ),
+                if (selected)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 9, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text('CURRENT',
+                        style: TextStyle(
+                            color: color,
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5)),
+                  ),
               ],
             ),
             const SizedBox(height: SetuSpacing.sm),
@@ -238,7 +294,7 @@ class _RoleCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Text(actionLabel,
+                Text(selected ? 'Stay here' : actionLabel,
                     style: TextStyle(color: color, fontWeight: FontWeight.w700)),
                 const SizedBox(width: 4),
                 Icon(Icons.arrow_forward, color: color, size: 18),

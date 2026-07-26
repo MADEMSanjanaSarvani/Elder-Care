@@ -5,6 +5,7 @@ import 'package:setu_core/setu_core.dart';
 
 import '../../../core/location.dart';
 import '../../../core/providers.dart';
+import '../../../core/role_exit.dart';
 import '../data/caregiver_registration_repository.dart';
 import '../../auth/data/auth_repository.dart';
 
@@ -166,92 +167,101 @@ class _CaregiverRegistrationScreenState
   @override
   Widget build(BuildContext context) {
     final subRoles = _subRolesByType[_type]!;
-    return Scaffold(
-      appBar: AppBar(title: const Text('Join as a caregiver')),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(SetuSpacing.lg),
-          children: [
-            const Text(
-              'Tell us about your professional background. Our team verifies '
-              'every caregiver before your profile goes live.',
-              style: TextStyle(color: SetuColors.mutedLight),
-            ),
-            const SizedBox(height: SetuSpacing.lg),
-            _section('About you'),
-            _field(_name, 'Full name', required: true,
-                capitalization: TextCapitalization.words),
-            _dobField(),
-            _genderField(),
-            _field(_address, 'Address', maxLines: 2),
-            _field(_govId, 'Government ID (Aadhaar / other)',
-                helper: 'Used only for verification.'),
-            const SizedBox(height: SetuSpacing.lg),
-            _section('Your work'),
-            _typeField(),
-            _subRoleField(subRoles),
-            if (_type == 'clinical')
-              _field(_councilReg, 'Council registration number',
-                  required: true),
-            _field(_qualification, 'Highest qualification'),
-            _field(_experience, 'Years of experience',
-                keyboard: TextInputType.number),
-            _field(_certifications, 'Certifications',
-                helper: 'Comma-separated, if any.'),
-            _field(_languages, 'Languages spoken',
-                helper: 'e.g. Telugu, Hindi, English'),
-            _field(_skills, 'Key skills',
-                helper: 'Comma-separated'),
-            _field(_bio, 'Short bio (shown to families)', maxLines: 3),
-            const SizedBox(height: SetuSpacing.lg),
-            _section('Availability & charges'),
-            _field(_hours, 'Preferred working hours',
-                helper: 'e.g. 9 AM – 6 PM, weekdays'),
-            _field(_radius, 'Service radius (km)',
-                keyboard: TextInputType.number),
-            _field(_charge, 'Expected charge (₹ per visit)',
-                keyboard: TextInputType.number),
-            const SizedBox(height: SetuSpacing.sm),
-            OutlinedButton.icon(
-              onPressed: _locating ? null : _captureLocation,
-              icon: _locating
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2))
-                  : Icon(_latitude != null
-                      ? Icons.check_circle_outline
-                      : Icons.my_location),
-              label: Text(_latitude != null
-                  ? 'Location captured — tap to update'
-                  : 'Use my current location'),
-            ),
-            const Padding(
-              padding: EdgeInsets.only(top: 4),
-              child: Text(
-                'Helps families near you find you. Optional.',
-                style: TextStyle(fontSize: 12, color: SetuColors.mutedLight),
+    // This form is the root of the caregiver shell — there is nothing beneath
+    // it to pop — so "back" has to mean "return to the role picker" or it
+    // means "close the app". Someone who tapped Caregiver by mistake was
+    // otherwise stuck here with Sign out as the only way out.
+    return RoleRootPopScope(
+      child: Scaffold(
+        appBar: AppBar(
+          leading: const RolePickerBackButton(),
+          title: const Text('Join as a caregiver'),
+        ),
+        body: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(SetuSpacing.lg),
+            children: [
+              const Text(
+                'Tell us about your professional background. Our team verifies '
+                'every caregiver before your profile goes live.',
+                style: TextStyle(color: SetuColors.mutedLight),
               ),
-            ),
-            const SizedBox(height: SetuSpacing.lg),
-            _section('Emergency contact'),
-            _field(_emergencyName, 'Contact name'),
-            _field(_emergencyPhone, 'Contact phone',
-                keyboard: TextInputType.phone),
-            const SizedBox(height: SetuSpacing.xl),
-            FilledButton(
-              onPressed: _busy ? null : _submit,
-              child: Text(_busy ? 'Submitting…' : 'Submit application'),
-            ),
-            const SizedBox(height: SetuSpacing.md),
-            TextButton(
-              onPressed: _busy
-                  ? null
-                  : () => AuthRepository(ref.read(supabaseClientProvider)).signOut(),
-              child: const Text('Sign out'),
-            ),
-          ],
+              const SizedBox(height: SetuSpacing.lg),
+              _section('About you'),
+              _field(_name, 'Full name', required: true,
+                  capitalization: TextCapitalization.words),
+              _dobField(),
+              _genderField(),
+              _field(_address, 'Address', maxLines: 2),
+              _field(_govId, 'Government ID (Aadhaar / other)',
+                  helper: 'Used only for verification.'),
+              const SizedBox(height: SetuSpacing.lg),
+              _section('Your work'),
+              _typeField(),
+              _subRoleField(subRoles),
+              if (_type == 'clinical')
+                _field(_councilReg, 'Council registration number',
+                    required: true),
+              _field(_qualification, 'Highest qualification'),
+              _field(_experience, 'Years of experience',
+                  keyboard: TextInputType.number),
+              _field(_certifications, 'Certifications',
+                  helper: 'Comma-separated, if any.'),
+              _field(_languages, 'Languages spoken',
+                  helper: 'e.g. Telugu, Hindi, English'),
+              _field(_skills, 'Key skills',
+                  helper: 'Comma-separated'),
+              _field(_bio, 'Short bio (shown to families)', maxLines: 3),
+              const SizedBox(height: SetuSpacing.lg),
+              _section('Availability & charges'),
+              _field(_hours, 'Preferred working hours',
+                  helper: 'e.g. 9 AM – 6 PM, weekdays'),
+              _field(_radius, 'Service radius (km)',
+                  keyboard: TextInputType.number),
+              _field(_charge, 'Expected charge (₹ per visit)',
+                  keyboard: TextInputType.number),
+              const SizedBox(height: SetuSpacing.sm),
+              OutlinedButton.icon(
+                onPressed: _locating ? null : _captureLocation,
+                icon: _locating
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : Icon(_latitude != null
+                        ? Icons.check_circle_outline
+                        : Icons.my_location),
+                label: Text(_latitude != null
+                    ? 'Location captured — tap to update'
+                    : 'Use my current location'),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(top: 4),
+                child: Text(
+                  'Helps families near you find you. Optional.',
+                  style: TextStyle(fontSize: 12, color: SetuColors.mutedLight),
+                ),
+              ),
+              const SizedBox(height: SetuSpacing.lg),
+              _section('Emergency contact'),
+              _field(_emergencyName, 'Contact name'),
+              _field(_emergencyPhone, 'Contact phone',
+                  keyboard: TextInputType.phone),
+              const SizedBox(height: SetuSpacing.xl),
+              FilledButton(
+                onPressed: _busy ? null : _submit,
+                child: Text(_busy ? 'Submitting…' : 'Submit application'),
+              ),
+              const SizedBox(height: SetuSpacing.md),
+              TextButton(
+                onPressed: _busy
+                    ? null
+                    : () => AuthRepository(ref.read(supabaseClientProvider)).signOut(),
+                child: const Text('Sign out'),
+              ),
+            ],
+          ),
         ),
       ),
     );
