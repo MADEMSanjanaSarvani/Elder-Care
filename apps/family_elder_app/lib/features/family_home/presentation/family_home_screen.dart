@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/action_success.dart';
 import '../../../core/providers.dart';
 import '../../health_profile/data/health_profile_repository.dart';
+import '../../health_profile/presentation/elder_avatar.dart';
 import '../../suggestions/presentation/suggestions_card.dart';
 import '../../trips/data/trips_repository.dart';
 import '../../wellness/presentation/weekly_activity_chart.dart';
@@ -663,13 +664,6 @@ class _ElderSection extends ConsumerStatefulWidget {
 class _ElderSectionState extends ConsumerState<_ElderSection> {
   bool _showMore = false;
 
-  String _initials(String name) {
-    final parts = name.trim().split(RegExp(r'\s+'));
-    if (parts.isEmpty || parts.first.isEmpty) return '?';
-    if (parts.length == 1) return parts.first[0].toUpperCase();
-    return (parts.first[0] + parts.last[0]).toUpperCase();
-  }
-
   @override
   Widget build(BuildContext context) {
     final elder = widget.elder;
@@ -714,13 +708,14 @@ class _ElderSectionState extends ConsumerState<_ElderSection> {
         // the Stitch mock assumes a single elder).
         Row(
           children: [
-            CircleAvatar(
+            // Their actual face when one has been added, initials otherwise.
+            // Not editable here — the photo is set from the health profile,
+            // so a mis-tap on a dashboard nobody scrolls carefully can't
+            // start a file picker.
+            ElderAvatar(
+              elderId: id,
+              displayName: elder.displayName,
               radius: 22,
-              backgroundColor: SetuColors.accentLight.withValues(alpha: 0.15),
-              child: Text(_initials(elder.displayName),
-                  style: const TextStyle(
-                      color: SetuColors.accentLight,
-                      fontWeight: FontWeight.w700)),
             ),
             const SizedBox(width: SetuSpacing.md),
             Expanded(

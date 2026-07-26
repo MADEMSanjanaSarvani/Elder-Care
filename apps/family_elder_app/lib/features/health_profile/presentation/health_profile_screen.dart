@@ -8,6 +8,7 @@ import '../../../core/providers.dart';
 import '../../family_access/data/family_access_repository.dart';
 import '../../medications/data/medications_repository.dart';
 import '../data/health_profile_repository.dart';
+import 'elder_avatar.dart';
 
 /// Health Records Management (PRD Part 6, Batch 3, Module 12), matching the
 /// Stitch "emergency_medical_profile" design (both frames): a Medical ID
@@ -50,6 +51,7 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
   bool _saving = false;
   String? _gender;
   DateTime? _dob;
+  String _displayName = '';
 
   HealthProfileRepository get _repo =>
       HealthProfileRepository(ref.read(supabaseClientProvider));
@@ -68,6 +70,7 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
     final elder = await ref.read(elderProfileByIdProvider(widget.elderId).future);
     if (!mounted) return;
     setState(() {
+      _displayName = elder?['display_name'] as String? ?? '';
       _gender = elder?['gender'] as String?;
       final dobRaw = elder?['dob'] as String?;
       _dob = dobRaw == null ? null : DateTime.tryParse(dobRaw);
@@ -228,6 +231,8 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
           // date of birth rather than stored, so it can never drift out of
           // date, and BMI is computed on read for the same reason.
           _AboutSection(
+            elderId: widget.elderId,
+            displayName: _displayName,
             dob: _dob,
             gender: _gender,
             heightController: _heightController,
@@ -683,6 +688,8 @@ class _ContactRow extends StatelessWidget {
 /// wrong the moment someone's weight changes.
 class _AboutSection extends StatelessWidget {
   const _AboutSection({
+    required this.elderId,
+    required this.displayName,
     required this.dob,
     required this.gender,
     required this.heightController,
@@ -691,6 +698,8 @@ class _AboutSection extends StatelessWidget {
     required this.onChanged,
   });
 
+  final String elderId;
+  final String displayName;
   final DateTime? dob;
   final String? gender;
   final TextEditingController heightController;
@@ -745,6 +754,36 @@ class _AboutSection extends StatelessWidget {
                   letterSpacing: 0.6,
                   color: SetuColors.mutedLight)),
           const SizedBox(height: SetuSpacing.md),
+          // The photo lives here rather than on the dashboard because this is
+          // the screen a family opens deliberately to fill in who the person
+          // is. Tapping it uploads; the same face then appears wherever the
+          // elder is shown.
+          Row(
+            children: [
+              ElderAvatar(
+                elderId: elderId,
+                displayName: displayName,
+                radius: 32,
+                editable: true,
+              ),
+              const SizedBox(width: SetuSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(displayName,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w800, fontSize: 16)),
+                    const SizedBox(height: 2),
+                    const Text('Tap the photo to add or change it',
+                        style: TextStyle(
+                            color: SetuColors.mutedLight, fontSize: 12.5)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: SetuSpacing.lg),
           Row(
             children: [
               Expanded(
