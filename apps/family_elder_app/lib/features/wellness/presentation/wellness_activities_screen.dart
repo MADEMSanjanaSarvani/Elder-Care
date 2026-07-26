@@ -5,6 +5,7 @@ import 'package:setu_core/setu_core.dart';
 import '../../family_home/data/home_summary_repository.dart' show HomeSummary;
 import '../../family_home/presentation/family_home_screen.dart' show homeSummaryProvider;
 import 'memory_game_screen.dart';
+import 'stories_screen.dart';
 
 /// Elder Wellness Activities — a warm daily engagement hub matching the
 /// Stitch "elder_wellness_activities" design: a real health-score ring, a
@@ -273,26 +274,39 @@ class WellnessActivitiesScreen extends ConsumerWidget {
               children: [
                 Text('Story Listening',
                     style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                Text('Traditional Folklore',
+                Text('Panchatantra, Jataka and more',
                     style: t.bodyMedium?.copyWith(color: SetuColors.mutedLight)),
               ],
             ),
           ]),
           const SizedBox(height: SetuSpacing.md),
-          Container(
-            padding: const EdgeInsets.all(SetuSpacing.md),
-            decoration: BoxDecoration(
-                color: SetuColors.paperLight,
-                borderRadius: BorderRadius.circular(14)),
-            child: Row(children: [
-              const Icon(Icons.play_circle_outline,
-                  color: SetuColors.accentLight),
-              const SizedBox(width: SetuSpacing.sm),
-              Expanded(child: Text('The Golden River', style: t.bodyMedium)),
-              const Text('15 min',
-                  style: TextStyle(
-                      color: SetuColors.mutedLight, fontSize: 12.5)),
-            ]),
+          // This used to be "The Golden River · 15 min" behind a play triangle.
+          // There was no Golden River and nothing happened when you pressed it.
+          // An elder who presses play on a story that does not exist learns
+          // that this app is decoration, and that lesson carries straight over
+          // to the buttons that matter.
+          //
+          // It reads rather than plays because no narrator has been recorded
+          // yet, and the label says so — a book icon, not a play triangle.
+          InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => const StoriesScreen(),
+            )),
+            child: Container(
+              padding: const EdgeInsets.all(SetuSpacing.md),
+              decoration: BoxDecoration(
+                  color: SetuColors.paperLight,
+                  borderRadius: BorderRadius.circular(14)),
+              child: Row(children: [
+                const Icon(Icons.auto_stories_outlined,
+                    color: SetuColors.accentLight),
+                const SizedBox(width: SetuSpacing.sm),
+                Expanded(
+                    child: Text('Read a folk tale', style: t.bodyMedium)),
+                const Icon(Icons.chevron_right, color: SetuColors.mutedLight),
+              ]),
+            ),
           ),
         ],
       ),
