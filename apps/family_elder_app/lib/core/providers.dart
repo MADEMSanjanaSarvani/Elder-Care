@@ -39,6 +39,31 @@ final regionConfigProvider = FutureProvider<Region>((ref) async {
   return RegionConfigClient(client).fetch(Env.activeRegionCode);
 });
 
+/// Every place SETU has a row for — all 28 states and 8 union territories,
+/// plus the Vizag pilot — with whether SETU actually operates there yet.
+///
+/// The whole list is offered, not only the live ones, because a daughter in
+/// Kochi needs to be told SETU isn't there yet rather than left staring at a
+/// dropdown that doesn't contain her state. `status` is what keeps that
+/// honest: 'active' means SETU can send a verified caregiver, anything else
+/// means it cannot, and the UI has to say which.
+///
+/// Live regions sort first so the places that actually work are what a family
+/// sees without scrolling.
+final regionsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final client = ref.watch(supabaseClientProvider);
+  final rows =
+      await client.from('regions').select('id, code, display_name, status');
+  final list = (rows as List).cast<Map<String, dynamic>>().toList();
+  list.sort((a, b) {
+    final aLive = a['status'] == 'active' ? 0 : 1;
+    final bLive = b['status'] == 'active' ? 0 : 1;
+    if (aLive != bLive) return aLive - bLive;
+    return (a['display_name'] as String).compareTo(b['display_name'] as String);
+  });
+  return list;
+});
+
 /// Elder profiles the signed-in user can act on: themself (if they're the
 /// elder) or any elder they're actively linked to as family.
 final myElderProfilesProvider = FutureProvider<List<ElderProfile>>((ref) async {

@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/action_success.dart';
 import '../../../core/providers.dart';
+import '../../../core/region_picker.dart';
 import '../../health_profile/data/health_profile_repository.dart';
 import '../../health_profile/presentation/elder_avatar.dart';
 import '../../suggestions/presentation/suggestions_card.dart';
@@ -124,6 +125,12 @@ Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
   String? gender;
   String? bloodType;
   var showMedical = false;
+  // Where they live decides which doctors and which caregivers this family
+  // will ever see, and it was hardcoded to the Vizag pilot for everyone in the
+  // country. Still defaults to the pilot, because that is where SETU actually
+  // operates — but it is a choice now, and a family outside it gets told the
+  // truth instead of being shown a clinic 700km away.
+  var regionCode = 'vizag-ap-in';
   const languages = {'en': 'English', 'hi': 'हिन्दी (Hindi)', 'te': 'తెలుగు (Telugu)'};
   const bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
@@ -246,6 +253,14 @@ Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
                 onChanged: (v) {
                   if (v != null) setSheetState(() => language = v);
                 },
+              ),
+              const SizedBox(height: SetuSpacing.md),
+              const Text('Where they live',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              const SizedBox(height: SetuSpacing.sm),
+              RegionPicker(
+                value: regionCode,
+                onChanged: (v) => setSheetState(() => regionCode = v),
               ),
               const SizedBox(height: SetuSpacing.md),
               // Collapsed by default: the fields are genuinely optional, and a
@@ -393,6 +408,7 @@ Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
       'display_name': name,
       'relationship': relationshipController.text.trim(),
       'primary_language': language,
+      'region_code': regionCode,
       if (dob != null)
         'dob':
             '${dob!.year.toString().padLeft(4, '0')}-${dob!.month.toString().padLeft(2, '0')}-${dob!.day.toString().padLeft(2, '0')}',

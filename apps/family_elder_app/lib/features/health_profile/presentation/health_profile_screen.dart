@@ -5,6 +5,7 @@ import 'package:setu_core/setu_core.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/providers.dart';
+import '../../../core/region_picker.dart';
 import '../../family_access/data/family_access_repository.dart';
 import '../../medications/data/medications_repository.dart';
 import '../data/health_profile_repository.dart';
@@ -783,6 +784,8 @@ class _AboutSection extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: SetuSpacing.md),
+          _WhereTheyLive(elderId: elderId),
           const SizedBox(height: SetuSpacing.lg),
           Row(
             children: [
@@ -869,6 +872,108 @@ class _Stat extends StatelessWidget {
             style: const TextStyle(
                 color: SetuColors.mutedLight, fontSize: 11.5)),
       ],
+    );
+  }
+}
+
+/// Where the elder lives, and a way to change it.
+///
+/// This sits on the profile rather than in settings because it is a fact about
+/// the person, not a preference of the app — and because it silently decides
+/// which doctors and which caregivers the family is ever shown. A family whose
+/// parent has moved to another city needs to be able to say so without
+/// contacting support.
+class _WhereTheyLive extends ConsumerWidget {
+  const _WhereTheyLive({required this.elderId});
+
+  final String elderId;
+
+  Future<void> _change(BuildContext context, WidgetRef ref, String current) async {
+    final regions = await ref.read(regionsProvider.future);
+    if (!context.mounted) return;
+    var picked = current;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Where do they live?'),
+          content: SizedBox(
+            width: double.maxFinite,
+            // Scrollable because the "we're not there yet" note under the
+            // dropdown runs to three lines on a small phone, and an
+            // AlertDialog overflows rather than scrolling on its own.
+            child: SingleChildScrollView(
+              child: RegionPicker(
+                value: picked,
+                onChanged: (v) => setState(() => picked = v),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel')),
+            FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Save')),
+          ],
+        ),
+      ),
+    );
+    if (confirmed != true || picked == current) return;
+
+    final region = regions.firstWhere((r) => r['code'] == picked,
+        orElse: () => const <String, dynamic>{});
+    final regionId = region['id'] as String?;
+    if (regionId == null) return;
+    try {
+      await setElderRegion(ref, elderId: elderId, regionId: regionId);
+      ref.invalidate(elderRegionProvider(elderId));
+    } catch (err) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Could not change: $err')));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final region = ref.watch(elderRegionProvider(elderId)).asData?.value;
+    final name = region?['display_name'] as String? ?? 'Not set';
+    final live = region?['status'] == 'active';
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: () => _change(context, ref, region?['code'] as String? ?? 'vizag-ap-in'),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: SetuSpacing.sm),
+        child: Row(
+          children: [
+            const Icon(Icons.place_outlined, size: 20, color: SetuColors.mutedLight),
+            const SizedBox(width: SetuSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name,
+                      style: const TextStyle(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 1),
+                  Text(
+                      live
+                          ? 'Doctors and caregivers here'
+                          : 'No SETU caregivers here yet',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: live
+                              ? SetuColors.mutedLight
+                              : SetuColors.peachLight)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: SetuColors.mutedLight),
+          ],
+        ),
+      ),
     );
   }
 }
