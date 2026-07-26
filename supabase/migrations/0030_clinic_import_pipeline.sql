@@ -68,23 +68,14 @@ alter table clinic_imports enable row level security;
 
 -- Staging is back-office only. Families never read it, and it is written by
 -- the import function under the service role.
+-- Uses the same has_admin_scope() helper every other admin policy uses,
+-- rather than reaching into admin_scopes directly — one definition of what
+-- "is a verification agent" means.
 create policy clinic_imports_admin_read on clinic_imports for select
-  using (
-    exists (
-      select 1 from admin_users a
-      where a.user_id = auth.uid()
-        and a.scope in ('super_admin', 'ops_manager', 'verification_agent')
-    )
-  );
+  using (has_admin_scope('verification_agent') or has_admin_scope('super_admin'));
 
 create policy clinic_imports_admin_write on clinic_imports for update
-  using (
-    exists (
-      select 1 from admin_users a
-      where a.user_id = auth.uid()
-        and a.scope in ('super_admin', 'ops_manager', 'verification_agent')
-    )
-  );
+  using (has_admin_scope('verification_agent') or has_admin_scope('super_admin'));
 
 create index if not exists clinic_imports_pending_idx
   on clinic_imports (status, created_at desc);

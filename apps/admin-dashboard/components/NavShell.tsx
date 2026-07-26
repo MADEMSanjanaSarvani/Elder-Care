@@ -9,6 +9,7 @@ const NAV_ITEMS: { href: string; label: string; scope?: Parameters<typeof hasSco
   { href: "/sos", label: "Live SOS monitor", scope: "sos_operator" },
   { href: "/bookings", label: "Bookings & disputes", scope: "ops_admin" },
   { href: "/caregivers", label: "Caregiver directory", scope: "ops_admin" },
+  { href: "/clinic-imports", label: "Clinic imports", scope: "verification_agent" },
   { href: "/ai-review", label: "AI review queue", scope: "ops_admin" },
   { href: "/payouts", label: "Payout reconciliation", scope: "finance_ops" },
   { href: "/analytics", label: "Care analytics", scope: "ops_admin" },

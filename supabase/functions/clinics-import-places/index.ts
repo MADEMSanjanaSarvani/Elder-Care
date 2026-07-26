@@ -47,20 +47,17 @@ Deno.serve(async (req) => {
     const user = await requireUser(req);
     const admin = supabaseAdmin();
 
-    // Back-office only: this writes to the directory pipeline.
-    const { data: adminRow } = await admin
-      .from("admin_users")
+    // Back-office only: this writes to the directory pipeline. Scopes live
+    // in admin_scopes keyed by profile_id, the same table has_admin_scope()
+    // reads in RLS.
+    const { data: scopes } = await admin
+      .from("admin_scopes")
       .select("scope")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    if (
-      !adminRow ||
-      !["super_admin", "ops_manager", "verification_agent"].includes(
-        adminRow.scope,
-      )
-    ) {
-      return errorResponse("Not authorized", 403);
-    }
+      .eq("profile_id", user.id);
+    const allowed = (scopes ?? []).some((s: { scope: string }) =>
+      s.scope === "verification_agent" || s.scope === "super_admin"
+    );
+    if (!allowed) return errorResponse("Not authorized", 403);
 
     const { region_id, lat, lng, radius_m, keyword } = await req.json();
     if (typeof lat !== "number" || typeof lng !== "number") {

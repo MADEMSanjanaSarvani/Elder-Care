@@ -62,9 +62,14 @@ not a gap.
 
 ### 2. Review what landed
 
-Everything sits in `clinic_imports` at `status = 'pending'`. Nothing is
-visible to a family until a human promotes it. For each row: is it real, is
-it in your service area, would you send someone's mother there?
+Admin dashboard → **Clinic imports**. Everything sits at `status = 'pending'`
+and nothing is visible to a family until you promote it. For each row: is it
+real, is it in your service area, would you send someone's mother there?
+There's a map link on each to check.
+
+Promoting creates the *facility* record — inactive, and with consent still
+unset, so it stays invisible until step 3. Rejecting is remembered: re-running
+the import will not resurrect it.
 
 ### 3. Add the doctors — by phone, with consent
 
