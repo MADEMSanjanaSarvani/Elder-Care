@@ -790,12 +790,8 @@ class _AboutSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: SetuSpacing.md),
-          // `value:` rather than `initialValue:` — the latter only exists on
-          // very recent Flutter, and this has to build on the pinned range in
-          // pubspec (>=3.22.0). Deprecation is an info, not a build failure.
-          // ignore: deprecated_member_use
           DropdownButtonFormField<String>(
-            value: gender,
+            initialValue: gender,
             isExpanded: true,
             decoration: const InputDecoration(labelText: 'Gender'),
             items: [

@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/action_success.dart';
 import '../../../core/providers.dart';
+import '../../health_profile/data/health_profile_repository.dart';
 import '../../suggestions/presentation/suggestions_card.dart';
 import '../../trips/data/trips_repository.dart';
 import '../../wellness/presentation/weekly_activity_chart.dart';
@@ -96,18 +97,34 @@ class _GreetingHeader extends ConsumerWidget {
 /// info box explaining why the details are collected, and labelled fields.
 ///
 /// The Stitch mock is a 4-step wizard (profile photo, DOB, gender, primary
-/// language across separate screens). SETU has no photo-upload path and the
-/// family-add-elder function doesn't accept a gender field, so this stays a
-/// single step with only the fields the function actually reads: name and
-/// relationship (already wired), plus date of birth and primary language —
-/// both already accepted by the function (`dob`, `primary_language`) but
-/// previously never sent from this dialog.
+/// language across separate screens). This stays a single scrolling sheet:
+/// four screens of tapping to add one person is how a form gets abandoned
+/// halfway, and everything below the name is optional anyway.
+///
+/// Identity fields (name, relationship, dob, primary_language) go through the
+/// family-add-elder function, which is the only path RLS allows for creating
+/// the elder row. The medical fields cannot ride along — the function doesn't
+/// read them — so they are written straight afterwards through
+/// HealthProfileRepository, which RLS does permit once the family link exists.
+///
+/// Medical details are asked for here, at the one moment the family is
+/// reliably willing to fill them in, because blood group, allergies and
+/// conditions are exactly what a caregiver or a paramedic needs and nobody
+/// comes back to a settings screen to enter them later. They stay optional and
+/// the same fields remain editable on the health profile screen — a failure to
+/// save them must never lose the person who was just added.
 Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
   final nameController = TextEditingController();
   final relationshipController = TextEditingController();
+  final allergiesController = TextEditingController();
+  final conditionsController = TextEditingController();
   DateTime? dob;
   String language = 'en';
+  String? gender;
+  String? bloodType;
+  var showMedical = false;
   const languages = {'en': 'English', 'hi': 'हिन्दी (Hindi)', 'te': 'తెలుగు (Telugu)'};
+  const bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
   final submitted = await showModalBottomSheet<bool>(
     context: context,
@@ -230,6 +247,104 @@ Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
                 },
               ),
               const SizedBox(height: SetuSpacing.md),
+              // Collapsed by default: the fields are genuinely optional, and a
+              // sheet that opens showing eight medical questions reads as a
+              // form to escape rather than a person to add. Open, it explains
+              // who sees the answers — families hand over health details more
+              // readily when they know what they are for.
+              InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: () => setSheetState(() => showMedical = !showMedical),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: SetuSpacing.sm),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.medical_information_outlined,
+                          size: 20, color: SetuColors.accentLight),
+                      const SizedBox(width: SetuSpacing.sm),
+                      const Expanded(
+                        child: Text('Medical details (optional)',
+                            style: TextStyle(fontWeight: FontWeight.w700)),
+                      ),
+                      Icon(
+                          showMedical
+                              ? Icons.expand_less
+                              : Icons.expand_more,
+                          color: SetuColors.mutedLight),
+                    ],
+                  ),
+                ),
+              ),
+              if (showMedical) ...[
+                const Text(
+                    'Shared with a caregiver during a visit and shown on the '
+                    'emergency screen. You can add or change these any time.',
+                    style: TextStyle(
+                        color: SetuColors.mutedLight,
+                        fontSize: 12.5,
+                        height: 1.4)),
+                const SizedBox(height: SetuSpacing.md),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        initialValue: gender,
+                        isExpanded: true,
+                        decoration:
+                            const InputDecoration(labelText: 'Gender'),
+                        items: const [
+                          DropdownMenuItem(
+                              value: 'female', child: Text('Female')),
+                          DropdownMenuItem(value: 'male', child: Text('Male')),
+                          DropdownMenuItem(
+                              value: 'other', child: Text('Other')),
+                          DropdownMenuItem(
+                              value: 'prefer_not_to_say',
+                              child: Text('Prefer not to say')),
+                        ],
+                        onChanged: (v) => setSheetState(() => gender = v),
+                      ),
+                    ),
+                    const SizedBox(width: SetuSpacing.md),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        initialValue: bloodType,
+                        isExpanded: true,
+                        decoration:
+                            const InputDecoration(labelText: 'Blood group'),
+                        items: [
+                          for (final type in bloodTypes)
+                            DropdownMenuItem(value: type, child: Text(type)),
+                        ],
+                        onChanged: (v) => setSheetState(() => bloodType = v),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: SetuSpacing.md),
+                TextField(
+                  controller: allergiesController,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: const InputDecoration(
+                    labelText: 'Allergies',
+                    hintText: 'e.g. Penicillin, peanuts',
+                    helperText: 'Separate with commas',
+                    prefixIcon: Icon(Icons.warning_amber_outlined),
+                  ),
+                ),
+                const SizedBox(height: SetuSpacing.md),
+                TextField(
+                  controller: conditionsController,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: const InputDecoration(
+                    labelText: 'Ongoing conditions',
+                    hintText: 'e.g. Diabetes, hypertension',
+                    helperText: 'Separate with commas',
+                    prefixIcon: Icon(Icons.monitor_heart_outlined),
+                  ),
+                ),
+              ],
+              const SizedBox(height: SetuSpacing.md),
               Container(
                 padding: const EdgeInsets.all(SetuSpacing.md),
                 decoration: BoxDecoration(
@@ -284,6 +399,37 @@ Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
     final data = res.data;
     final newElderId =
         data is Map && data['elder_id'] is String ? data['elder_id'] as String : null;
+
+    final allergies = _splitList(allergiesController.text);
+    final conditions = _splitList(conditionsController.text);
+    final hasMedical = gender != null ||
+        bloodType != null ||
+        allergies.isNotEmpty ||
+        conditions.isNotEmpty;
+    // Best-effort, and deliberately so. The person is already created; if the
+    // medical write fails the family must still land on "added", not on an
+    // error that implies nothing happened. The success screen below then
+    // points them at the health profile screen, where the same fields live.
+    var medicalSaved = false;
+    if (newElderId != null && hasMedical) {
+      try {
+        final repo = HealthProfileRepository(client);
+        if (gender != null) await repo.saveGender(newElderId, gender);
+        if (bloodType != null || allergies.isNotEmpty || conditions.isNotEmpty) {
+          await repo.saveHealthProfile(
+            elderId: newElderId,
+            updatedBy: client.auth.currentUser!.id,
+            bloodType: bloodType,
+            allergies: allergies,
+            chronicConditions: conditions,
+          );
+        }
+        medicalSaved = true;
+      } catch (_) {
+        medicalSaved = false;
+      }
+    }
+
     // Wait for the fresh list so the new person is actually on screen before
     // we say "added" — no more "did it save?" ambiguity.
     ref.invalidate(myElderProfilesProvider);
@@ -303,12 +449,19 @@ Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
           title: 'Everything is Set Up!',
           message: newElderId == null
               ? '$name is now safely connected to your care circle.'
-              : '$name is now safely connected to your care circle.\n\n'
-                  'Next, add their medical details — blood group, allergies '
-                  'and conditions. This is what a caregiver or paramedic sees '
-                  'if something goes wrong.',
-          primaryLabel:
-              newElderId == null ? 'Go to Dashboard' : 'Add medical details',
+              : medicalSaved
+                  ? '$name is now safely connected to your care circle.\n\n'
+                      'Their medical details are saved. Add height, weight, '
+                      'medicines and doctor details whenever you have them.'
+                  : '$name is now safely connected to your care circle.\n\n'
+                      'Next, add their medical details — blood group, allergies '
+                      'and conditions. This is what a caregiver or paramedic sees '
+                      'if something goes wrong.',
+          primaryLabel: newElderId == null
+              ? 'Go to Dashboard'
+              : medicalSaved
+                  ? 'Review medical details'
+                  : 'Add medical details',
           onPrimary: () {
             Navigator.of(ctx).pop();
             if (newElderId != null) {
@@ -342,6 +495,15 @@ Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
     }
   }
 }
+
+/// "Penicillin, peanuts" -> ['Penicillin', 'peanuts']. Empty entries are
+/// dropped so a stray trailing comma doesn't become a blank allergy sitting on
+/// the emergency screen.
+List<String> _splitList(String raw) => raw
+    .split(',')
+    .map((part) => part.trim())
+    .where((part) => part.isNotEmpty)
+    .toList();
 
 /// Turns a raw add-elder failure into a plain, honest explanation the family
 /// member can act on (and screenshot for support).
