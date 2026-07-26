@@ -1,23 +1,33 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Family Member Management (PRD Part 4, Batch 1, Module 4). Reading the
-/// list is direct-table (guarded by `family_links_select` /
-/// `family_links_select_shared`); inviting goes through the `family-invite`
-/// Edge Function since it needs the service-role Auth Admin API to create
-/// an account for someone who may not have one yet. Setting `coordinator`
-/// is direct-table too — the `trg_enforce_coordinator_change` trigger is
-/// the real enforcement, this repository doesn't duplicate that check.
+/// Family Member Management (PRD Part 4, Batch 1, Module 4). Inviting goes
+/// through the `family-invite` Edge Function since it needs the service-role
+/// Auth Admin API to create an account for someone who may not have one yet.
+/// Setting `coordinator` is direct-table — the
+/// `trg_enforce_coordinator_change` trigger is the real enforcement, this
+/// repository doesn't duplicate that check.
 class FamilyAccessRepository {
   FamilyAccessRepository(this._client);
 
   final SupabaseClient _client;
 
+  /// Reads the circle through the `family_circle` function rather than
+  /// selecting family_links with an embedded profiles().
+  ///
+  /// The direct select returned an empty screen: RLS lets you read your own
+  /// link and no one else's, and blocks profiles rows that aren't yours — and
+  /// PostgREST turns a blocked embed into a null rather than an error, so even
+  /// the visible row came back nameless. Fixing it in RLS would have meant
+  /// making every SETU user's name and phone readable by every other user.
+  /// See migration 0034.
   Future<List<Map<String, dynamic>>> fetchFamily(String elderId) async {
-    return _client
-        .from('family_links')
-        .select('id, relationship, status, coordinator, profiles(display_name, phone)')
-        .eq('elder_id', elderId)
-        .order('created_at');
+    final rows = await _client.rpc(
+      'family_circle',
+      params: {'p_elder_id': elderId},
+    ) as List<dynamic>;
+    return rows
+        .map((row) => (row as Map).cast<String, dynamic>())
+        .toList();
   }
 
   Future<void> invite({

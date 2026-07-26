@@ -175,14 +175,20 @@ class _FamilyMemberCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profile = row['profiles'] as Map<String, dynamic>?;
     final isCoordinator = row['coordinator'] as bool? ?? false;
-    final name = profile?['display_name'] as String? ?? 'Pending invite';
+    // Someone invited by email hasn't set a display name yet, so fall back to
+    // the address they were invited at — "Pending invite" for everybody told
+    // the family nothing about who was actually invited.
+    final displayName = (row['display_name'] as String?)?.trim();
+    final email = (row['email'] as String?)?.trim();
+    final name = displayName != null && displayName.isNotEmpty
+        ? displayName
+        : (email != null && email.isNotEmpty ? email : 'Pending invite');
     final relationship = row['relationship'] as String?;
     final status = row['status'] as String;
     final pending = status != 'active';
-    final initials = name.trim().isEmpty || name == 'Pending invite'
-        ? '?'
+    final initials = displayName == null || displayName.isEmpty
+        ? (email != null && email.isNotEmpty ? email[0].toUpperCase() : '?')
         : name
             .trim()
             .split(' ')
