@@ -46,7 +46,7 @@ Future<void> setElderRegion(
 /// of the rest shows what actually happens next — the person can still be
 /// added, medicines and reminders still work, there is just nobody to send yet.
 class RegionPicker extends ConsumerWidget {
-  const RegionPicker({required this.value, required this.onChanged});
+  const RegionPicker({super.key, required this.value, required this.onChanged});
 
   final String value;
   final ValueChanged<String> onChanged;
@@ -70,9 +70,11 @@ class RegionPicker extends ConsumerWidget {
       ),
       data: (rows) {
         final selected = rows.any((r) => r['code'] == value) ? value : null;
+        // Falls back to "live" so an unrecognised code doesn't scare a family
+        // with a "we're not there yet" warning about a place we can't identify.
         final isLive = rows.firstWhere(
               (r) => r['code'] == selected,
-              orElse: () => const {'status': 'active'},
+              orElse: () => const <String, dynamic>{'status': 'active'},
             )['status'] ==
             'active';
         return Column(
