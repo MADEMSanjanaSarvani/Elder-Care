@@ -417,6 +417,20 @@ Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
     final newElderId =
         data is Map && data['elder_id'] is String ? data['elder_id'] as String : null;
 
+    // If they picked somewhere SETU hasn't reached, the sheet just told them
+    // we'd let them know when we arrive. Record that so it's a promise we can
+    // keep — and so "which city next" becomes a count rather than a guess.
+    // register_region_interest ignores regions that are already live, so this
+    // is safe to call every time.
+    final regions = await ref.read(regionsProvider.future);
+    final chosen = regions.firstWhere((r) => r['code'] == regionCode,
+        orElse: () => const <String, dynamic>{});
+    final chosenId = chosen['id'] as String?;
+    if (chosenId != null) {
+      await registerRegionInterest(ref,
+          regionId: chosenId, elderId: newElderId);
+    }
+
     final allergies = _splitList(allergiesController.text);
     final conditions = _splitList(conditionsController.text);
     final hasMedical = gender != null ||

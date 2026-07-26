@@ -36,6 +36,31 @@ Future<void> setElderRegion(
   ref.invalidate(myElderProfilesProvider);
 }
 
+/// Adds the signed-in family member to the waiting list for a region SETU
+/// hasn't reached, so the picker's "we'll let you know the moment we arrive"
+/// is a promise something can actually keep.
+///
+/// Best-effort by design. This runs right after a person has been added, and
+/// failing to record a waiting-list entry must never surface as an error that
+/// makes the family think their mother wasn't saved. The function itself
+/// ignores regions that are already live, so calling it unconditionally is
+/// safe.
+Future<void> registerRegionInterest(
+  WidgetRef ref, {
+  required String regionId,
+  String? elderId,
+}) async {
+  try {
+    await ref.read(supabaseClientProvider).rpc(
+      'register_region_interest',
+      params: {'p_region_id': regionId, 'p_elder_id': elderId},
+    );
+  } catch (_) {
+    // Nothing the family can do about it, and nothing worth interrupting them
+    // for. The elder is already created either way.
+  }
+}
+
 /// Picks the state or city an elder lives in, and says plainly whether SETU
 /// operates there.
 ///
