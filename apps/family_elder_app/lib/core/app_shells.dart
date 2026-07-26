@@ -16,6 +16,7 @@ import '../features/job_queue/presentation/pending_verification_screen.dart';
 import '../features/medications/presentation/medications_screen.dart';
 import '../features/notifications/presentation/notification_inbox_screen.dart';
 import '../features/reports/presentation/reports_screen.dart';
+import '../features/auth/data/auth_repository.dart';
 
 /// The SETU navigation backbone: one persistent bottom-navigation shell per
 /// role, wiring the existing screens into the tabs from the approved flow.
@@ -335,7 +336,7 @@ class ProfileMenuScreen extends ConsumerWidget {
           const SizedBox(height: SetuSpacing.lg),
           OutlinedButton.icon(
             onPressed: () =>
-                ref.read(supabaseClientProvider).auth.signOut(),
+                AuthRepository(ref.read(supabaseClientProvider)).signOut(),
             icon: const Icon(Icons.logout),
             label: const Text('Sign out'),
           ),

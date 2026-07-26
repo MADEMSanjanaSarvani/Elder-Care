@@ -66,8 +66,18 @@ class AuthRepository {
   /// Native Google Sign-In → Supabase. We ask Google for an idToken audienced
   /// to our Web (server) client, then hand it to Supabase's Google provider.
   /// Returns null if the user cancels the Google chooser.
+  /// Native Google Sign-In → Supabase, always via the account chooser.
+  ///
+  /// `signIn()` on its own silently reuses whichever Google account was
+  /// authorised last, with no visible picker. On a shared or family phone
+  /// that reads as a bug of the worst kind: you pick "sign in with Google",
+  /// get someone else's account, and see their care circle — so it looks
+  /// like the app leaked data when in fact it faithfully showed the account
+  /// Google handed back. Signing out of Google first forces the chooser
+  /// every time, which is the behaviour a user expects.
   Future<AuthResponse?> signInWithGoogle() async {
     final google = GoogleSignIn(serverClientId: Env.googleWebClientId);
+    await google.signOut();
     final account = await google.signIn();
     if (account == null) return null; // user dismissed the picker
     final auth = await account.authentication;
@@ -111,5 +121,23 @@ class AuthRepository {
         .eq('id', user.id)
         .maybeSingle();
     return row != null;
+  }
+
+  /// Sign out of Supabase *and* Google.
+  ///
+  /// Signing out of Supabase alone leaves the Google session intact, so the
+  /// next "Continue with Google" silently re-authorises the same account and
+  /// the user appears unable to switch. On a family phone that matters: the
+  /// daughter who hands the device to her mother must be able to sign out
+  /// completely. Google's sign-out is best-effort — if it fails (no Play
+  /// Services, or the user never used Google here) the Supabase sign-out must
+  /// still happen, so it never blocks getting out of the account.
+  Future<void> signOut() async {
+    try {
+      await GoogleSignIn(serverClientId: Env.googleWebClientId).signOut();
+    } catch (_) {
+      // Not signed in with Google, or Play Services unavailable. Ignore.
+    }
+    await _client.auth.signOut();
   }
 }

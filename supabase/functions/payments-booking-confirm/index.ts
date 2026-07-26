@@ -54,12 +54,32 @@ Deno.serve(async (req) => {
       })
       .eq("provider_order_ref", link_id);
 
+    // Capturing the money is only half the job: the booking has to advance
+    // too. Without this the visit sat at 'requested' forever — the family had
+    // paid, nothing showed as confirmed, and the app looked like it had
+    // swallowed the payment. Only move forward from the pre-confirmation
+    // states, so a completed or cancelled visit is never resurrected by a
+    // repeated "I've paid" tap or a late webhook.
+    const { error: bookingErr } = await admin
+      .from("bookings")
+      .update({ status: "confirmed" })
+      .eq("id", booking_id)
+      .in("status", ["requested", "matched"]);
+    if (bookingErr) {
+      console.error("booking confirm failed", bookingErr);
+      return errorResponse(
+        "Payment was received but the visit could not be confirmed. " +
+          "Please contact support — do not pay again.",
+        500,
+      );
+    }
+
     await admin.from("audit_log").insert({
       actor_user_id: user.id,
       action: "write",
       resource_type: "payment",
       resource_id: booking_id,
-      metadata: { event: "captured_via_link", link_id },
+      metadata: { event: "captured_via_link", link_id, booking_confirmed: true },
     });
 
     return jsonResponse({ paid: true }, 200);

@@ -60,6 +60,55 @@ Deno.serve(async (req) => {
         });
       }
     }
+
+    // Marking the payment captured is not enough on its own — until this
+    // block existed, nothing was actually delivered by the webhook. A family
+    // that paid and closed the browser got a captured payment row and an
+    // unconfirmed visit or an inactive plan, and the purchase only completed
+    // if they happened to return and tap "I've paid". Razorpay carries the
+    // intent in the payment link's notes, so honour it here too. Both
+    // branches are idempotent, because a webhook can and will be redelivered.
+    const notes = event.payload?.payment?.entity?.notes ?? {};
+
+    if (notes.purpose === "care_plan" && notes.elder_id && notes.care_plan_id) {
+      const { data: existing } = await admin
+        .from("elder_care_plan_subscriptions")
+        .select("id")
+        .eq("elder_id", notes.elder_id)
+        .in("status", ["active", "paused"])
+        .maybeSingle();
+      if (!existing) {
+        await admin.from("elder_care_plan_subscriptions").insert({
+          elder_id: notes.elder_id,
+          care_plan_id: notes.care_plan_id,
+          subscribed_by: notes.user_id ?? null,
+        });
+        await admin.from("audit_log").insert({
+          actor_user_id: notes.user_id ?? null,
+          action: "write",
+          resource_type: "care_plan_subscription",
+          resource_id: notes.elder_id,
+          metadata: { via: "payments-webhook", event: "plan_activated" },
+        });
+      }
+    }
+
+    if (notes.purpose === "booking" && notes.booking_id) {
+      // Only advance from the pre-confirmation states, so a redelivered
+      // webhook can never resurrect a completed or cancelled visit.
+      await admin
+        .from("bookings")
+        .update({ status: "confirmed" })
+        .eq("id", notes.booking_id)
+        .in("status", ["requested", "matched"]);
+      await admin.from("audit_log").insert({
+        actor_user_id: notes.user_id ?? null,
+        action: "write",
+        resource_type: "booking",
+        resource_id: notes.booking_id,
+        metadata: { via: "payments-webhook", event: "booking_confirmed" },
+      });
+    }
   } else if (event.event === "payment.failed") {
     const orderId = event.payload?.payment?.entity?.order_id;
     if (orderId) {

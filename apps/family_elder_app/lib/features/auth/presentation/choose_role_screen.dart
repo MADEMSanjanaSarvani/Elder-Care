@@ -157,9 +157,8 @@ class _ChooseRoleScreenState extends ConsumerState<ChooseRoleScreen> {
                   TextButton(
                     onPressed: _busy
                         ? null
-                        : () => ref
-                            .read(supabaseClientProvider)
-                            .auth
+                        : () => AuthRepository(
+                                ref.read(supabaseClientProvider))
                             .signOut(),
                     child: const Text('Sign out'),
                   ),

@@ -11,6 +11,7 @@ import '../../../core/providers.dart';
 import '../../payments/presentation/payment_flow_screens.dart';
 import '../../legal/legal_content.dart';
 import '../../legal/presentation/legal_screen.dart';
+import '../../auth/data/auth_repository.dart';
 
 /// Accessibility + language settings (PRD Part 8, Batch 5, Modules 19 &
 /// 20), restyled to match the Stitch "settings_dashboard" design: sectioned
@@ -72,7 +73,7 @@ class SettingsScreen extends ConsumerWidget {
               ],
               footer: OutlinedButton.icon(
                 onPressed: () =>
-                    ref.read(supabaseClientProvider).auth.signOut(),
+                    AuthRepository(ref.read(supabaseClientProvider)).signOut(),
                 icon: const Icon(Icons.logout, color: SetuColors.sosLight),
                 label: const Text('Sign out',
                     style: TextStyle(color: SetuColors.sosLight)),

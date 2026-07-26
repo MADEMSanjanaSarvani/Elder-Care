@@ -5,6 +5,7 @@ import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
 import '../data/caregiver_registration_repository.dart';
+import '../../auth/data/auth_repository.dart';
 
 /// Professional application for caregivers. On submit it files the application
 /// (caregiver-register) and the caregiver moves to "pending verification"
@@ -247,7 +248,7 @@ class _CaregiverRegistrationScreenState
             TextButton(
               onPressed: _busy
                   ? null
-                  : () => ref.read(supabaseClientProvider).auth.signOut(),
+                  : () => AuthRepository(ref.read(supabaseClientProvider)).signOut(),
               child: const Text('Sign out'),
             ),
           ],
