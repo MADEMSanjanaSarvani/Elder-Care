@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
         admin.from("profiles").select("id, display_name").in("id", userIds),
         admin
           .from("caregiver_profile_details")
-          .select("caregiver_id, bio, photo_storage_path, latitude, longitude")
+          .select("caregiver_id, bio, photo_storage_path, latitude, longitude, years_experience, certifications, languages, available_days, available_from, available_to")
           .in("caregiver_id", ids),
         admin
           .from("caregiver_rating_summary")
@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
       }
       return {
         id: c.id,
-        name: nameById.get(c.user_id) ?? "CareHive caregiver",
+        name: nameById.get(c.user_id) ?? "SETU caregiver",
         caregiver_type: c.caregiver_type,
         sub_role: c.sub_role,
         trust_tier: c.trust_tier,
@@ -143,6 +143,15 @@ Deno.serve(async (req) => {
         rating_count: rating ? rating.rating_count : 0,
         distance_km: distanceKm,
         member_since: c.created_at,
+        // Self-declared profile content. Anything SETU has actually checked
+        // is reflected in trust_tier instead, and the app labels these as
+        // the caregiver's own claims.
+        years_experience: detail?.years_experience ?? null,
+        certifications: detail?.certifications ?? [],
+        languages: detail?.languages ?? [],
+        available_days: detail?.available_days ?? [],
+        available_from: detail?.available_from ?? null,
+        available_to: detail?.available_to ?? null,
       };
     }));
 

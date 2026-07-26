@@ -792,6 +792,7 @@ class _CaregiverDetailSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: SetuSpacing.lg),
+            _SelfDeclared(caregiver: caregiver),
             if (bio != null && bio.isNotEmpty) ...[
               Text('BIOGRAPHY',
                   style: TextStyle(
@@ -840,4 +841,100 @@ class _CaregiverDetailSheet extends StatelessWidget {
       ),
     );
   }
+}
+
+
+/// Experience, certifications, languages and working days.
+///
+/// Headed "in their own words" on purpose. These are the caregiver's own
+/// claims about themselves; anything SETU has actually checked — background
+/// verification, police verification, clinical credentials — is what drives
+/// the trust tier shown above. Blurring those two would let a self-typed
+/// certificate borrow the credibility of a verified one, on a screen whose
+/// entire job is deciding whether to let a stranger into a parent's home.
+class _SelfDeclared extends StatelessWidget {
+  const _SelfDeclared({required this.caregiver});
+
+  final Map<String, dynamic> caregiver;
+
+  static const _dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  static String _hhmm(String t) => t.length >= 5 ? t.substring(0, 5) : t;
+
+  @override
+  Widget build(BuildContext context) {
+    final years = (caregiver['years_experience'] as num?)?.toInt();
+    final certs = ((caregiver['certifications'] as List?) ?? const [])
+        .map((e) => e.toString())
+        .where((e) => e.trim().isNotEmpty)
+        .toList();
+    final langs = ((caregiver['languages'] as List?) ?? const [])
+        .map((e) => e.toString())
+        .where((e) => e.trim().isNotEmpty)
+        .toList();
+    final days = ((caregiver['available_days'] as List?) ?? const [])
+        .map((e) => (e as num).toInt())
+        .where((d) => d >= 1 && d <= 7)
+        .toList()
+      ..sort();
+    final from = caregiver['available_from'] as String?;
+    final to = caregiver['available_to'] as String?;
+
+    if (years == null && certs.isEmpty && langs.isEmpty && days.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final availability = days.isEmpty
+        // Never render an unstated schedule as "unavailable" — a caregiver
+        // who skipped the field would silently stop looking bookable.
+        ? 'Ask when booking'
+        : '${days.map((d) => _dayNames[d - 1]).join(', ')}'
+            '${from != null && to != null ? ' · ${_hhmm(from)}-${_hhmm(to)}' : ''}';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: SetuSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('IN THEIR OWN WORDS',
+              style: TextStyle(
+                  color: SetuColors.mutedLight,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1)),
+          const SizedBox(height: SetuSpacing.sm),
+          if (years != null)
+            _row(Icons.workspace_premium_outlined, 'Experience',
+                years == 1 ? '1 year' : '$years years'),
+          if (langs.isNotEmpty)
+            _row(Icons.translate, 'Speaks', langs.join(', ')),
+          _row(Icons.event_available_outlined, 'Usually works', availability),
+          if (certs.isNotEmpty)
+            _row(Icons.school_outlined, 'Training', certs.join(' · ')),
+        ],
+      ),
+    );
+  }
+
+  Widget _row(IconData icon, String label, String value) => Padding(
+        padding: const EdgeInsets.only(bottom: SetuSpacing.sm),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 17, color: SetuColors.mutedLight),
+            const SizedBox(width: SetuSpacing.sm),
+            SizedBox(
+              width: 110,
+              child: Text(label,
+                  style: const TextStyle(
+                      color: SetuColors.mutedLight, fontSize: 13.5)),
+            ),
+            Expanded(
+              child: Text(value,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w600, fontSize: 14, height: 1.35)),
+            ),
+          ],
+        ),
+      );
 }
