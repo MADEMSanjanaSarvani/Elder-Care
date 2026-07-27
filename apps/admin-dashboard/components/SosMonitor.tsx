@@ -27,6 +27,10 @@ export interface IncidentReport {
 
 function statusTone(status: SosStatus) {
   if (status === "resolved") return "good" as const;
+  // Neutral, not "good": a cancelled alert is off the queue but it is not an
+  // outcome anyone achieved, and an operator scanning for wins should not
+  // read false alarms as them.
+  if (status === "cancelled") return "neutral" as const;
   if (status === "triggered") return "critical" as const;
   return "warning" as const;
 }

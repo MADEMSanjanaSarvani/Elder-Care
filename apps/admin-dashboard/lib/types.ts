@@ -21,7 +21,15 @@ export type BookingStatus =
   | "cancelled"
   | "disputed";
 
-export type SosStatus = "triggered" | "family_notified" | "responder_dispatched" | "resolved";
+// "cancelled" is terminal and means the alert was a false alarm — kept
+// distinct from "resolved" so the operator queue and incident counts never
+// confuse a pocket-press with a real call. See migration 0040.
+export type SosStatus =
+  | "triggered"
+  | "family_notified"
+  | "responder_dispatched"
+  | "resolved"
+  | "cancelled";
 
 export type PayoutStatus = "scheduled" | "processing" | "paid" | "failed";
 

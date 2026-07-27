@@ -31,6 +31,13 @@ class _SosScreenState extends ConsumerState<SosScreen> {
   /// where you are — the one place in this app where a reassuring lie could
   /// get somebody hurt.
   bool _locationMissing = false;
+  bool _cancelling = false;
+  bool _cancelled = false;
+
+  /// The row `sos-trigger` created, so it can be stood back down. Held only
+  /// for this screen's lifetime — a cancel after the app has been closed goes
+  /// through the on-call operator, which is the right escalation for that.
+  String? _sosEventId;
   String? _error;
 
   Future<void> _call108() async {
@@ -93,7 +100,7 @@ class _SosScreenState extends ConsumerState<SosScreen> {
         timeout: const Duration(seconds: 12),
       );
       final repo = SosRepository(ref.read(supabaseClientProvider));
-      await repo.trigger(
+      final event = await repo.trigger(
         elderId: widget.elderId,
         lat: result.position?.latitude,
         lng: result.position?.longitude,
@@ -102,11 +109,66 @@ class _SosScreenState extends ConsumerState<SosScreen> {
       setState(() {
         _notified = true;
         _locationMissing = !result.ok;
+        _sosEventId = event['id'] as String?;
       });
     } catch (err) {
       setState(() => _error = err.toString());
     } finally {
       setState(() => _notifying = false);
+    }
+  }
+
+  /// Stands the alert back down after a mis-tap.
+  ///
+  /// Confirmed first, and deliberately not with a "Yes/No" pair: the two
+  /// wrong outcomes here are wildly asymmetric. Cancelling a real emergency by
+  /// accident is a catastrophe; leaving a false alarm running for another
+  /// thirty seconds is an embarrassment. So the confirming button carries the
+  /// whole sentence and the safe option is the one your thumb finds first.
+  Future<void> _cancelAlert() async {
+    final id = _sosEventId;
+    if (id == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel this emergency?'),
+        content: const Text(
+          'Your family and the SETU team will be told it was a false alarm. '
+          'Only do this if nobody needs help.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Keep the alert'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Yes, it was a false alarm'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() {
+      _cancelling = true;
+      _error = null;
+    });
+    try {
+      await SosRepository(ref.read(supabaseClientProvider))
+          .cancel(sosEventId: id);
+      if (mounted) setState(() => _cancelled = true);
+    } catch (err) {
+      // Says plainly that the alert is still live. Anything vaguer and someone
+      // walks away believing they stood it down when they didn't.
+      if (mounted) {
+        setState(() => _error =
+            'Could not cancel — the alert is still active. Please call your '
+            'family directly. ($err)');
+      }
+    } finally {
+      if (mounted) setState(() => _cancelling = false);
     }
   }
 
@@ -150,7 +212,42 @@ class _SosScreenState extends ConsumerState<SosScreen> {
               ),
               const SizedBox(height: SetuSpacing.md),
             ],
-            if (_notified) ...[
+            if (_cancelled) ...[
+              // The stood-down state. It says who was told, because the
+              // question immediately after cancelling is "do I still need to
+              // ring my daughter?" and the answer is no.
+              Container(
+                padding: const EdgeInsets.all(SetuSpacing.lg),
+                decoration: BoxDecoration(
+                  color: SetuColors.verifiedLight.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                      color: SetuColors.verifiedLight.withValues(alpha: 0.3)),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(Icons.check_circle,
+                        color: SetuColors.verifiedLight, size: 44),
+                    const SizedBox(height: SetuSpacing.sm),
+                    Text('Alert cancelled',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleLarge
+                            ?.copyWith(
+                                color: SetuColors.verifiedLight,
+                                fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Your family and the SETU team have been told it was a '
+                      'false alarm. Nobody is on their way.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: SetuColors.mutedLight),
+                    ),
+                  ],
+                ),
+              ),
+            ] else if (_notified) ...[
               // Matches the Stitch "emergency_sos_active" badge treatment.
               Center(
                 child: Container(
@@ -295,11 +392,25 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                         tint: SetuColors.peachLight,
                         title: 'On-call team alerted',
                         subtitle: 'SETU is coordinating help'),
+                    // Follows the same fix as the strip above rather than
+                    // hardcoding success. This row used to claim the location
+                    // had been shared while the strip six pixels higher said
+                    // NO GPS — a direct contradiction, on the screen where
+                    // being believed matters most.
                     _ActiveAction(
-                        icon: Icons.my_location_outlined,
-                        tint: SetuColors.accentLight,
-                        title: 'Location shared',
-                        subtitle: 'Responders can find you'),
+                        icon: _locationMissing
+                            ? Icons.location_off_outlined
+                            : Icons.my_location_outlined,
+                        tint: _locationMissing
+                            ? SetuColors.peachLight
+                            : SetuColors.accentLight,
+                        done: !_locationMissing,
+                        title: _locationMissing
+                            ? 'Location not sent'
+                            : 'Location shared',
+                        subtitle: _locationMissing
+                            ? 'The phone could not get a fix'
+                            : 'Responders can find you'),
                   ],
                 ),
               ),
@@ -335,6 +446,34 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                   ],
                 ),
               ),
+              const SizedBox(height: SetuSpacing.lg),
+              // The undo. Until this existed a pocket-press sent the whole
+              // care circle across the city with no way to call them back,
+              // and every false alarm made the next real one less believed.
+              //
+              // Outlined, not filled: it must be findable without competing
+              // with anything on the screen that is actually about getting
+              // help.
+              if (_sosEventId != null)
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: SetuSpacing.md),
+                    foregroundColor: SetuColors.mutedLight,
+                    side: const BorderSide(
+                        color: SetuColors.borderLight, width: 2),
+                  ),
+                  onPressed: _cancelling ? null : _cancelAlert,
+                  icon: _cancelling
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.cancel_outlined),
+                  label: Text(_cancelling
+                      ? 'Cancelling…'
+                      : 'Cancel — it was a false alarm'),
+                ),
             ] else
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
@@ -384,11 +523,16 @@ class _ActiveAction extends StatelessWidget {
     required this.tint,
     required this.title,
     required this.subtitle,
+    this.done = true,
   });
   final IconData icon;
   final Color tint;
   final String title;
   final String subtitle;
+
+  /// A green tick means it happened. A row that didn't happen gets a dash
+  /// instead, so the checklist can't be read as all-clear at a glance.
+  final bool done;
 
   @override
   Widget build(BuildContext context) {
@@ -415,8 +559,9 @@ class _ActiveAction extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(Icons.check_circle,
-              color: SetuColors.verifiedLight, size: 22),
+          Icon(done ? Icons.check_circle : Icons.remove_circle_outline,
+              color: done ? SetuColors.verifiedLight : SetuColors.peachLight,
+              size: 22),
         ],
       ),
     );

@@ -15,6 +15,7 @@ import '../features/companion_visits/presentation/companion_preferences_screen.d
 import '../features/consent/presentation/consent_screen.dart';
 import '../features/family_access/presentation/family_access_screen.dart';
 import '../features/health_profile/presentation/health_profile_screen.dart';
+import '../features/health_profile/presentation/medical_id_screen.dart';
 import '../features/earnings/presentation/earnings_screen.dart';
 import '../features/hospital_stays/presentation/hospital_stays_screen.dart';
 import '../features/medical_documents/presentation/medical_documents_screen.dart';
@@ -159,6 +160,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/elder/:elderId/health-profile',
         builder: (context, state) =>
             HealthProfileScreen(elderId: state.pathParameters['elderId']!),
+      ),
+      GoRoute(
+        path: '/elder/:elderId/medical-id',
+        builder: (context, state) =>
+            MedicalIdScreen(elderId: state.pathParameters['elderId']!),
       ),
       GoRoute(
         path: '/elder/:elderId/documents',

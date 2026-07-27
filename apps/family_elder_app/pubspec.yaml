@@ -4,7 +4,7 @@ description: >
   (PRD Part 3 §17/§18): family mode (dashboard, booking, consent
   management) and elder mode (large-text, voice-first, three-action home).
 publish_to: "none"
-version: 0.7.1+47
+version: 0.7.1+48
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -31,6 +31,10 @@ dependencies:
   fl_chart: ^0.69.0
   # Offline detection for the global "no internet" banner + graceful retries.
   connectivity_plus: ^6.0.5
+  # Medical ID QR (pure Dart, depends only on `qr` — no native code). The code
+  # carries the emergency details themselves rather than a link, so it scans
+  # with no network at all; see medical_id_screen.dart.
+  qr_flutter: ^4.1.0
   # Push notifications (FCM) and Google Sign-In. Bounded below the next major
   # so a CI resolve never silently pulls a breaking API change.
   firebase_core: ">=3.6.0 <4.0.0"

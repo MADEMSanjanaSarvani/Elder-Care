@@ -34,6 +34,26 @@ class SosRepository {
     return response.data as Map<String, dynamic>;
   }
 
+  /// Stands a raised alert back down.
+  ///
+  /// Goes through `sos-cancel` rather than updating the row directly because
+  /// cancelling is not a state change, it is a second message: everyone who
+  /// was told the emergency was happening has to be told it isn't, and only
+  /// the service role can write into other people's notification rows. A
+  /// client that merely flipped the status would leave the family driving.
+  Future<void> cancel({required String sosEventId, String? reason}) async {
+    final response = await _client.functions.invoke(
+      'sos-cancel',
+      body: {
+        'sos_event_id': sosEventId,
+        if (reason != null && reason.isNotEmpty) 'reason': reason,
+      },
+    );
+    if (response.status != 200) {
+      throw StateError('SOS cancel failed: ${response.data}');
+    }
+  }
+
   /// A practice run (PRD Part 10, Batch 7, Module 25). Goes to the
   /// SEPARATE `sos-drill-trigger` function — never `sos-trigger` — so a
   /// drill can never fan out real alerts. Returns the coaching feedback

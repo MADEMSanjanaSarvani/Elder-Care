@@ -149,6 +149,37 @@ the same soft edge for nothing per frame.
 - **Not carried over:** Apple Sign-In (not configured, and `Icons.apps` is a placeholder). The design's terms checkbox defaults to `value: true`; a pre-ticked consent box is not valid affirmative consent under DPDP. Ours is a statement, which avoids the problem.
 - **Bug in source:** `_SetuTextFieldState` never disposes its `FocusNode`.
 
+### 18–19. Daily Timeline (frames 1 and 2)
+- **Replaces:** `features/timeline/presentation/timeline_screen.dart`
+- **Modified:** the connector rail — a `CustomPaint` drawing dashes became one `Container` with the event's colour fading into sand, and medallions were lifted off it so they read as nodes on a line rather than holes punched through it
+- **Also cheaper:** the dashes re-rasterised on every scroll frame
+- **Not carried over:** photos on timeline events (SETU Memories has images; timeline events do not), and the contextual call FAB
+- **Build:** 46
+
+### 20. Elder Wellness
+- **Replaces:** `features/wellness/presentation/wellness_summary_screen.dart`
+- **Modified:** `_RingCard` — the health score now counts up over 1.5s on `easeInOut`, arc and number together
+- **Implementation note:** `TweenAnimationBuilder`, not an `AnimationController`. The score is live, so the tween starts from the value already on screen and moves to the new one; a controller would replay from zero on every rebuild, leaving the number the family came to read wrong for a second and a half each time they touched anything.
+- **Build:** 47
+
+### 21. Emergency Medical Profile (frame 2)
+- **New screen:** `features/health_profile/presentation/medical_id_screen.dart`, route `/elder/:elderId/medical-id`
+- **Modified:** `health_profile_screen.dart` (the MEDICAL ID badge is now the way in), `router.dart`
+- **Dependency added:** `qr_flutter ^4.1.0` — pure Dart, depends only on `qr`, no native code
+- **Why a second screen rather than a rewrite:** the health profile is a form, and a form is right for the family filling it in on a Sunday and wrong for the ninety seconds it exists for. Nobody scrolls a text field while somebody is on the floor. Same data, read-only, blood group at 44pt, allergies in red at the top, a call button on every contact.
+- **The QR holds the record, not a link.** "SCAN FOR FULL RECORD" normally means a URL to a hosted page — a public unauthenticated endpoint serving medical records to whoever holds the token, which would also fail in exactly the situation it exists for, because an ambulance on the Vizag bypass may have no signal. The code carries the text itself: any camera app shows it instantly, offline, and there is no server-side surface to leak.
+- **Bug fixed on the way through:** `_ContactRow` still read an embedded `row['profiles']` object, but `fetchFamily` has returned flat rows from `family_circle()` since migration 0034 — so every emergency contact rendered as "Family member" with no call button, on the screen where that matters most.
+- **Not carried over:** the map image (unchanged reasoning from screen 5), and the fabricated Chennai hospital address.
+- **Bugs in source:** `Icons.pill` does not exist (second appearance); `colorScheme.background` and `surfaceVariant` are deprecated; `withOpacity` is deprecated in favour of `withValues`; `_buildNavItem` takes an `isActive` flag it never reads.
+
+### 22. Emergency SOS (active)
+- **Replaces:** `features/sos/presentation/sos_screen.dart` (pulsing button, SOS badge, "Emergency Mode Activated", location strip, Active actions and the AI Dispatcher card were already built from this design)
+- **New:** migration `0040`, Edge Function `sos-cancel`, `SosRepository.cancel()`, the "Cancel — it was a false alarm" action and its stood-down state
+- **Modified:** `notification_inbox_screen.dart` and `timeline_screen.dart` (a `sos_cancelled` row, green rather than red, and a cancelled SOS stands the timeline's day-banner down), `admin-dashboard/lib/types.ts` + `SosMonitor.tsx`
+- **Why it was worth building:** the emergency button had no undo. A pocket-press sent the whole care circle across the city with no way to call them back, and every false alarm makes the next real one less believed. `cancelled` is its own status rather than reusing `resolved` because the two mean opposite things to whoever reads the queue next — one says something happened and was handled, the other says nothing happened at all.
+- **Contradiction fixed:** the Active-actions checklist claimed "Location shared — Responders can find you" even while the strip directly above it said NO GPS.
+- **Not carried over:** "Ambulance called — ETA 8 minutes" (108 dispatches ambulances, not SETU, and there is no ETA to show), "Nurse Sarah alerted" (no nurse roster), the map image and street address, and the "Device: Ramesh's Watch • Battery 84%" footer (there is no watch).
+
 ---
 
 ## Capabilities built because a design implied them
@@ -158,6 +189,7 @@ the same soft edge for nothing per frame.
 | Preferred hospital | 0037 | Paramedics ask it second |
 | Hydration logging | 0038 | Only wearable-free wellness metric, and the one that prevents incidents |
 | Memory Lane + dismissals | 0039 | Reminiscence prompting; dismissals so "not now" means something |
+| SOS cancel | 0040 | The emergency button had no undo |
 | Region selection (36 states) | 0031 | Decides which doctors and caregivers a family ever sees |
 | Region waiting list | 0035 | The picker promises to tell them when we arrive |
 | Stories | 0036 | The story button did nothing |
@@ -169,3 +201,4 @@ the same soft edge for nothing per frame.
 - **96 analyzer infos** (mostly `prefer_const_constructors`). Not fixed by hand: Flutter cannot be run in this environment, and adding `const` to an expression that is not actually constant is a compile error. This needs one `dart fix --apply` run on a machine with the SDK — it is a single command and I would rather it be run than guessed at.
 - Time-of-day grid for medications (screen 14).
 - Additional languages (screen 13).
+- A cancel path for an SOS raised in a previous session. `_sosEventId` is held for the screen's lifetime only; after the app is closed, standing an alert down goes through the on-call operator. Reloading the elder's open SOS on screen entry would close this.

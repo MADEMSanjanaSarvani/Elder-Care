@@ -219,11 +219,19 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: SetuColors.sosLight,
-                    borderRadius: BorderRadius.circular(999),
+                // The badge is now the way in to the card itself. This screen
+                // is a form — fields, keyboard, Save — which is right for
+                // filling it in and wrong for the ninety seconds it exists
+                // for. Nobody scrolls a form while somebody is on the floor.
+                FilledButton(
+                  onPressed: () =>
+                      context.push('/elder/${widget.elderId}/medical-id'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: SetuColors.sosLight,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   child: const Text('MEDICAL ID',
                       style: TextStyle(
@@ -662,9 +670,13 @@ class _ContactRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final profile = row['profiles'] as Map<String, dynamic>?;
-    final name = profile?['display_name'] as String? ?? 'Family member';
-    final phone = profile?['phone'] as String?;
+    // Flat fields, not an embedded `profiles` object: family_circle() (0034)
+    // returns the circle already joined, because the direct select with an
+    // embed came back nameless under RLS. This row had been left reading the
+    // old shape, so every emergency contact rendered as "Family member" with
+    // no call button — on the one screen where that matters most.
+    final name = row['display_name'] as String? ?? 'Family member';
+    final phone = row['phone'] as String?;
     final relationship = row['relationship'] as String?;
 
     return Row(

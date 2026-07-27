@@ -31,6 +31,9 @@ _Category _categoryFor(String type) {
   switch (type) {
     case 'sos_triggered':
     case 'sos_ops_alert':
+    // The stand-down sits in Emergency alongside the alert it retracts. In
+    // any other section it would be found after the drive across town.
+    case 'sos_cancelled':
     case 'checkin_missed_escalation':
     case 'reminder_hospital_stay_gap':
       return _Category.emergency;
@@ -350,6 +353,10 @@ Color _categoryColor(String type) {
     case 'checkin_missed_escalation':
     case 'reminder_hospital_stay_gap':
       return SetuColors.sosLight;
+    // Green, though it is an emergency-category row: a red stripe on a
+    // stand-down is read as another alarm at a glance.
+    case 'sos_cancelled':
+      return SetuColors.verifiedLight;
     case 'reminder_medication_dose':
     case 'reminder_appointment':
       return SetuColors.peachLight;
@@ -365,6 +372,8 @@ IconData _iconFor(String type) {
     case 'sos_triggered':
     case 'sos_ops_alert':
       return Icons.sos_rounded;
+    case 'sos_cancelled':
+      return Icons.check_circle_outline;
     case 'checkin_missed_escalation':
       return Icons.warning_amber_outlined;
     case 'family_invite_sent':
@@ -384,6 +393,8 @@ String _labelFor(String type) {
   switch (type) {
     case 'sos_triggered':
       return 'SOS triggered';
+    case 'sos_cancelled':
+      return 'False alarm — SOS cancelled';
     case 'sos_ops_alert':
       return 'SOS ops alert';
     case 'checkin_missed_escalation':
@@ -408,6 +419,7 @@ String? _deepLinkFor(String type, Map<String, dynamic>? payload) {
   if (elderId == null) return null;
   switch (type) {
     case 'sos_triggered':
+    case 'sos_cancelled':
       return '/elder/$elderId/sos';
     case 'checkin_missed_escalation':
       return '/elder/$elderId/timeline';

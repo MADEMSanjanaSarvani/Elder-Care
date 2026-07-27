@@ -108,7 +108,13 @@ class _PeaceOfMindHeader extends StatelessWidget {
             ? 'Good afternoon'
             : 'Good evening';
 
-    final hasSos =
+    // A cancelled SOS stands the banner down. Leaving "an SOS was raised
+    // today — please check in" at the top of the day, after the family has
+    // already established it was a pocket-press, is how an app teaches people
+    // to ignore it.
+    final sosCancelled =
+        events.any((e) => e['event_type'] == 'sos_cancelled');
+    final hasSos = !sosCancelled &&
         events.any((e) => e['event_type'] == 'sos_triggered');
     final missed =
         events.any((e) => e['event_type'] == 'checkin_missed');
@@ -380,6 +386,8 @@ String _titleFor(String eventType) {
       return 'Check-in missed';
     case 'sos_triggered':
       return 'SOS raised';
+    case 'sos_cancelled':
+      return 'SOS cancelled';
     case 'health_note_added':
       return 'Health note';
     default:
@@ -401,6 +409,8 @@ IconData _iconFor(String eventType) {
       return Icons.warning_amber_outlined;
     case 'sos_triggered':
       return Icons.sos_rounded;
+    case 'sos_cancelled':
+      return Icons.check_circle_outline;
     case 'health_note_added':
       return Icons.notes_outlined;
     default:
@@ -417,6 +427,8 @@ Color _colorFor(String eventType) {
       return SetuColors.peachLight; // attention
     case 'sos_triggered':
       return SetuColors.sosLight; // urgent
+    case 'sos_cancelled':
+      return SetuColors.verifiedLight; // stood down
     default:
       return SetuColors.lavenderLight; // neutral/scheduled
   }
@@ -434,6 +446,8 @@ Color _colorFor(String eventType) {
       return (Icons.warning_amber_rounded, 'Missed');
     case 'sos_triggered':
       return (Icons.priority_high_rounded, 'Urgent');
+    case 'sos_cancelled':
+      return (Icons.check_circle, 'False alarm');
     default:
       return null;
   }
