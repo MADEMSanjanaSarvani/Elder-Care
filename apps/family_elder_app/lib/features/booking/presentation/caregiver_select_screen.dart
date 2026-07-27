@@ -194,7 +194,7 @@ class _CaregiverSelectScreenState extends ConsumerState<CaregiverSelectScreen> {
   /// plainly that payment will be collected separately.
   Future<bool> _collectPayment(String bookingId) async {
     final amount =
-        '${widget.service.currency} ${widget.service.basePrice.toStringAsFixed(0)}';
+        formatMoney(widget.service.basePrice, currency: widget.service.currency);
     final messenger = ScaffoldMessenger.of(context);
 
     final proceed = await showDialog<bool>(

@@ -293,7 +293,7 @@ class _ServiceCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      'From ${service.currency} ${service.basePrice.toStringAsFixed(0)}',
+                      'From ${formatMoney(service.basePrice, currency: service.currency)}',
                       style: const TextStyle(
                           color: SetuColors.accentLight,
                           fontWeight: FontWeight.w700),

@@ -53,7 +53,7 @@ class EarningsScreen extends ConsumerWidget {
                     const Text('Total paid out',
                         style: TextStyle(color: SetuColors.mutedLight)),
                     const SizedBox(height: 4),
-                    Text('$currency ${paidTotal.toStringAsFixed(0)}',
+                    Text(formatMoney(paidTotal, currency: currency as String),
                         style: Theme.of(context)
                             .textTheme
                             .headlineMedium
@@ -96,7 +96,9 @@ class _PayoutCard extends StatelessWidget {
         child: ListTile(
           leading: SetuIconChip(
               icon: Icons.account_balance_wallet_outlined, color: color),
-          title: Text('${payout['currency']} ${payout['amount']}',
+          title: Text(
+              formatMoney(payout['amount'] as num,
+                  currency: payout['currency'] as String? ?? 'INR'),
               style: const TextStyle(fontWeight: FontWeight.w600)),
           subtitle:
               when == null ? null : Text(SetuFormat.friendlyDate(when)),

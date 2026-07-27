@@ -192,7 +192,7 @@ class InvoiceScreen extends StatelessWidget {
   final String method;
   final DateTime date;
 
-  String _r(double v) => '₹${v.toStringAsFixed(2)}';
+  String _r(double v) => formatMoney(v, paise: true);
 
   @override
   Widget build(BuildContext context) {

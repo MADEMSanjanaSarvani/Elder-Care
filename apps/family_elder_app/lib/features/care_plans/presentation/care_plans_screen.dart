@@ -243,7 +243,7 @@ class _PlanCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final allocations = (plan['care_plan_allocations'] as List?) ?? [];
     final currency = plan['currency'] as String? ?? 'INR';
-    final price = (plan['monthly_price'] as num).toStringAsFixed(0);
+    final price = plan['monthly_price'] as num;
     final code = plan['code'] as String? ?? '';
     // Middle tier is the "most loved" hero; each tier gets its own tint.
     final popular = code == 'standard';
@@ -302,7 +302,7 @@ class _PlanCard extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
                   children: [
-                    Text('$currency $price',
+                    Text(formatMoney(price, currency: currency),
                         style: Theme.of(context)
                             .textTheme
                             .headlineLarge
@@ -350,7 +350,7 @@ class _PlanCard extends ConsumerWidget {
                     onPressed: hasActiveSub
                         ? null
                         : () => _subscribe(context, ref,
-                            currencyLabel: '$currency $price'),
+                            currencyLabel: formatMoney(price, currency: currency)),
                     child: Text(hasActiveSub
                         ? 'Cancel current plan first'
                         : 'Choose ${plan['name']}'),
