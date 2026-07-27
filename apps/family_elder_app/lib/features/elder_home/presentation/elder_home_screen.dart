@@ -206,6 +206,11 @@ class _BentoTile extends StatelessWidget {
     return Material(
       color: color,
       borderRadius: BorderRadius.circular(28),
+      // The lift the designs give every bento tile. Material's own elevation
+      // is used rather than a wrapping Container so the ink splash still
+      // clips to the rounded corners.
+      elevation: 3,
+      shadowColor: SetuColors.peachLight.withValues(alpha: 0.45),
       child: InkWell(
         borderRadius: BorderRadius.circular(28),
         onTap: onTap,
