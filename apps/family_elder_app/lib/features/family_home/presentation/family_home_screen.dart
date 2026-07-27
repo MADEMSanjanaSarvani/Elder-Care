@@ -1164,27 +1164,40 @@ class _BentoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The designs' bento treatment: the tile is washed in its own accent
+    // rather than being another white card behind a border, and the icon sits
+    // in a solid chip of that accent. White-on-white made the two tiles read
+    // as one undifferentiated block; the tint is what lets someone find "mood"
+    // without reading the label.
     return Container(
       padding: const EdgeInsets.symmetric(
           vertical: SetuSpacing.md, horizontal: SetuSpacing.sm),
       decoration: BoxDecoration(
-        color: SetuColors.paperRaisedLight,
+        color: color.withValues(alpha: 0.13),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: SetuColors.borderLight),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 28),
+          Container(
+            padding: const EdgeInsets.all(9),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: Colors.white, size: 20),
+          ),
           const SizedBox(height: SetuSpacing.sm),
           Text(label,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.6,
-                  color: SetuColors.mutedLight)),
+                  color: color)),
           const SizedBox(height: 2),
           Text(value,
+              textAlign: TextAlign.center,
               style: Theme.of(context)
                   .textTheme
                   .titleMedium

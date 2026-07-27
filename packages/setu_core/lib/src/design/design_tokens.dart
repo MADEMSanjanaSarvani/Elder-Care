@@ -44,6 +44,17 @@ class SetuColors {
   static const Color lavenderLight = Color(0xFF62549B);
   static const Color lavenderDark = Color(0xFFCBBEFF);
 
+  /// The lavender *container* pair, straight from the designs. Every mock
+  /// marks the active navigation item with a solid #BEAEFD pill carrying
+  /// #4C3E84 content — it is the most repeated element in the whole set,
+  /// appearing on every screen, and it needs its own tokens because
+  /// `lavenderLight` is the dark ink version and cannot be a background for
+  /// dark text.
+  static const Color lavenderContainerLight = Color(0xFFBEAEFD);
+  static const Color onLavenderContainerLight = Color(0xFF4C3E84);
+  static const Color lavenderContainerDark = Color(0xFF4C3E84);
+  static const Color onLavenderContainerDark = Color(0xFFE7DEFF);
+
   /// Peach / pastel orange — warmth & human touch (primary-container family).
   static const Color peachLight = Color(0xFFF08A3C);
   static const Color peachDark = Color(0xFFFFB68D);
@@ -76,6 +87,7 @@ class SetuTheme {
         isDark ? SetuColors.borderDark : SetuColors.borderLight;
     final Color surface =
         isDark ? SetuColors.paperRaisedDark : SetuColors.paperRaisedLight;
+    final Color muted = isDark ? SetuColors.mutedDark : SetuColors.mutedLight;
 
     // Full Warmth colour scheme. IMPORTANT: secondary is LAVENDER, not the
     // success-green — Material 3 derives the bottom-nav indicator and the
@@ -218,16 +230,46 @@ class SetuTheme {
       ),
       // The bottom bar in every design: white, lifted by a warm shadow that
       // falls upward, with the active destination in a filled pill.
+      // The designs' navigation bar, matched properly. The active item is a
+      // solid lavender pill, not a 20%-opacity tint of it — at that opacity it
+      // read as a smudge behind the icon rather than as the selected state,
+      // which is the one thing this control exists to communicate. The label
+      // goes bold in the pill and the inactive items sit back, exactly as
+      // every mock in the set has it.
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: surface,
         elevation: 3,
         shadowColor: SetuColors.peachLight.withValues(alpha: 0.10),
         surfaceTintColor: Colors.transparent,
-        indicatorColor: (isDark ? SetuColors.lavenderDark : SetuColors.lavenderLight)
-            .withValues(alpha: 0.20),
+        height: 68,
+        indicatorColor: isDark
+            ? SetuColors.lavenderContainerDark
+            : SetuColors.lavenderContainerLight,
         indicatorShape: const StadiumBorder(),
-        labelTextStyle: WidgetStatePropertyAll(TextStyle(
-            fontSize: 12.5, fontWeight: FontWeight.w600, color: ink)),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return IconThemeData(
+            size: 24,
+            color: selected
+                ? (isDark
+                    ? SetuColors.onLavenderContainerDark
+                    : SetuColors.onLavenderContainerLight)
+                : muted.withValues(alpha: 0.75),
+          );
+        }),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return TextStyle(
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+            color: selected
+                ? (isDark
+                    ? SetuColors.onLavenderContainerDark
+                    : SetuColors.onLavenderContainerLight)
+                : muted.withValues(alpha: 0.75),
+          );
+        }),
       ),
       chipTheme: ChipThemeData(
         shape: const StadiumBorder(),
