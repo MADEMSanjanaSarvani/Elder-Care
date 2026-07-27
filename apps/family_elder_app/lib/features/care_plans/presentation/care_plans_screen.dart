@@ -15,6 +15,16 @@ final _plansProvider =
   return CarePlansRepository(client).fetchPlans(regionId);
 });
 
+/// How many real caregivers serve this elder's region. Zero means a plan
+/// cannot currently be delivered there — see migration 0042.
+final _coverageProvider =
+    FutureProvider.family<int, String>((ref, elderId) async {
+  final client = ref.watch(supabaseClientProvider);
+  final result = await client
+      .rpc('region_real_caregiver_count', params: {'p_elder_id': elderId});
+  return (result as num?)?.toInt() ?? 0;
+});
+
 final _subscriptionProvider =
     FutureProvider.family<Map<String, dynamic>?, String>((ref, elderId) async {
   final client = ref.watch(supabaseClientProvider);
@@ -69,11 +79,15 @@ class CarePlansScreen extends ConsumerWidget {
                   loading: () => const SizedBox.shrink(),
                   error: (e, s) => const SizedBox.shrink(),
                 ),
+                if (ref.watch(_coverageProvider(elderId)).asData?.value == 0)
+                  const _NoCoverageNotice(),
                 for (final plan in plans)
                   _PlanCard(
                     elderId: elderId,
                     plan: plan,
                     hasActiveSub: subAsync.asData?.value != null,
+                    noCoverage:
+                        ref.watch(_coverageProvider(elderId)).asData?.value == 0,
                   ),
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: SetuSpacing.sm),
@@ -233,11 +247,20 @@ class _CurrentSubscriptionBanner extends ConsumerWidget {
 }
 
 class _PlanCard extends ConsumerWidget {
-  const _PlanCard({required this.elderId, required this.plan, required this.hasActiveSub});
+  const _PlanCard({
+    required this.elderId,
+    required this.plan,
+    required this.hasActiveSub,
+    this.noCoverage = false,
+  });
 
   final String elderId;
   final Map<String, dynamic> plan;
   final bool hasActiveSub;
+
+  /// No real caregiver serves this region yet, so the visits this plan pays
+  /// for cannot currently be delivered.
+  final bool noCoverage;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -369,6 +392,37 @@ class _PlanCard extends ConsumerWidget {
   /// the clearly-labelled demo checkout so the flow is still demonstrable.
   Future<void> _subscribe(BuildContext context, WidgetRef ref,
       {required String currencyLabel}) async {
+    // Nobody pays a monthly fee for visits that cannot happen without being
+    // told first, in a box they have to actively dismiss. The banner above the
+    // plans says the same thing, but a banner is scenery by the time somebody
+    // has decided to buy.
+    if (noCoverage) {
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('No caregivers here yet'),
+          content: Text(
+            'SETU has not recruited any caregivers in this area yet, so the '
+            'visits in this plan cannot be delivered right now. You would be '
+            'charged $currencyLabel every month for them.\n\n'
+            'Everything else — medicines, reminders, the timeline, check-ins '
+            'and SOS — works without a plan.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text("Don't subscribe"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Subscribe anyway'),
+            ),
+          ],
+        ),
+      );
+      if (proceed != true || !context.mounted) return;
+    }
+
     final repo = CarePlansRepository(ref.read(supabaseClientProvider));
     final planId = plan['id'] as String;
     final messenger = ScaffoldMessenger.of(context);
@@ -459,5 +513,59 @@ class _PlanCard extends ConsumerWidget {
     } catch (err) {
       messenger.showSnackBar(SnackBar(content: Text('Could not start payment: $err')));
     }
+  }
+}
+
+
+/// Says, before anyone is asked to pay, that the visits a plan buys cannot
+/// currently be delivered here.
+///
+/// Plans run ₹1,999–₹6,999 a month and Choose-plan opens a live Razorpay
+/// checkout. What the money buys is caregiver visits, so in a region where no
+/// real caregiver has been recruited it buys nothing — and renews anyway. The
+/// sample profiles on the marketplace screen made this easy to miss: six
+/// smiling cards with five-star ratings look exactly like coverage.
+class _NoCoverageNotice extends StatelessWidget {
+  const _NoCoverageNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: SetuSpacing.md),
+      padding: const EdgeInsets.all(SetuSpacing.md),
+      decoration: BoxDecoration(
+        color: SetuColors.peachLight.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: SetuColors.peachLight.withValues(alpha: 0.4)),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline, color: SetuColors.peachLight, size: 22),
+          SizedBox(width: SetuSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('No caregivers in your area yet',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: SetuColors.peachLight)),
+                SizedBox(height: 2),
+                Text(
+                  'A plan pays for caregiver visits, and SETU has not recruited '
+                  'anyone here yet — so a subscription would renew each month '
+                  'without visits behind it. Medicines, reminders, the '
+                  'timeline, check-ins and SOS all work without a plan.',
+                  style: TextStyle(
+                      color: SetuColors.mutedLight, fontSize: 13, height: 1.4),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
