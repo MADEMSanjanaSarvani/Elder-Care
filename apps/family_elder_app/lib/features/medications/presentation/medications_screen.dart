@@ -110,7 +110,7 @@ class _AddMedResult {
 /// Add-medication form built to match the Stitch `add_medication` design
 /// (both frames): a hero banner, a split amount+unit dosage entry, a
 /// frequency selector that fills in the dose times, and a note on the
-/// voice-reminder + refill-alert behaviour SETU runs automatically.
+/// reminder + refill-alert behaviour SETU runs automatically.
 /// Submits through the same repository as before — the amount+unit split is
 /// purely a visual/entry convenience, composed back into the single dosage
 /// string the backend already expects.
@@ -287,11 +287,25 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
               ),
             ],
             const SizedBox(height: SetuSpacing.md),
-            _autoFeatureRow(Icons.record_voice_over,
-                'Voice Reminders', 'Friendly spoken prompts at each dose time.'),
+            // These describe what SETU actually does, and one of them used to
+            // not. "Voice Reminders — friendly spoken prompts" was in the
+            // Stitch design and was copied straight in; nothing in this app
+            // speaks. There is no text-to-speech dependency, no audio, no
+            // spoken anything. Promising an elder that a voice will remind
+            // them to take a tablet, and then staying silent, is a promise
+            // that fails at exactly the moment it matters.
+            //
+            // What actually happens is a push notification, dispatched by
+            // reminders-dispatch-sweep. So that is what it now says.
+            _autoFeatureRow(Icons.notifications_active_outlined,
+                'Dose Reminders',
+                'A phone notification at each dose time, to the elder and the '
+                    'family.'),
             const SizedBox(height: SetuSpacing.sm),
             _autoFeatureRow(Icons.notification_important_outlined,
-                'Refill Alerts', 'We notify the family when stock runs low.'),
+                'Refill Alerts',
+                'When stock runs low, a refill suggestion appears on the '
+                    'dashboard.'),
             const SizedBox(height: SetuSpacing.lg),
             SizedBox(
               width: double.infinity,

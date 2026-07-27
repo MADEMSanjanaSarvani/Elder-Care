@@ -781,6 +781,8 @@ class _CaregiverDetailSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: SetuSpacing.lg),
+            _TrustBadges(caregiver: caregiver),
+            const SizedBox(height: SetuSpacing.lg),
             _SelfDeclared(caregiver: caregiver),
             if (bio != null && bio.isNotEmpty) ...[
               Text('BIOGRAPHY',
@@ -926,4 +928,126 @@ class _SelfDeclared extends StatelessWidget {
           ],
         ),
       );
+}
+
+
+/// What SETU has actually checked about this person.
+///
+/// The single most important block on the screen. A family is deciding
+/// whether to let a stranger into their mother's house, and everything above
+/// this — the bio, the experience, the certificate list — is what the
+/// caregiver says about themselves. This is what the platform stands behind.
+///
+/// Every badge is derived, never decorative. A badge only appears when the
+/// underlying state is actually true, because a trust marker that shows up
+/// regardless is worse than no badge at all: it teaches families that the
+/// green ticks mean nothing, and then they stop reading the real ones.
+///
+/// The Stitch design showed three fixed badges — "Identity Verified",
+/// "Medically Certified", "Top Rated" — on every profile. Two of those are
+/// real platform state (bgv_status, trust_tier) and the third is a rating
+/// threshold, so all three survive; they just have to earn their place.
+class _TrustBadges extends StatelessWidget {
+  const _TrustBadges({required this.caregiver});
+
+  final Map<String, dynamic> caregiver;
+
+  @override
+  Widget build(BuildContext context) {
+    final tier = caregiver['trust_tier'] as String? ?? '';
+    final stars = (caregiver['average_stars'] as num?)?.toDouble() ?? 0;
+    final count = (caregiver['rating_count'] as num?)?.toInt() ?? 0;
+
+    final badges = <Widget>[
+      // Everyone on this list has cleared background verification —
+      // caregivers-for-service filters on bgv_status = 'cleared' server-side,
+      // so an uncleared caregiver never reaches this screen at all.
+      const _TrustBadge(
+        icon: Icons.badge_outlined,
+        title: 'Identity verified',
+        subtitle: 'Government ID and background check',
+        tint: SetuColors.verifiedLight,
+      ),
+      if (tier == 'clinical_verified')
+        const _TrustBadge(
+          icon: Icons.medical_services_outlined,
+          title: 'Clinically verified',
+          subtitle: 'Council registration and insurance confirmed',
+          tint: SetuColors.lavenderLight,
+        ),
+      // Deliberately needs a real sample behind it. One five-star review is
+      // not "top rated", and a badge earned that easily is a badge that means
+      // nothing by the tenth profile a family looks at.
+      if (stars >= 4.8 && count >= 20)
+        _TrustBadge(
+          icon: Icons.workspace_premium_outlined,
+          title: 'Highly rated',
+          subtitle:
+              '${stars.toStringAsFixed(1)} stars across $count visits',
+          tint: SetuColors.peachLight,
+        ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('WHAT SETU HAS CHECKED',
+            style: TextStyle(
+                color: SetuColors.mutedLight,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1)),
+        const SizedBox(height: SetuSpacing.sm),
+        for (final badge in badges) ...[
+          badge,
+          const SizedBox(height: SetuSpacing.sm),
+        ],
+      ],
+    );
+  }
+}
+
+class _TrustBadge extends StatelessWidget {
+  const _TrustBadge({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.tint,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color tint;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+              color: tint.withValues(alpha: 0.14), shape: BoxShape.circle),
+          child: Icon(icon, color: tint, size: 22),
+        ),
+        const SizedBox(width: SetuSpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 15)),
+              const SizedBox(height: 1),
+              Text(subtitle,
+                  style: const TextStyle(
+                      color: SetuColors.mutedLight, fontSize: 12.5)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }
