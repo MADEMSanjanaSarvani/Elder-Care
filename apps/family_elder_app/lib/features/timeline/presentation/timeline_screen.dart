@@ -262,7 +262,7 @@ class _TimelineRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Rail: big icon medallion + dashed connector down to the next node.
+          // Rail: icon medallion + the connector down to the next node.
           Column(
             children: [
               Container(
@@ -272,14 +272,31 @@ class _TimelineRow extends StatelessWidget {
                   color: color.withValues(alpha: 0.16),
                   shape: BoxShape.circle,
                   border: Border.all(color: color.withValues(alpha: 0.4)),
+                  // Lifted off the rail so the medallions read as nodes on a
+                  // line rather than as holes punched through it.
+                  boxShadow: SetuSurfaces.of(context).cardShadow,
                 ),
                 child: Icon(_iconFor(type), color: color, size: 26),
               ),
               if (!isLast)
+                // A gradient rather than the dashes it used to draw. The
+                // design fades peach into sand down the page, which reads as
+                // the day passing — dashes read as a form field. It is also
+                // one Container instead of a CustomPaint that re-rasterised
+                // on every scroll frame.
                 Expanded(
-                  child: CustomPaint(
-                    size: const Size(2, double.infinity),
-                    painter: _DashedLinePainter(color: SetuColors.borderLight),
+                  child: Container(
+                    width: 2,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          color.withValues(alpha: 0.55),
+                          SetuColors.borderLight,
+                        ],
+                      ),
+                    ),
                   ),
                 ),
             ],
@@ -347,32 +364,6 @@ class _TimelineRow extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Paints a soft dashed vertical rail connecting timeline nodes (Flutter has
-/// no built-in dashed line).
-class _DashedLinePainter extends CustomPainter {
-  const _DashedLinePainter({required this.color});
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 2;
-    const dash = 4.0;
-    const gap = 4.0;
-    var y = 0.0;
-    while (y < size.height) {
-      canvas.drawLine(
-          Offset(size.width / 2, y), Offset(size.width / 2, y + dash), paint);
-      y += dash + gap;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _DashedLinePainter oldDelegate) =>
-      oldDelegate.color != color;
 }
 
 String _titleFor(String eventType) {
