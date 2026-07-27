@@ -117,11 +117,19 @@ class _FamilyShellState extends ConsumerState<FamilyShell> {
     ];
 
     return Scaffold(
-      body: Column(children: [
-        const OfflineBanner(),
-        Expanded(child: IndexedStack(index: _index, children: tabs)),
-      ]),
-      bottomNavigationBar: NavigationBar(
+      // Soft colour blobs bleeding off the corners, from the SETU designs.
+      // Behind everything, so every tab in the shell gets them without each
+      // screen having to opt in.
+      body: Stack(
+        children: [
+          const SetuAtmosphere(),
+          Column(children: [
+            const OfflineBanner(),
+            Expanded(child: IndexedStack(index: _index, children: tabs)),
+          ]),
+        ],
+      ),
+      bottomNavigationBar: SetuNavSurface(child: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
         destinations: const [
@@ -146,7 +154,7 @@ class _FamilyShellState extends ConsumerState<FamilyShell> {
               selectedIcon: Icon(Icons.person),
               label: 'Profile'),
         ],
-      ),
+      )),
     );
   }
 }
@@ -177,11 +185,19 @@ class _ElderShellState extends ConsumerState<ElderShell> {
     ];
 
     return Scaffold(
-      body: Column(children: [
-        const OfflineBanner(),
-        Expanded(child: IndexedStack(index: _index, children: tabs)),
-      ]),
-      bottomNavigationBar: NavigationBar(
+      // Soft colour blobs bleeding off the corners, from the SETU designs.
+      // Behind everything, so every tab in the shell gets them without each
+      // screen having to opt in.
+      body: Stack(
+        children: [
+          const SetuAtmosphere(),
+          Column(children: [
+            const OfflineBanner(),
+            Expanded(child: IndexedStack(index: _index, children: tabs)),
+          ]),
+        ],
+      ),
+      bottomNavigationBar: SetuNavSurface(child: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
         destinations: const [
@@ -202,7 +218,7 @@ class _ElderShellState extends ConsumerState<ElderShell> {
               selectedIcon: Icon(Icons.person),
               label: 'Profile'),
         ],
-      ),
+      )),
     );
   }
 }
@@ -246,11 +262,19 @@ class _CaregiverShellState extends State<CaregiverShell> {
       const ProfileMenuScreen(),
     ];
     return Scaffold(
-      body: Column(children: [
-        const OfflineBanner(),
-        Expanded(child: IndexedStack(index: _index, children: tabs)),
-      ]),
-      bottomNavigationBar: NavigationBar(
+      // Soft colour blobs bleeding off the corners, from the SETU designs.
+      // Behind everything, so every tab in the shell gets them without each
+      // screen having to opt in.
+      body: Stack(
+        children: [
+          const SetuAtmosphere(),
+          Column(children: [
+            const OfflineBanner(),
+            Expanded(child: IndexedStack(index: _index, children: tabs)),
+          ]),
+        ],
+      ),
+      bottomNavigationBar: SetuNavSurface(child: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
         destinations: const [
@@ -267,7 +291,7 @@ class _CaregiverShellState extends State<CaregiverShell> {
               selectedIcon: Icon(Icons.person),
               label: 'Profile'),
         ],
-      ),
+      )),
     );
   }
 }

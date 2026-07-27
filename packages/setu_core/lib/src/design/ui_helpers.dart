@@ -216,3 +216,97 @@ class SetuFormat {
         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
       ][m - 1];
 }
+
+/// Lifts a bottom navigation bar off the page the way every SETU design draws
+/// it: white, rounded across the top, with a warm shadow falling upward.
+///
+/// NavigationBarThemeData has no shape, so this cannot come from the theme.
+/// Wrapping is the only way to get the rounded top, and the upward shadow is
+/// what separates the bar from the content instead of letting it blend into
+/// the bottom of a scrolling list.
+class SetuNavSurface extends StatelessWidget {
+  const SetuNavSurface({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: dark ? SetuColors.paperRaisedDark : SetuColors.paperRaisedLight,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: (dark ? Colors.black : SetuColors.peachLight)
+                .withValues(alpha: dark ? 0.4 : 0.10),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        child: child,
+      ),
+    );
+  }
+}
+
+/// The soft out-of-focus colour blobs behind the SETU screens.
+///
+/// Two large circles bled off opposite corners at very low alpha. Cheap —
+/// they are plain circles with a radial gradient, painted once, with no blur
+/// filter and no animation, so they cost nothing per frame. That matters: the
+/// designs achieve this with backdrop blur, which is one of the most expensive
+/// things you can put on an entry-level Android GPU, and repeating it behind
+/// every screen would be felt.
+///
+/// Put it at the bottom of a Stack, under the content.
+class SetuAtmosphere extends StatelessWidget {
+  const SetuAtmosphere({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const IgnorePointer(
+      child: Stack(
+        children: [
+          Positioned(
+            top: -120,
+            right: -120,
+            child: _Blob(size: 340, color: SetuColors.peachLight),
+          ),
+          Positioned(
+            bottom: -140,
+            left: -110,
+            child: _Blob(size: 300, color: SetuColors.lavenderLight),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Blob extends StatelessWidget {
+  const _Blob({required this.size, required this.color});
+
+  final double size;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        // A radial gradient fading to nothing gives the same soft edge a blur
+        // would, for none of the cost.
+        gradient: RadialGradient(colors: [
+          color.withValues(alpha: 0.14),
+          color.withValues(alpha: 0.0),
+        ]),
+      ),
+    );
+  }
+}

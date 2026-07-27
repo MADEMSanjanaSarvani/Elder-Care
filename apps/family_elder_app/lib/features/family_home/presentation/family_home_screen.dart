@@ -842,15 +842,20 @@ class _ActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Properly tinted tiles, matching the SETU bento grids. These used to be
+    // a 5%-alpha wash inside a hairline border, which read as grey at arm's
+    // length — the designs colour the whole tile and drop the border, and the
+    // difference on a real phone is the difference between a legible grid and
+    // a page of faint rectangles.
     return InkWell(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(20),
       onTap: () => context.push('/elder/$elderId/${action.route}'),
       child: Container(
         padding: const EdgeInsets.all(SetuSpacing.sm),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          color: action.color.withValues(alpha: 0.05),
-          border: Border.all(color: action.color.withValues(alpha: 0.22)),
+          borderRadius: BorderRadius.circular(20),
+          color: action.color.withValues(alpha: 0.16),
+          boxShadow: SetuSurfaces.of(context).cardShadow,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -858,10 +863,12 @@ class _ActionTile extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(SetuSpacing.sm),
               decoration: BoxDecoration(
-                color: action.color.withValues(alpha: 0.14),
-                shape: BoxShape.circle,
+                // Solid, not a wash — the icon container in the designs is
+                // the saturated element that gives each tile its identity.
+                color: action.color,
+                borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(action.icon, color: action.color, size: 22),
+              child: Icon(action.icon, color: Colors.white, size: 22),
             ),
             const SizedBox(height: SetuSpacing.xs),
             Text(
@@ -869,7 +876,8 @@ class _ActionTile extends StatelessWidget {
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12, height: 1.15),
+              style: const TextStyle(
+                  fontSize: 12.5, height: 1.15, fontWeight: FontWeight.w600),
             ),
           ],
         ),
