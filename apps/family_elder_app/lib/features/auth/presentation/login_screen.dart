@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
 
+import '../../../core/action_success.dart';
 import '../../../core/app_build.dart';
 import '../../../core/illustrations.dart';
 import '../../../core/providers.dart';
@@ -203,8 +204,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _sendPasswordReset(String email) {
     return _run(() async {
       await _repo.sendPasswordReset(email);
-      setState(() => _notice =
-          'If an account exists for $email, a reset link is on its way.');
+      if (!mounted) return;
+      // A full screen rather than the inline notice this used to set. The next
+      // thing this person does is leave for their email app, and a line of
+      // text on a login form is the easiest thing in the world to walk past —
+      // they come back, see the same form, and send another link.
+      //
+      // The wording stays deliberately non-committal. "We've sent you a link"
+      // confirms the address has an account, which turns this box into a free
+      // account-enumeration oracle for anyone who wants to know whether a
+      // given person's family uses SETU.
+      await Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (ctx) => ActionSuccessScreen(
+          tagline: 'Link sent',
+          title: 'Check your inbox',
+          message: 'If an account exists for $email, a reset link is on its '
+              'way.\n\nIt can take a few minutes. If nothing arrives, look in '
+              'your spam folder before trying again.',
+          primaryLabel: 'Back to login',
+          onPrimary: () => Navigator.of(ctx).pop(),
+        ),
+      ));
     });
   }
 
@@ -225,112 +245,119 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _showForgotPasswordSheet() async {
     final controller = TextEditingController(text: _emailController.text.trim());
     String? sheetError;
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: SetuColors.paperLight,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (sheetContext) => StatefulBuilder(
-        builder: (sheetContext, setSheetState) {
-          return Padding(
-            padding: EdgeInsets.only(
-              left: SetuSpacing.lg,
-              right: SetuSpacing.lg,
-              top: SetuSpacing.lg,
-              bottom: MediaQuery.of(sheetContext).viewInsets.bottom + SetuSpacing.lg,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 44,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: SetuSpacing.lg),
+    try {
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: SetuColors.paperLight,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        builder: (sheetContext) => StatefulBuilder(
+          builder: (sheetContext, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: SetuSpacing.lg,
+                right: SetuSpacing.lg,
+                top: SetuSpacing.lg,
+                bottom: MediaQuery.of(sheetContext).viewInsets.bottom + SetuSpacing.lg,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 44,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: SetuSpacing.lg),
+                      decoration: BoxDecoration(
+                          color: SetuColors.borderLight,
+                          borderRadius: BorderRadius.circular(999)),
+                    ),
+                  ),
+                  Text('Forgot Password?',
+                      style: Theme.of(sheetContext)
+                          .textTheme
+                          .headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w800)),
+                  const SizedBox(height: SetuSpacing.xs),
+                  const Text(
+                      'No worries — it happens to the best of us. We\'ll help '
+                      'you get back into your care circle.',
+                      style: TextStyle(color: SetuColors.mutedLight, height: 1.4)),
+                  const SizedBox(height: SetuSpacing.lg),
+                  TextField(
+                    controller: controller,
+                    keyboardType: TextInputType.emailAddress,
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                        labelText: 'Email', prefixIcon: Icon(Icons.mail_outline)),
+                  ),
+                  if (sheetError != null) ...[
+                    const SizedBox(height: SetuSpacing.sm),
+                    Text(sheetError!,
+                        style: const TextStyle(
+                            color: SetuColors.sosLight, fontSize: 13)),
+                  ],
+                  const SizedBox(height: SetuSpacing.lg),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: _busy
+                          ? null
+                          : () async {
+                              final email = controller.text.trim();
+                              if (email.isEmpty || !_emailRegex.hasMatch(email)) {
+                                setSheetState(() => sheetError =
+                                    'Please enter a valid email address.');
+                                return;
+                              }
+                              Navigator.of(sheetContext).pop();
+                              await _sendPasswordReset(email);
+                            },
+                      icon: const Icon(Icons.send_outlined),
+                      label: const Text('Send Reset Link'),
+                    ),
+                  ),
+                  const SizedBox(height: SetuSpacing.md),
+                  Container(
+                    padding: const EdgeInsets.all(SetuSpacing.md),
                     decoration: BoxDecoration(
-                        color: SetuColors.borderLight,
-                        borderRadius: BorderRadius.circular(999)),
+                      color: SetuColors.paperRaisedLight,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: SetuColors.borderLight),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.shield_outlined,
+                            size: 18, color: SetuColors.mutedLight),
+                        const SizedBox(width: SetuSpacing.sm),
+                        const Expanded(
+                          child: Text(
+                              'Your security matters. If you don\'t receive an '
+                              'email within a few minutes, check your spam folder.',
+                              style: TextStyle(
+                                  color: SetuColors.mutedLight,
+                                  fontSize: 12.5,
+                                  height: 1.4)),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Text('Forgot Password?',
-                    style: Theme.of(sheetContext)
-                        .textTheme
-                        .headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.w800)),
-                const SizedBox(height: SetuSpacing.xs),
-                const Text(
-                    'No worries — it happens to the best of us. We\'ll help '
-                    'you get back into your care circle.',
-                    style: TextStyle(color: SetuColors.mutedLight, height: 1.4)),
-                const SizedBox(height: SetuSpacing.lg),
-                TextField(
-                  controller: controller,
-                  keyboardType: TextInputType.emailAddress,
-                  autofocus: true,
-                  decoration: const InputDecoration(
-                      labelText: 'Email', prefixIcon: Icon(Icons.mail_outline)),
-                ),
-                if (sheetError != null) ...[
-                  const SizedBox(height: SetuSpacing.sm),
-                  Text(sheetError!,
-                      style: const TextStyle(
-                          color: SetuColors.sosLight, fontSize: 13)),
                 ],
-                const SizedBox(height: SetuSpacing.lg),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: _busy
-                        ? null
-                        : () async {
-                            final email = controller.text.trim();
-                            if (email.isEmpty || !_emailRegex.hasMatch(email)) {
-                              setSheetState(() => sheetError =
-                                  'Please enter a valid email address.');
-                              return;
-                            }
-                            Navigator.of(sheetContext).pop();
-                            await _sendPasswordReset(email);
-                          },
-                    icon: const Icon(Icons.send_outlined),
-                    label: const Text('Send Reset Link'),
-                  ),
-                ),
-                const SizedBox(height: SetuSpacing.md),
-                Container(
-                  padding: const EdgeInsets.all(SetuSpacing.md),
-                  decoration: BoxDecoration(
-                    color: SetuColors.paperRaisedLight,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: SetuColors.borderLight),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.shield_outlined,
-                          size: 18, color: SetuColors.mutedLight),
-                      const SizedBox(width: SetuSpacing.sm),
-                      const Expanded(
-                        child: Text(
-                            'Your security matters. If you don\'t receive an '
-                            'email within a few minutes, check your spam folder.',
-                            style: TextStyle(
-                                color: SetuColors.mutedLight,
-                                fontSize: 12.5,
-                                height: 1.4)),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
+              ),
+            );
+          },
+        ),
+      );
+    } finally {
+      // The sheet owns this controller, so the sheet has to release it. Every
+      // "forgot password" tap was leaking one field's worth of state and its
+      // listeners for the life of the login screen.
+      controller.dispose();
+    }
   }
 
   @override

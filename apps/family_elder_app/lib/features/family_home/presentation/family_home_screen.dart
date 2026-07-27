@@ -892,8 +892,22 @@ class _ActionTile extends StatelessWidget {
   }
 }
 
-/// "{name} is safe" status line with a small "AT HOME" map snippet, matching
-/// the Stitch dashboard's welcome + map row.
+/// The status line the whole dashboard is really for, matching the Stitch
+/// welcome section.
+///
+/// Two things changed here from the earlier pass, and both were the same
+/// mistake this project has spent weeks refusing in other people's mocks.
+///
+/// The state was hardcoded: `isSafe` returned a literal `true`, so this line
+/// read "Ramesh is safe" in green whatever had happened. It now comes from an
+/// open `sos_events` row and today's `checkin_missed` entry.
+///
+/// And the map thumbnail beside it carried an "AT HOME" badge over a drawn
+/// grid. SETU knows an elder's location during an SOS and at no other moment,
+/// so that badge was a location claim with nothing behind it — on the screen
+/// a family opens precisely to ask where he is. If he had wandered out it
+/// would still have said AT HOME. It is replaced by the last check-in, which
+/// is both true and the thing they wanted to know.
 class _StatusRow extends ConsumerWidget {
   const _StatusRow({required this.elderId, required this.name});
 
@@ -905,8 +919,15 @@ class _StatusRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final s = ref.watch(homeSummaryProvider(elderId)).asData?.value;
-    final safe = s?.isSafe ?? true;
-    final color = safe ? SetuColors.verifiedLight : SetuColors.peachLight;
+    final state = s?.safety ?? SafetyState.allWell;
+
+    final (Color color, String label) = switch (state) {
+      SafetyState.emergency => (SetuColors.sosLight, 'Emergency raised'),
+      SafetyState.needsAttention =>
+        (SetuColors.peachLight, 'No check-in yet today'),
+      SafetyState.allWell => (SetuColors.verifiedLight, '$_first is safe'),
+    };
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -914,14 +935,10 @@ class _StatusRow extends ConsumerWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-              ),
+              _PulseDot(color: color),
               const SizedBox(width: SetuSpacing.sm),
               Flexible(
-                child: Text('$_first is safe',
+                child: Text(label,
                     style: TextStyle(color: color, fontWeight: FontWeight.w700),
                     overflow: TextOverflow.ellipsis),
               ),
@@ -929,87 +946,91 @@ class _StatusRow extends ConsumerWidget {
           ),
         ),
         const SizedBox(width: SetuSpacing.md),
-        const _MapSnippet(),
+        _LastCheckInChip(at: s?.lastCheckIn),
       ],
     );
   }
 }
 
-/// A small, decorative "at home" map snippet (matches the Stitch dashboard's
-/// map thumbnail). A calm reassurance chip rather than a live GPS claim.
-class _MapSnippet extends StatelessWidget {
-  const _MapSnippet();
+/// A slowly breathing status dot. The design animates it, and here the motion
+/// earns its keep: it is what tells someone the line is live rather than a
+/// label printed once. Honours reduced-motion with a still dot.
+class _PulseDot extends StatefulWidget {
+  const _PulseDot({required this.color});
+
+  final Color color;
+
+  @override
+  State<_PulseDot> createState() => _PulseDotState();
+}
+
+class _PulseDotState extends State<_PulseDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 2000))
+    ..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final dot = Container(
+      width: 10,
+      height: 10,
+      decoration: BoxDecoration(color: widget.color, shape: BoxShape.circle),
+    );
+    if (MediaQuery.of(context).disableAnimations) return dot;
+    return FadeTransition(
+      opacity: Tween<double>(begin: 0.45, end: 1).animate(_c),
+      child: dot,
+    );
+  }
+}
+
+/// When they last checked in — the real answer to "is he all right?", in the
+/// slot the mock filled with a picture of a map.
+class _LastCheckInChip extends StatelessWidget {
+  const _LastCheckInChip({this.at});
+
+  final DateTime? at;
+
+  static String _clock(DateTime t) {
+    final hour = t.hour % 12 == 0 ? 12 : t.hour % 12;
+    final minute = t.minute.toString().padLeft(2, '0');
+    return '$hour:$minute ${t.hour < 12 ? 'am' : 'pm'}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final known = at != null;
+    final colour = known ? SetuColors.verifiedLight : SetuColors.mutedLight;
+
     return Container(
-      width: 108,
-      height: 64,
-      clipBehavior: Clip.antiAlias,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            SetuColors.verifiedLight.withValues(alpha: 0.18),
-            SetuColors.accentLight.withValues(alpha: 0.12),
-          ],
-        ),
-        border: Border.all(color: SetuColors.borderLight),
+        color: colour.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: colour.withValues(alpha: 0.25)),
       ),
-      child: Stack(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Positioned.fill(child: CustomPaint(painter: _GridPainter())),
-          Positioned(
-            left: 6,
-            bottom: 6,
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.75),
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.6)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(Icons.home_rounded, size: 12, color: SetuColors.accentLight),
-                  SizedBox(width: 3),
-                  Text('AT HOME',
-                      style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.4,
-                          color: SetuColors.inkLight)),
-                ],
-              ),
-            ),
+          Icon(known ? Icons.check_circle_outline : Icons.schedule,
+              size: 14, color: colour),
+          const SizedBox(width: 5),
+          Text(
+            known ? 'Checked in ${_clock(at!)}' : 'No check-in yet',
+            style: TextStyle(
+                fontSize: 11.5, fontWeight: FontWeight.w800, color: colour),
           ),
         ],
       ),
     );
   }
-}
-
-class _GridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = SetuColors.borderLight.withValues(alpha: 0.5)
-      ..strokeWidth = 1;
-    const step = 26.0;
-    for (double x = 0; x < size.width; x += step) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
-    }
-    for (double y = 0; y < size.height; y += step) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 /// "Today at a glance" bento grid — a full-width "medicines taken" tile plus
