@@ -310,3 +310,34 @@ class _Blob extends StatelessWidget {
     );
   }
 }
+
+/// Keeps a perpetual "breathing" animation in step with the platform's
+/// reduce-motion setting. Call from `didChangeDependencies`.
+///
+/// Six things in this app breathe forever — the SOS halo, the assistant orb,
+/// the empty-inbox blob, the success screen, the elder-home SOS button, the
+/// dashboard status dot. Three of them ignored the setting entirely, which is
+/// the wrong way round for an app whose users are older adults: vestibular
+/// sensitivity, migraine and vertigo all get worse with age, and "reduce
+/// motion" is precisely the switch those people have already found.
+///
+/// It stops the controller rather than merely ignoring its output. A repeating
+/// controller nobody reads still schedules a frame on every vsync, so leaving
+/// it running would keep the screen awake and the battery draining to animate
+/// something deliberately not being shown.
+///
+/// [restingValue] is where the animation settles — pick whatever the design
+/// looks right at when still, usually its midpoint rather than an endpoint.
+void setuSyncBreathing(
+  BuildContext context,
+  AnimationController controller, {
+  double restingValue = 0.5,
+  bool reverse = true,
+}) {
+  if (MediaQuery.of(context).disableAnimations) {
+    if (controller.isAnimating) controller.stop();
+    controller.value = restingValue;
+  } else if (!controller.isAnimating) {
+    controller.repeat(reverse: reverse);
+  }
+}

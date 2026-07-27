@@ -255,7 +255,13 @@ class _NoNotificationsState extends State<_NoNotifications>
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(seconds: 4),
-  )..repeat(reverse: true);
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    setuSyncBreathing(context, _controller);
+  }
 
   @override
   void dispose() {

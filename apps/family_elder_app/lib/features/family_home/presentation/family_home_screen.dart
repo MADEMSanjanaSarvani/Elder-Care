@@ -967,8 +967,13 @@ class _PulseDot extends StatefulWidget {
 class _PulseDotState extends State<_PulseDot>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 2000))
-    ..repeat(reverse: true);
+      vsync: this, duration: const Duration(milliseconds: 2000));
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    setuSyncBreathing(context, _c, restingValue: 1);
+  }
 
   @override
   void dispose() {

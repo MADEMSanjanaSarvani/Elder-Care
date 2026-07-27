@@ -43,7 +43,13 @@ class _ActionSuccessScreenState extends State<ActionSuccessScreen>
   late final AnimationController _float = AnimationController(
     vsync: this,
     duration: const Duration(seconds: 6),
-  )..repeat(reverse: true);
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    setuSyncBreathing(context, _float);
+  }
 
   @override
   void dispose() {

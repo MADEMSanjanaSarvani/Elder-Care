@@ -314,7 +314,13 @@ class _SosButtonState extends State<_SosButton> with SingleTickerProviderStateMi
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1500),
-  )..repeat(reverse: true);
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    setuSyncBreathing(context, _controller);
+  }
 
   @override
   void dispose() {

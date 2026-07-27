@@ -231,8 +231,13 @@ class _BreathingOrb extends ConsumerStatefulWidget {
 class _BreathingOrbState extends ConsumerState<_BreathingOrb>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
-      vsync: this, duration: const Duration(seconds: 4))
-    ..repeat(reverse: true);
+      vsync: this, duration: const Duration(seconds: 4));
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    setuSyncBreathing(context, _c);
+  }
 
   @override
   void dispose() {
