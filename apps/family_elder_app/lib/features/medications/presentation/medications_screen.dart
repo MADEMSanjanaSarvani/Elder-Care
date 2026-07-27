@@ -108,9 +108,9 @@ class _AddMedResult {
 }
 
 /// Add-medication form built to match the Stitch `add_medication` design
-/// (both frames): a hero banner, a split amount+unit dosage entry, a
-/// frequency selector that fills in the dose times, and a note on the
-/// reminder + refill-alert behaviour SETU runs automatically.
+/// (both frames): a hero banner, a split amount+unit dosage entry, the
+/// Morning / Afternoon / Evening / Night grid that sets the dose times, and a
+/// note on the reminder + refill-alert behaviour SETU runs automatically.
 /// Submits through the same repository as before — the amount+unit split is
 /// purely a visual/entry convenience, composed back into the single dosage
 /// string the backend already expects.
@@ -130,17 +130,51 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
   final _name = TextEditingController();
   final _dosageAmount = TextEditingController();
   String _dosageUnit = 'mg';
-  String _frequency = 'twice';
+
+  /// Which parts of the day this medicine is taken. Replaces a
+  /// once/twice/thrice frequency picker, which could only express four
+  /// preset patterns and told the family nothing about *when*.
+  ///
+  /// Four independent slots express fifteen combinations instead of four, and
+  /// they match how the dose is actually described at home — "the white one
+  /// after breakfast and before bed" — rather than making somebody translate
+  /// that into "twice daily" and hope the app picks the same hours. An empty
+  /// selection is "as needed", which is the honest reading of a medicine with
+  /// no fixed time.
+  final Set<String> _slots = {'morning', 'night'};
 
   static const _units = ['mg', 'ml', 'mcg', 'tablet(s)', 'drop(s)', 'puff(s)'];
 
-  // Default dose times per frequency (24h).
-  static const _timesByFrequency = {
-    'once': ['08:00'],
-    'twice': ['08:00', '20:00'],
-    'thrice': ['08:00', '14:00', '20:00'],
-    'as_needed': <String>[],
+  /// Slot → 24h dose time. These are the hours the reminder sweep will fire,
+  /// so they are deliberately ordinary: a dose scheduled at 06:00 because the
+  /// app called it "morning" is a notification nobody wanted.
+  static const _slotTimes = {
+    'morning': '08:00',
+    'afternoon': '14:00',
+    'evening': '18:00',
+    'night': '21:00',
   };
+
+  static const _slotOrder = ['morning', 'afternoon', 'evening', 'night'];
+
+  static const _slotLabels = {
+    'morning': 'Morning',
+    'afternoon': 'Afternoon',
+    'evening': 'Evening',
+    'night': 'Night',
+  };
+
+  static const _slotIcons = {
+    'morning': Icons.wb_sunny_outlined,
+    'afternoon': Icons.light_mode_outlined,
+    'evening': Icons.wb_twilight,
+    'night': Icons.bedtime_outlined,
+  };
+
+  List<String> get _times => [
+        for (final slot in _slotOrder)
+          if (_slots.contains(slot)) _slotTimes[slot]!,
+      ];
 
   @override
   void dispose() {
@@ -157,7 +191,7 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    final times = _timesByFrequency[_frequency] ?? const <String>[];
+    final times = _times;
     return Padding(
       padding: EdgeInsets.only(
         left: SetuSpacing.lg,
@@ -251,41 +285,29 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
               ],
             ),
             const SizedBox(height: SetuSpacing.md),
-            const Text('Frequency',
+            const Text('When is it taken?',
                 style: TextStyle(fontWeight: FontWeight.w700)),
             const SizedBox(height: SetuSpacing.sm),
-            Wrap(
-              spacing: SetuSpacing.sm,
-              runSpacing: SetuSpacing.sm,
+            Row(
               children: [
-                _freqChip('once', 'Once daily'),
-                _freqChip('twice', 'Twice daily'),
-                _freqChip('thrice', 'Thrice daily'),
-                _freqChip('as_needed', 'As needed'),
+                for (final slot in _slotOrder) ...[
+                  Expanded(child: _slotTile(slot)),
+                  if (slot != _slotOrder.last)
+                    const SizedBox(width: SetuSpacing.sm),
+                ],
               ],
             ),
-            if (times.isNotEmpty) ...[
-              const SizedBox(height: SetuSpacing.md),
-              const Text('Time of Day',
-                  style: TextStyle(fontWeight: FontWeight.w700)),
-              const SizedBox(height: SetuSpacing.sm),
-              Wrap(
-                spacing: SetuSpacing.sm,
-                children: [
-                  for (final tm in times)
-                    Chip(
-                      avatar: const Icon(Icons.schedule,
-                          size: 16, color: SetuColors.accentLight),
-                      label: Text(tm),
-                      backgroundColor:
-                          SetuColors.accentLight.withValues(alpha: 0.08),
-                      side: BorderSide(
-                          color:
-                              SetuColors.accentLight.withValues(alpha: 0.3)),
-                    ),
-                ],
-              ),
-            ],
+            const SizedBox(height: SetuSpacing.sm),
+            // The exact hours, spelled out. The grid is the friendly way to
+            // choose; this is the line that stops anyone being surprised by
+            // when the phone actually goes off.
+            Text(
+              times.isEmpty
+                  ? 'As needed — no reminders will be sent.'
+                  : 'Reminders at ${times.join(', ')}.',
+              style: const TextStyle(
+                  color: SetuColors.mutedLight, fontSize: 13, height: 1.4),
+            ),
             const SizedBox(height: SetuSpacing.md),
             // These describe what SETU actually does, and one of them used to
             // not. "Voice Reminders — friendly spoken prompts" was in the
@@ -322,21 +344,43 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
     );
   }
 
-  Widget _freqChip(String value, String label) {
-    final selected = _frequency == value;
-    return ChoiceChip(
-      label: Text(label),
-      selected: selected,
-      onSelected: (_) => setState(() => _frequency = value),
-      showCheckmark: false,
-      selectedColor: SetuColors.accentLight,
-      backgroundColor: SetuColors.paperRaisedLight,
-      labelStyle: TextStyle(
-        color: selected ? Colors.white : SetuColors.inkLight,
-        fontWeight: FontWeight.w600,
+  Widget _slotTile(String slot) {
+    final selected = _slots.contains(slot);
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => setState(() {
+        if (!_slots.remove(slot)) _slots.add(slot);
+      }),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(vertical: SetuSpacing.md),
+        decoration: BoxDecoration(
+          color: selected
+              ? SetuColors.accentLight
+              : SetuColors.paperRaisedLight,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color:
+                  selected ? SetuColors.accentLight : SetuColors.borderLight,
+              width: 2),
+        ),
+        child: Column(
+          children: [
+            Icon(_slotIcons[slot],
+                size: 22,
+                color: selected ? Colors.white : SetuColors.mutedLight),
+            const SizedBox(height: 4),
+            Text(
+              _slotLabels[slot]!,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: selected ? Colors.white : SetuColors.inkLight,
+              ),
+            ),
+          ],
+        ),
       ),
-      side: BorderSide(
-          color: selected ? SetuColors.accentLight : SetuColors.borderLight),
     );
   }
 

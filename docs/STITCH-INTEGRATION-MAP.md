@@ -196,9 +196,37 @@ the same soft edge for nothing per frame.
 
 ---
 
+## Closed, and why
+
+- **Time-of-day grid for medications (screen 14).** Built. The
+  once/twice/thrice frequency picker is replaced by Morning / Afternoon /
+  Evening / Night tiles. Four independent slots express fifteen combinations
+  instead of four, and they match how a dose is described at home — "the white
+  one after breakfast and before bed" — rather than making somebody translate
+  that into "twice daily" and hope the app picks the same hours. The exact
+  reminder times are printed underneath so nobody is surprised by when the
+  phone goes off. No selection means "as needed", which is the honest reading
+  of a medicine with no fixed time.
+
+- **Additional languages (screen 13).** Not built, deliberately. The design
+  offers nine; SETU has real translations for three (`app_en.arb`,
+  `app_hi.arb`, `app_te.arb`), and `preferred_language` sets the app's actual
+  locale. Listing Bengali or Marathi would let a family choose it and then get
+  an English interface — a worse outcome than not offering it. This reopens the
+  day someone translates the strings, not before.
+
+- **Trust footer on the caregiver marketplace (screen 16).** Already built as
+  `_SetuStandard`.
+
+- **Photos on timeline events (screen 19).** Not built. `elder_timeline_events`
+  has no image column and nothing writes one; the photos in the design live in
+  SETU Memories, which is a separate feature with its own screen. Wiring
+  Memories images into timeline rows would show a photo from one day against an
+  event from another.
+
+---
+
 ## Known gaps
 
 - **96 analyzer infos** (mostly `prefer_const_constructors`). Not fixed by hand: Flutter cannot be run in this environment, and adding `const` to an expression that is not actually constant is a compile error. This needs one `dart fix --apply` run on a machine with the SDK — it is a single command and I would rather it be run than guessed at.
-- Time-of-day grid for medications (screen 14).
-- Additional languages (screen 13).
 - A cancel path for an SOS raised in a previous session. `_sosEventId` is held for the screen's lifetime only; after the app is closed, standing an alert down goes through the on-call operator. Reloading the elder's open SOS on screen entry would close this.
