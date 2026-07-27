@@ -158,12 +158,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return Column(
       key: const ValueKey('carousel'),
       children: [
+        // On the last slide Skip is gone, not blanked. This rendered
+        // `Text('')` inside a live TextButton — an invisible control in the
+        // top-right corner that still finished onboarding when somebody
+        // tapped what looked like empty space. The SizedBox holds the same
+        // height so the carousel doesn't jump on the final page.
         Align(
           alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: _finish,
-            child: Text(last ? '' : 'Skip'),
-          ),
+          child: last
+              ? const SizedBox(height: 48)
+              : TextButton(onPressed: _finish, child: const Text('Skip')),
         ),
         Expanded(
           child: PageView.builder(
