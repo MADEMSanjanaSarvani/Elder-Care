@@ -9,14 +9,18 @@ import '../data/otp_visit_repository.dart';
 /// One-handed use standing in a doorway (PRD Part 3 §17): a single OTP
 /// field and a single action button, nothing else competing for attention.
 /// Matches the Stitch "otp_verification" design: a shield/lock icon badge,
-/// a bold headline, and a big centred code field — restyled visually, same
-/// single-field `_otpController` feeding the same real startVisit/endVisit
-/// calls as before.
+/// a bold headline, and the six-box code field — restyled visually, same
+/// single `_otpController` feeding the same real startVisit/endVisit calls
+/// as before. Six boxes is exactly right here because every code SETU issues
+/// is six digits: `bookings-match` generates `100000 + random * 900000`,
+/// which cannot produce any other length.
 ///
 /// The Stitch mock's subtitle says "we've sent a code to your mobile" and
 /// shows a resend countdown — SETU's real flow has no SMS-to-caregiver step;
 /// the family member reads the code out at the door, and there's no resend
-/// function to back a countdown, so neither is reproduced.
+/// function to back a countdown, so neither is reproduced. The mock's
+/// countdown is also broken on its own terms: it formats minutes as `'0$m'`,
+/// so anything from ten minutes up renders as "010:00".
 class OtpVisitScreen extends ConsumerStatefulWidget {
   const OtpVisitScreen({required this.bookingId, super.key});
 
@@ -37,6 +41,15 @@ class _OtpVisitScreenState extends ConsumerState<OtpVisitScreen> {
 
   OtpVisitRepository get _repo =>
       OtpVisitRepository(ref.read(supabaseClientProvider));
+
+  @override
+  void dispose() {
+    // Neither of these was being released. A caregiver opens this screen once
+    // per visit, several times a day, for as long as the app stays resident.
+    _otpController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
 
   Future<void> _start() async {
     setState(() {
@@ -131,14 +144,12 @@ class _OtpVisitScreenState extends ConsumerState<OtpVisitScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(color: SetuColors.mutedLight, height: 1.4)),
           const SizedBox(height: SetuSpacing.xl),
-          TextField(
-            controller: _otpController,
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-                fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: 10),
-            decoration: const InputDecoration(labelText: 'Visit code'),
-          ),
+          // Six boxes, one per digit, as the design has it. The code is read
+          // aloud at the door — "four… seven… two…" — and a box per digit is
+          // how somebody keeps their place in a spoken number with a bag in
+          // the other hand. Still one controller behind the glass, so
+          // startVisit/endVisit are untouched.
+          SetuCodeField(controller: _otpController, enabled: !_busy),
           const SizedBox(height: SetuSpacing.lg),
           if (_error != null) ...[
             Container(

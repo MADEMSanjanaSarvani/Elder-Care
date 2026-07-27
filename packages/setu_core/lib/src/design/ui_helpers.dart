@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'design_tokens.dart';
 
@@ -339,5 +340,165 @@ void setuSyncBreathing(
     controller.value = restingValue;
   } else if (!controller.isAnimating) {
     controller.repeat(reverse: reverse);
+  }
+}
+
+/// A code entry laid out as separate boxes, one per digit.
+///
+/// Six of them, because every code SETU issues is six digits — the visit OTP is
+/// generated as `100000 + random * 900000`, which cannot produce anything else.
+///
+/// Built as one real text field drawn invisibly over decorative boxes, rather
+/// than as six fields that pass focus between themselves. Six fields is the
+/// obvious implementation and it breaks in all the ways that matter at a
+/// doorway: pasting a code fills only the first box, backspace at the start of
+/// a box does nothing, and platform autofill has no single target to fill.
+/// One field behind the boxes gets paste, backspace, selection and autofill for
+/// free, and the caller keeps the plain [TextEditingController] it already had.
+class SetuCodeField extends StatefulWidget {
+  const SetuCodeField({
+    required this.controller,
+    this.length = 6,
+    this.autofocus = false,
+    this.enabled = true,
+    this.onCompleted,
+    super.key,
+  });
+
+  final TextEditingController controller;
+  final int length;
+  final bool autofocus;
+  final bool enabled;
+
+  /// Fires once the last digit lands, so the caller can submit without making
+  /// someone reach for a button they have already earned.
+  final ValueChanged<String>? onCompleted;
+
+  @override
+  State<SetuCodeField> createState() => _SetuCodeFieldState();
+}
+
+class _SetuCodeFieldState extends State<SetuCodeField> {
+  final _node = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    // The active box is drawn from focus as well as from length, so both have
+    // to trigger a repaint.
+    _node.addListener(_onChanged);
+    widget.controller.addListener(_onChanged);
+  }
+
+  @override
+  void dispose() {
+    _node.removeListener(_onChanged);
+    widget.controller.removeListener(_onChanged);
+    // The node is ours; the controller belongs to the caller and is not
+    // disposed here.
+    _node.dispose();
+    super.dispose();
+  }
+
+  void _onChanged() {
+    if (mounted) setState(() {});
+    if (widget.controller.text.length == widget.length) {
+      widget.onCompleted?.call(widget.controller.text);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final code = widget.controller.text;
+
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        // The boxes are a picture of the field's value, so a screen reader
+        // should hear the field once rather than the field followed by six
+        // loose digits.
+        ExcludeSemantics(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              for (var i = 0; i < widget.length; i++)
+                _CodeBox(
+                  digit: i < code.length ? code[i] : null,
+                  // The caret sits on the next empty box, or on the last one
+                  // when the code is full — never nowhere.
+                  active: _node.hasFocus &&
+                      (i == code.length ||
+                          (code.length == widget.length &&
+                              i == widget.length - 1)),
+                ),
+            ],
+          ),
+        ),
+        // The real field, invisible and on top so it takes every tap.
+        Positioned.fill(
+          child: TextField(
+            controller: widget.controller,
+            focusNode: _node,
+            autofocus: widget.autofocus,
+            enabled: widget.enabled,
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.done,
+            enableInteractiveSelection: false,
+            showCursor: false,
+            cursorColor: Colors.transparent,
+            style: const TextStyle(color: Colors.transparent, fontSize: 1),
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(widget.length),
+            ],
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              disabledBorder: InputBorder.none,
+              filled: false,
+              counterText: '',
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CodeBox extends StatelessWidget {
+  const _CodeBox({required this.digit, required this.active});
+
+  final String? digit;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final filled = digit != null;
+    final border = active
+        ? SetuColors.accentLight
+        : filled
+            ? SetuColors.accentLight.withValues(alpha: 0.4)
+            : SetuColors.borderLight;
+
+    return Container(
+      width: 46,
+      height: 58,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: SetuColors.paperRaisedLight,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: border, width: 2),
+      ),
+      child: Text(
+        digit ?? '',
+        style: const TextStyle(
+          fontSize: 26,
+          fontWeight: FontWeight.w800,
+          color: SetuColors.inkLight,
+        ),
+      ),
+    );
   }
 }
