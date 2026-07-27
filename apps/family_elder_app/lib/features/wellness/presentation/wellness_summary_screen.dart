@@ -288,40 +288,51 @@ class _RingCard extends StatelessWidget {
       ),
       child: Column(
         children: [
+          // The arc and the number count up together over 1.5s, as in the
+          // design. TweenAnimationBuilder rather than an AnimationController
+          // because the score is live: when the elder marks a dose taken and
+          // this rebuilds, the tween starts from the value already on screen
+          // and moves to the new one, so the change is legible instead of
+          // snapping. A controller would replay from zero every rebuild.
           SizedBox(
             width: 168,
             height: 168,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                SizedBox(
-                  width: 168,
-                  height: 168,
-                  child: CircularProgressIndicator(
-                    value: score / 100,
-                    strokeWidth: 12,
-                    strokeCap: StrokeCap.round,
-                    backgroundColor:
-                        SetuColors.accentLight.withValues(alpha: 0.12),
-                    valueColor:
-                        const AlwaysStoppedAnimation(SetuColors.accentLight),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween<double>(end: score / 100),
+              duration: const Duration(milliseconds: 1500),
+              curve: Curves.easeInOut,
+              builder: (context, value, _) => Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 168,
+                    height: 168,
+                    child: CircularProgressIndicator(
+                      value: value,
+                      strokeWidth: 12,
+                      strokeCap: StrokeCap.round,
+                      backgroundColor:
+                          SetuColors.accentLight.withValues(alpha: 0.12),
+                      valueColor:
+                          const AlwaysStoppedAnimation(SetuColors.accentLight),
+                    ),
                   ),
-                ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('$score%',
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineLarge
-                            ?.copyWith(
-                                color: SetuColors.accentLight,
-                                fontWeight: FontWeight.w900)),
-                    const Text('Wellness',
-                        style: TextStyle(color: SetuColors.mutedLight)),
-                  ],
-                ),
-              ],
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('${(value * 100).round()}%',
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineLarge
+                              ?.copyWith(
+                                  color: SetuColors.accentLight,
+                                  fontWeight: FontWeight.w900)),
+                      const Text('Wellness',
+                          style: TextStyle(color: SetuColors.mutedLight)),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: SetuSpacing.md),
