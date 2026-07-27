@@ -32,6 +32,7 @@ class HealthProfileRepository {
     String? emergencyMedicalNotes,
     double? heightCm,
     double? weightKg,
+    String? preferredHospitalNote,
   }) async {
     await _client.from('elder_health_profile').upsert({
       'elder_id': elderId,
@@ -41,6 +42,7 @@ class HealthProfileRepository {
       'emergency_medical_notes': emergencyMedicalNotes,
       'height_cm': heightCm,
       'weight_kg': weightKg,
+      'preferred_hospital_note': preferredHospitalNote,
       'updated_by': updatedBy,
     }, onConflict: 'elder_id');
   }

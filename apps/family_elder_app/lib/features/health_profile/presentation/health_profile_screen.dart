@@ -21,8 +21,11 @@ import 'elder_avatar.dart';
 /// administrative half (e.g. a caregiver mid-visit) simply gets nothing
 /// back from that table; RLS decides, the UI just renders what came back.
 ///
-/// The Stitch mock also shows a "Preferred Hospital" card with a map — SETU
-/// has no such field, so it's omitted rather than invented. Emergency
+/// Preferred hospital is now a real field (migration 0037) — it was omitted
+/// while SETU had nowhere to put one, since inventing a hospital on an
+/// emergency screen is worse than leaving it blank. The map from the mock is
+/// still omitted: SETU geocodes clinics but has no map widget, and a picture
+/// of a map that cannot be navigated helps nobody in an emergency. Emergency
 /// contacts use the real family_links data (name, relationship, and a
 /// working call button when a phone number is on file) instead of the
 /// mock's fabricated names/numbers.
@@ -40,6 +43,7 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
   final _allergiesController = TextEditingController();
   final _conditionsController = TextEditingController();
   final _emergencyNotesController = TextEditingController();
+  final _hospitalController = TextEditingController();
   final _physicianNameController = TextEditingController();
   final _physicianContactController = TextEditingController();
   final _insuranceProviderController = TextEditingController();
@@ -86,6 +90,8 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
           ((health?['chronic_conditions'] as List?)?.cast<String>() ?? []).join(', ');
       _emergencyNotesController.text =
           health?['emergency_medical_notes'] as String? ?? '';
+      _hospitalController.text =
+          health?['preferred_hospital_note'] as String? ?? '';
       _adminVisible = admin != null;
       _physicianNameController.text = admin?['primary_physician_name'] as String? ?? '';
       _physicianContactController.text =
@@ -118,6 +124,9 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
             : _emergencyNotesController.text.trim(),
         heightCm: double.tryParse(_heightController.text.trim()),
         weightKg: double.tryParse(_weightController.text.trim()),
+        preferredHospitalNote: _hospitalController.text.trim().isEmpty
+            ? null
+            : _hospitalController.text.trim(),
       );
       await _repo.saveGender(widget.elderId, _gender);
       // The dashboard header and any screen showing age read the elder row,
@@ -332,6 +341,22 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
             controller: _emergencyNotesController,
             maxLines: 3,
             decoration: const InputDecoration(labelText: 'Emergency medical notes'),
+          ),
+          const SizedBox(height: SetuSpacing.md),
+          // "Which hospital" is the second question a paramedic asks, right
+          // after "what happened". It was left out of this screen originally
+          // because SETU had nowhere to put it and inventing a hospital would
+          // have been worse than omitting one — that stopped being true when
+          // the clinic directory landed.
+          TextField(
+            controller: _hospitalController,
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(
+              labelText: 'Preferred hospital',
+              hintText: 'e.g. KIMS Icon, Sheela Nagar',
+              helperText: 'Where they are registered, or would want to be taken',
+              prefixIcon: Icon(Icons.local_hospital_outlined),
+            ),
           ),
           const SizedBox(height: SetuSpacing.lg),
 
