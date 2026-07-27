@@ -9,6 +9,7 @@ import '../../../core/providers.dart';
 import '../../../core/region_picker.dart';
 import '../../health_profile/data/health_profile_repository.dart';
 import '../../health_profile/presentation/elder_avatar.dart';
+import '../../memories/presentation/memory_lane_card.dart';
 import '../../suggestions/presentation/suggestions_card.dart';
 import '../../trips/data/trips_repository.dart';
 import '../../wellness/presentation/weekly_activity_chart.dart';
@@ -770,6 +771,11 @@ class _ElderSectionState extends ConsumerState<_ElderSection> {
         _AiInsightCard(elderId: id),
         const SizedBox(height: SetuSpacing.md),
         _MemoriesCard(elderId: id, name: elder.displayName),
+        const SizedBox(height: SetuSpacing.md),
+        // Memory Lane. Renders nothing at all when there is no memory old
+        // enough to offer, or when this one has been put away — an empty
+        // prompt is worse than no prompt.
+        MemoryLaneCard(elderId: id),
         const SizedBox(height: SetuSpacing.md),
         SuggestionsCard(elderId: id),
         const SizedBox(height: SetuSpacing.md),
