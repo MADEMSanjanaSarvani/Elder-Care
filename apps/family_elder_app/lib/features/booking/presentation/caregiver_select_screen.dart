@@ -341,6 +341,10 @@ class _CaregiverSelectScreenState extends ConsumerState<CaregiverSelectScreen> {
                     'SETU match the best available.',
                     style: TextStyle(color: SetuColors.mutedLight),
                   ),
+                  if (caregivers.any((c) => c['demo'] == true)) ...[
+                    const SizedBox(height: SetuSpacing.md),
+                    const _SampleProfilesNotice(),
+                  ],
                   const SizedBox(height: SetuSpacing.md),
                   _AutoMatchCard(onTap: () => _book()),
                   const SizedBox(height: SetuSpacing.lg),
@@ -561,6 +565,7 @@ class _CaregiverCard extends StatelessWidget {
     final count = (caregiver['rating_count'] as num?)?.toInt() ?? 0;
     final distance = (caregiver['distance_km'] as num?)?.toDouble();
     final bio = caregiver['bio'] as String?;
+    final demo = caregiver['demo'] == true;
 
     return InkWell(
       borderRadius: BorderRadius.circular(18),
@@ -597,6 +602,22 @@ class _CaregiverCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (demo)
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: SetuColors.sosLight,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: const Text('SAMPLE PROFILE — NOT A REAL PERSON',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.4)),
+                        ),
                       Text(name,
                           style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 2),
@@ -1048,6 +1069,68 @@ class _TrustBadge extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+
+/// Says out loud that the caregivers on this screen are invented.
+///
+/// Six sample profiles were seeded so the booking flow could be exercised
+/// before any real caregiver had been recruited. Their names, their star
+/// ratings and their review counts are typed-in values, and "Clinically
+/// verified" on those cards is a hardcoded trust tier rather than the outcome
+/// of a background check.
+///
+/// Until now nothing said so. A family could read "Clinically verified · 5.0
+/// (41)", tap Request, and get a real booking against somebody who does not
+/// exist — and then wait for a person who was never going to arrive. On a
+/// platform whose whole proposition is that a stranger can be trusted inside
+/// your parent's home, that is the most damaging thing this app could do.
+///
+/// Red, not grey, and above the list rather than under it. The one reading it
+/// may be arranging care for a parent today.
+class _SampleProfilesNotice extends StatelessWidget {
+  const _SampleProfilesNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(SetuSpacing.md),
+      decoration: BoxDecoration(
+        color: SetuColors.sosLight.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: SetuColors.sosLight.withValues(alpha: 0.35)),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.warning_amber_rounded,
+              color: SetuColors.sosLight, size: 22),
+          SizedBox(width: SetuSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('These are sample profiles',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: SetuColors.sosLight)),
+                SizedBox(height: 2),
+                Text(
+                  'SETU has not recruited caregivers in this area yet. The '
+                  'people below are examples for testing — their names, '
+                  'ratings and verification are not real, and nobody will '
+                  'visit if you request them.',
+                  style: TextStyle(
+                      color: SetuColors.mutedLight, fontSize: 13, height: 1.4),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

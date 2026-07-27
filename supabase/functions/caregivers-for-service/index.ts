@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
     // Verified, active caregivers in the elder's region.
     const { data: caregivers, error: cgErr } = await admin
       .from("caregivers")
-      .select("id, user_id, caregiver_type, sub_role, trust_tier, created_at")
+      .select("id, user_id, caregiver_type, sub_role, trust_tier, created_at, demo")
       .eq("region_id", elder.region_id)
       .eq("active", true)
       .eq("bgv_status", "cleared");
@@ -137,6 +137,9 @@ Deno.serve(async (req) => {
         caregiver_type: c.caregiver_type,
         sub_role: c.sub_role,
         trust_tier: c.trust_tier,
+        // A seeded sample profile, not a real person. Carried all the way to
+        // the card so the app can say so plainly — see migration 0041.
+        demo: c.demo === true,
         bio: detail?.bio ?? null,
         photo_url: photoUrl,
         average_stars: rating ? Number(rating.average_stars) : 0,
