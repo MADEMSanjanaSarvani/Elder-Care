@@ -9,6 +9,8 @@ class HomeSummary {
     required this.checkedIn,
     this.mood,
     this.lastCheckIn,
+    this.nextDoseAt,
+    this.nextDoseName,
   });
 
   final int medsTaken;
@@ -16,6 +18,13 @@ class HomeSummary {
   final bool checkedIn;
   final String? mood;
   final DateTime? lastCheckIn;
+
+  /// The next dose still due today, if any. An elder glancing at their home
+  /// screen should be able to see when the next tablet is due without tapping
+  /// into anything — "tap to see today's schedule" makes them do work to learn
+  /// the one fact they opened the app for.
+  final DateTime? nextDoseAt;
+  final String? nextDoseName;
 
   /// "Safe" = no missed check-in escalation and no unresolved SOS. For the
   /// pilot we treat "checked in today, or nothing amiss" as safe.
@@ -33,14 +42,32 @@ class HomeSummaryRepository {
 
     final doses = await _client
         .from('medication_doses')
-        .select('status, elder_medications!inner(elder_id)')
+        .select('status, scheduled_at, elder_medications!inner(elder_id, name)')
         .eq('elder_medications.elder_id', elderId)
         .gte('scheduled_at', start.toIso8601String())
-        .lt('scheduled_at', end.toIso8601String());
+        .lt('scheduled_at', end.toIso8601String())
+        .order('scheduled_at');
 
     final total = doses.length;
     final taken =
         doses.where((d) => d['status'] == 'taken').length;
+
+    // The earliest dose still outstanding. Anything already taken or skipped
+    // is behind us; a missed one still in the past is deliberately not shown
+    // as "next", because calling an overdue dose "next" would hide the fact
+    // that it was missed.
+    DateTime? nextAt;
+    String? nextName;
+    for (final dose in doses) {
+      if (dose['status'] != 'pending') continue;
+      final at = DateTime.tryParse(dose['scheduled_at'] as String)?.toLocal();
+      if (at == null || at.isBefore(now)) continue;
+      if (nextAt == null || at.isBefore(nextAt)) {
+        nextAt = at;
+        final med = dose['elder_medications'];
+        nextName = med is Map ? med['name'] as String? : null;
+      }
+    }
 
     final checkin = await _client
         .from('daily_checkins')
@@ -59,6 +86,8 @@ class HomeSummaryRepository {
       lastCheckIn: checkin?['checked_in_at'] != null
           ? DateTime.tryParse(checkin!['checked_in_at'] as String)?.toLocal()
           : null,
+      nextDoseAt: nextAt,
+      nextDoseName: nextName,
     );
   }
 }

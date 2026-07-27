@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
+import '../../family_home/presentation/family_home_screen.dart'
+    show homeSummaryProvider;
 
 // Local colour tokens lifted from the Stitch "elder_home_screen" design
 // system (SETU's Material-3 palette) — not promoted to SetuColors because
@@ -81,7 +83,12 @@ class ElderHomeScreen extends ConsumerWidget {
                     iconColor: SetuColors.accentLight,
                     title: 'Take Medicines',
                     chipIcon: Icons.schedule,
-                    chipLabel: "Tap to see today's schedule",
+                    // The one fact an elder opens this card for. It used to
+                    // say "tap to see today's schedule", which made them do
+                    // work to learn it. The Stitch design showed a fixed
+                    // "Next dose: 10:30 AM"; this is the real next pending
+                    // dose, and it says so honestly when there isn't one.
+                    chipLabel: _nextDoseLabel(ref, elder.id),
                     t: t,
                   ),
                   const SizedBox(height: SetuSpacing.md),
@@ -343,4 +350,27 @@ class _SosButtonState extends State<_SosButton> with SingleTickerProviderStateMi
       ),
     );
   }
+}
+
+
+/// "Next dose: 10:30 AM", from the real schedule.
+///
+/// Falls back to plain statements rather than a guess. An overdue dose is
+/// never described as "next" — calling a missed tablet the next one would
+/// hide the fact that it was missed, which is the opposite of what an
+/// adherence feature is for.
+String _nextDoseLabel(WidgetRef ref, String elderId) {
+  final summary = ref.watch(homeSummaryProvider(elderId)).asData?.value;
+  if (summary == null) return "Today's schedule";
+  if (summary.medsTotal == 0) return 'No medicines today';
+  final at = summary.nextDoseAt;
+  if (at == null) {
+    return summary.medsTaken >= summary.medsTotal
+        ? 'All done for today'
+        : "Tap to see today's schedule";
+  }
+  final hour = at.hour % 12 == 0 ? 12 : at.hour % 12;
+  final minute = at.minute.toString().padLeft(2, '0');
+  final period = at.hour < 12 ? 'AM' : 'PM';
+  return 'Next dose: $hour:$minute $period';
 }
