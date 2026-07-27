@@ -4,7 +4,7 @@ description: >
   (PRD Part 3 §17/§18): family mode (dashboard, booking, consent
   management) and elder mode (large-text, voice-first, three-action home).
 publish_to: "none"
-version: 0.5.6+38
+version: 0.6.0+39
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -67,3 +67,16 @@ flutter:
     # Original SETU illustrations (tools/build_illustrations.py regenerates
     # them). The 2.0x/ variants are picked up automatically by Flutter.
     - assets/illustrations/
+
+  # Plus Jakarta Sans — the typeface every SETU design is drawn in. Bundled
+  # rather than fetched at runtime: an elder-care app has to look right on a
+  # bad connection, and google_fonts downloads on first paint. It is a variable
+  # font, so one 176 KB file covers every weight from 200 to 800 and the whole
+  # app gets real 600/700/800 weights instead of Roboto faux-bolding.
+  #
+  # SIL Open Font License 1.1 — assets/fonts/OFL.txt ships alongside it, which
+  # is what the licence requires.
+  fonts:
+    - family: Plus Jakarta Sans
+      fonts:
+        - asset: assets/fonts/PlusJakartaSans.ttf

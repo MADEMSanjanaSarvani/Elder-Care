@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 /// Codifies the palette and type scale from
 /// docs/prd/03-prd-part3-execution.html Section 17.
 ///
-/// No custom font files are bundled for the MVP — Section 20's offline-
-/// resilience requirement argues against a network font fetch, and a
-/// bundled custom font is a Phase 2 polish item, not an MVP blocker.
-/// Platform default fonts (San Francisco / Roboto) carry the type scale
-/// below instead.
+/// Plus Jakarta Sans is now bundled (see the app's pubspec) rather than
+/// fetched at runtime. Section 20's offline-resilience requirement rules out
+/// a network font fetch, and it was the reason this shipped on Roboto for a
+/// long time — but a bundled variable font costs 176 KB once and no network
+/// at all, which satisfies the requirement instead of dodging it. The
+/// difference is visible: the designs lean on 600/700/800 weights that Roboto
+/// can only fake.
 class SetuColors {
   const SetuColors._();
 
@@ -115,20 +117,43 @@ class SetuTheme {
       outlineVariant: border,
     );
 
+    // Fully rounded. Every SETU design draws its primary action as a pill,
+    // and it is not only a style: a pill reads as a single tappable object at
+    // arm's length, where a rounded rectangle at the bottom of a screen can
+    // read as a panel. This app is used by people holding a phone further
+    // away than the designer was sitting from the mock.
     final buttonShape =
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(16));
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(999));
 
-    OutlineInputBorder inputBorder(Color c, [double w = 1.4]) =>
+    // 2px, because a 1.4px hairline effectively disappears on the cheap
+    // 720p panels most of our users have.
+    OutlineInputBorder inputBorder(Color c, [double w = 2]) =>
         OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: c, width: w),
         );
+
+    // The warm lift under every card and bar in the designs. Not a grey
+    // drop-shadow: it is the primary hue at very low alpha, which is what
+    // makes the surfaces feel lit rather than cut out.
+    final warmShadow = [
+      BoxShadow(
+        color: (isDark ? Colors.black : SetuColors.peachLight)
+            .withValues(alpha: isDark ? 0.35 : 0.10),
+        blurRadius: 20,
+        offset: const Offset(0, 4),
+      ),
+    ];
 
     return ThemeData(
       brightness: brightness,
       scaffoldBackgroundColor: paper,
       colorScheme: colorScheme,
       useMaterial3: true,
+      // Bundled with the app (see pubspec). Every SETU design is drawn in it,
+      // and its 600/700/800 weights are what give the headings their
+      // character — Roboto faux-bolds them and the screens go flat.
+      fontFamily: 'Plus Jakarta Sans',
       textTheme: _textTheme(ink),
       appBarTheme: AppBarTheme(
           backgroundColor: paper,
@@ -151,6 +176,20 @@ class SetuTheme {
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(56),
           shape: buttonShape,
+          elevation: 4,
+          shadowColor: accent.withValues(alpha: 0.35),
+          textStyle:
+              const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          minimumSize: const Size.fromHeight(56),
+          shape: buttonShape,
+          elevation: 4,
+          shadowColor: accent.withValues(alpha: 0.35),
+          backgroundColor: accent,
+          foregroundColor: Colors.white,
           textStyle:
               const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
@@ -159,7 +198,7 @@ class SetuTheme {
         style: OutlinedButton.styleFrom(
           minimumSize: const Size.fromHeight(56),
           shape: buttonShape,
-          side: BorderSide(color: border, width: 1.4),
+          side: BorderSide(color: border, width: 2),
           foregroundColor: accent,
           textStyle:
               const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
@@ -170,10 +209,44 @@ class SetuTheme {
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: border),
+          // 24 rather than 20 — the designs are noticeably softer than what
+          // the app was rendering, and on a bento grid the difference between
+          // 20 and 24 is the difference between tiles and cards.
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: border.withValues(alpha: 0.5)),
         ),
       ),
+      // The bottom bar in every design: white, lifted by a warm shadow that
+      // falls upward, with the active destination in a filled pill.
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: surface,
+        elevation: 3,
+        shadowColor: SetuColors.peachLight.withValues(alpha: 0.10),
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: (isDark ? SetuColors.lavenderDark : SetuColors.lavenderLight)
+            .withValues(alpha: 0.20),
+        indicatorShape: const StadiumBorder(),
+        labelTextStyle: WidgetStatePropertyAll(TextStyle(
+            fontSize: 12.5, fontWeight: FontWeight.w600, color: ink)),
+      ),
+      chipTheme: ChipThemeData(
+        shape: const StadiumBorder(),
+        side: BorderSide(color: border.withValues(alpha: 0.5)),
+        backgroundColor: surface,
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: surface,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24)),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: paper,
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      ),
+      // Exposed so screens can use the same lift on the plain Containers they
+      // build by hand, instead of each inventing its own drop shadow.
+      extensions: [SetuSurfaces(cardShadow: warmShadow)],
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(
           shape: WidgetStatePropertyAll(RoundedRectangleBorder(
@@ -184,14 +257,27 @@ class SetuTheme {
     );
   }
 
+  /// Type scale from the designs: bigger and heavier than Material's
+  /// defaults throughout. Screen titles are 40, not 32 — this is an app read
+  /// by people with presbyopia, and the mocks are right to shout.
   static TextTheme _textTheme(Color ink) {
     return TextTheme(
-      headlineLarge:
-          TextStyle(fontSize: 32, fontWeight: FontWeight.w700, color: ink),
+      displaySmall: TextStyle(
+          fontSize: 40,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.8,
+          color: ink),
+      headlineLarge: TextStyle(
+          fontSize: 34,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.5,
+          color: ink),
       headlineMedium:
-          TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: ink),
+          TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: ink),
+      headlineSmall:
+          TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: ink),
       titleLarge:
-          TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: ink),
+          TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: ink),
       bodyLarge: TextStyle(
           fontSize: 18, color: ink), // large, legible base (Warmth system)
       bodyMedium: TextStyle(fontSize: 16, color: ink),
@@ -209,6 +295,37 @@ extension ElderModeTypography on TextTheme {
       bodyLarge: bodyLarge?.copyWith(fontSize: 20),
       bodyMedium: bodyMedium?.copyWith(fontSize: 18),
       headlineMedium: headlineMedium?.copyWith(fontSize: 28),
+    );
+  }
+}
+
+/// The warm shadow the designs put under every raised surface, exposed on the
+/// theme so screens stop inventing their own.
+///
+/// Before this, cards built as plain Containers each hard-coded a drop shadow
+/// — some grey, some warm, some none — so nominally identical cards on two
+/// screens sat at visibly different heights. Reading it from the theme means
+/// light and dark get the right treatment without any call site knowing which
+/// one is active.
+@immutable
+class SetuSurfaces extends ThemeExtension<SetuSurfaces> {
+  const SetuSurfaces({required this.cardShadow});
+
+  final List<BoxShadow> cardShadow;
+
+  static SetuSurfaces of(BuildContext context) =>
+      Theme.of(context).extension<SetuSurfaces>() ??
+      const SetuSurfaces(cardShadow: []);
+
+  @override
+  SetuSurfaces copyWith({List<BoxShadow>? cardShadow}) =>
+      SetuSurfaces(cardShadow: cardShadow ?? this.cardShadow);
+
+  @override
+  SetuSurfaces lerp(ThemeExtension<SetuSurfaces>? other, double t) {
+    if (other is! SetuSurfaces) return this;
+    return SetuSurfaces(
+      cardShadow: BoxShadow.lerpList(cardShadow, other.cardShadow, t) ?? cardShadow,
     );
   }
 }
