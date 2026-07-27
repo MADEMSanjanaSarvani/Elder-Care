@@ -56,14 +56,12 @@ class StoriesRepository {
         .select()
         .eq('active', true)
         .order('sort_order');
-    final stories = (rows as List)
-        .map((r) => Story.fromMap(r as Map<String, dynamic>))
-        .toList();
-    final languages = (rows)
-        .map((r) => (r as Map<String, dynamic>)['language'] as String? ?? 'en')
-        .toList();
+    // Pair each story with its language in one pass, and with no cast at all:
+    // select() already returns List<Map<String, dynamic>>. The previous version
+    // walked the rows twice and cast on each pass, and the redundant second
+    // cast was a *warning*, which flutter analyze treats as fatal.
     final indexed = [
-      for (var i = 0; i < stories.length; i++) (stories[i], languages[i])
+      for (final row in rows) (Story.fromMap(row), row['language'] as String? ?? 'en'),
     ]..sort((a, b) {
         final aFirst = a.$2 == preferredLanguage ? 0 : 1;
         final bFirst = b.$2 == preferredLanguage ? 0 : 1;
