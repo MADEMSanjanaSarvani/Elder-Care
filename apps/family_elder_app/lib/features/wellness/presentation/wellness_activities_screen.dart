@@ -6,6 +6,7 @@ import '../../family_home/data/home_summary_repository.dart' show HomeSummary;
 import '../../family_home/presentation/family_home_screen.dart' show homeSummaryProvider;
 import 'memory_game_screen.dart';
 import 'breathing_screen.dart';
+import 'hydration_card.dart';
 import 'stories_screen.dart';
 
 /// Elder Wellness Activities — a warm daily engagement hub matching the
@@ -40,6 +41,11 @@ class WellnessActivitiesScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(SetuSpacing.lg),
         children: [
           _healthScore(context, t, summary),
+          const SizedBox(height: SetuSpacing.lg),
+          // The one metric tile from the wellness design that needed no
+          // wearable. Sleep, steps and resting heart rate from that same grid
+          // are not here and will not be until there is hardware behind them.
+          HydrationCard(elderId: elderId),
           const SizedBox(height: SetuSpacing.lg),
           _challengeCard(context, t),
           const SizedBox(height: SetuSpacing.md),
