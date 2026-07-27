@@ -785,7 +785,7 @@ class _CaregiverDetailSheet extends StatelessWidget {
             const SizedBox(height: SetuSpacing.lg),
             _SelfDeclared(caregiver: caregiver),
             if (bio != null && bio.isNotEmpty) ...[
-              Text('BIOGRAPHY',
+              const Text('BIOGRAPHY',
                   style: TextStyle(
                       color: SetuColors.mutedLight,
                       fontSize: 11,
@@ -803,12 +803,12 @@ class _CaregiverDetailSheet extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: SetuColors.accentLight.withValues(alpha: 0.2)),
               ),
-              child: Row(
+              child: const Row(
                 children: [
-                  const Icon(Icons.shield_outlined,
+                  Icon(Icons.shield_outlined,
                       color: SetuColors.accentLight, size: 20),
-                  const SizedBox(width: SetuSpacing.sm),
-                  const Expanded(
+                  SizedBox(width: SetuSpacing.sm),
+                  Expanded(
                     child: Text(
                         'Every SETU caregiver is background-checked, skill-tested '
                         'and interviewed before joining.',

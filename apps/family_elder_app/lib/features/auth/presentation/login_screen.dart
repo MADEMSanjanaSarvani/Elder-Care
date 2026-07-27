@@ -328,13 +328,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: SetuColors.borderLight),
                     ),
-                    child: Row(
+                    child: const Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.shield_outlined,
+                        Icon(Icons.shield_outlined,
                             size: 18, color: SetuColors.mutedLight),
-                        const SizedBox(width: SetuSpacing.sm),
-                        const Expanded(
+                        SizedBox(width: SetuSpacing.sm),
+                        Expanded(
                           child: Text(
                               'Your security matters. If you don\'t receive an '
                               'email within a few minutes, check your spam folder.',
@@ -486,7 +486,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         if (_notice != null) _banner(_notice!),
                         ..._buildFields(),
                         const SizedBox(height: SetuSpacing.md),
-                        Row(children: const [
+                        const Row(children: [
                           Expanded(child: Divider()),
                           Padding(
                             padding: EdgeInsets.symmetric(
@@ -539,7 +539,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: TextButton(
                       onPressed: () => Navigator.of(context).push(
                           MaterialPageRoute<void>(
-                              builder: (_) => LegalScreen(
+                              builder: (_) => const LegalScreen(
                                   title: 'Privacy Policy',
                                   body: kPrivacyPolicy,
                                   updated: kPrivacyPolicyUpdated))),

@@ -141,7 +141,7 @@ class _PeaceOfMindHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: SetuColors.paperRaisedLight,
         borderRadius: BorderRadius.circular(20),
-        border: Border(
+        border: const Border(
           left: BorderSide(color: SetuColors.accentLight, width: 4),
           top: BorderSide(color: SetuColors.borderLight),
           right: BorderSide(color: SetuColors.borderLight),
@@ -151,10 +151,10 @@ class _PeaceOfMindHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.auto_awesome, color: SetuColors.accentLight, size: 20),
-              const SizedBox(width: SetuSpacing.sm),
+              Icon(Icons.auto_awesome, color: SetuColors.accentLight, size: 20),
+              SizedBox(width: SetuSpacing.sm),
               Text('DAILY PEACE OF MIND',
                   style: TextStyle(
                       fontSize: 12,
@@ -197,7 +197,7 @@ class _AiRecommendationCard extends StatelessWidget {
             child: const Icon(Icons.video_call, color: Colors.white, size: 22),
           ),
           const SizedBox(width: SetuSpacing.md),
-          Expanded(
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -205,8 +205,8 @@ class _AiRecommendationCard extends StatelessWidget {
                     style: TextStyle(
                         fontWeight: FontWeight.w700,
                         color: SetuColors.lavenderLight)),
-                const SizedBox(height: 2),
-                const Text(
+                SizedBox(height: 2),
+                Text(
                   'A short video call this evening would brighten their day.',
                   style: TextStyle(height: 1.3),
                 ),

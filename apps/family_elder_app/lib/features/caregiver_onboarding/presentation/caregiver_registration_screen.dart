@@ -106,7 +106,7 @@ class _CaregiverRegistrationScreenState
         content: Text(result.problem!),
         duration: const Duration(seconds: 6),
         action: result.needsSettings
-            ? SnackBarAction(
+            ? const SnackBarAction(
                 label: 'Settings',
                 onPressed: Geolocator.openAppSettings,
               )

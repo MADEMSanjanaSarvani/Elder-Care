@@ -64,6 +64,15 @@ class SettingsScreen extends ConsumerWidget {
               icon: Icons.verified_user_outlined,
               iconBg: SetuColors.accentLight,
               title: 'Account & Security',
+              footer: OutlinedButton.icon(
+                onPressed: () =>
+                    AuthRepository(ref.read(supabaseClientProvider)).signOut(),
+                icon: const Icon(Icons.logout, color: SetuColors.sosLight),
+                label: const Text('Sign out',
+                    style: TextStyle(color: SetuColors.sosLight)),
+                style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: SetuColors.sosLight)),
+              ),
               children: [
                 _InfoRow(
                   icon: Icons.person_outline,
@@ -83,15 +92,6 @@ class SettingsScreen extends ConsumerWidget {
                       current: profile?['role'] as String?),
                 ),
               ],
-              footer: OutlinedButton.icon(
-                onPressed: () =>
-                    AuthRepository(ref.read(supabaseClientProvider)).signOut(),
-                icon: const Icon(Icons.logout, color: SetuColors.sosLight),
-                label: const Text('Sign out',
-                    style: TextStyle(color: SetuColors.sosLight)),
-                style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: SetuColors.sosLight)),
-              ),
             ),
             const SizedBox(height: SetuSpacing.md),
 
@@ -208,6 +208,20 @@ class SettingsScreen extends ConsumerWidget {
               icon: Icons.contact_support_outlined,
               iconBg: SetuColors.lavenderLight,
               title: 'Help & Support',
+              footer: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: SetuSpacing.md, vertical: SetuSpacing.sm),
+                decoration: BoxDecoration(
+                  color: SetuColors.paperLight,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: SetuColors.borderLight),
+                ),
+                child: const Center(
+                  child: Text('SETU · $kAppBuildLabel',
+                      style: TextStyle(
+                          color: SetuColors.mutedLight, fontSize: 12.5)),
+                ),
+              ),
               children: [
                 _NavRow(
                   icon: Icons.shield_outlined,
@@ -241,20 +255,6 @@ class SettingsScreen extends ConsumerWidget {
                   onTap: () => _deleteAccount(context, ref),
                 ),
               ],
-              footer: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: SetuSpacing.md, vertical: SetuSpacing.sm),
-                decoration: BoxDecoration(
-                  color: SetuColors.paperLight,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: SetuColors.borderLight),
-                ),
-                child: Center(
-                  child: Text('SETU · $kAppBuildLabel',
-                      style: const TextStyle(
-                          color: SetuColors.mutedLight, fontSize: 12.5)),
-                ),
-              ),
             ),
             const SizedBox(height: SetuSpacing.lg),
           ],
@@ -624,7 +624,7 @@ class _SettingsCard extends StatelessWidget {
           ...children,
           if (footer != null) ...[
             const SizedBox(height: SetuSpacing.sm),
-            Divider(color: SetuColors.borderLight),
+            const Divider(color: SetuColors.borderLight),
             const SizedBox(height: SetuSpacing.sm),
             footer!,
           ],

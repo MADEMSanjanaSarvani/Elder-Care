@@ -170,9 +170,9 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
                     ?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: SetuSpacing.xs),
-              Text(
+              const Text(
                 'Take as long as you like — there is no timer.',
-                style: const TextStyle(
+                style: TextStyle(
                     color: SetuColors.mutedLight, fontSize: 15),
               ),
               const SizedBox(height: SetuSpacing.md),

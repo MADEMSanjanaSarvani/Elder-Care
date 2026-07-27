@@ -298,7 +298,7 @@ class _FamilyMemberCard extends ConsumerWidget {
           ),
           if (!pending) ...[
             const SizedBox(height: SetuSpacing.sm),
-            Divider(height: 1, color: SetuColors.borderLight),
+            const Divider(height: 1, color: SetuColors.borderLight),
             const SizedBox(height: SetuSpacing.sm),
             SizedBox(
               width: double.infinity,

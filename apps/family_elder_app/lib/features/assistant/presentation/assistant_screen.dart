@@ -332,12 +332,12 @@ class _MemoryLaneCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.psychology_outlined,
+              Icon(Icons.psychology_outlined,
                   size: 16, color: SetuColors.lavenderLight),
-              const SizedBox(width: 6),
-              const Text('MINDFULNESS',
+              SizedBox(width: 6),
+              Text('MINDFULNESS',
                   style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,

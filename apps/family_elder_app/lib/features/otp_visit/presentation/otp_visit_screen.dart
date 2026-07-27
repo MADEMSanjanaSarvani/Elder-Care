@@ -203,11 +203,11 @@ class _OtpVisitScreenState extends ConsumerState<OtpVisitScreen> {
           OutlinedButton(
               onPressed: _busy ? null : _end, child: const Text('End visit')),
           const SizedBox(height: SetuSpacing.lg),
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.lock_outline, size: 14, color: SetuColors.mutedLight),
-              const SizedBox(width: 6),
+              Icon(Icons.lock_outline, size: 14, color: SetuColors.mutedLight),
+              SizedBox(width: 6),
               Text('SECURED BY SETU AUTHENTICATION',
                   style: TextStyle(
                       color: SetuColors.mutedLight,

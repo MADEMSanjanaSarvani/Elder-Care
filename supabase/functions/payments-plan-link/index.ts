@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         amount: amountPaise,
         currency: plan.currency ?? "INR",
-        description: `CareHive — ${plan.name} (monthly)`,
+        description: `SETU — ${plan.name} (monthly)`,
         notes: { purpose: "care_plan", elder_id, care_plan_id, user_id: user.id },
         reminder_enable: false,
       }),

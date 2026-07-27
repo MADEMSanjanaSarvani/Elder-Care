@@ -157,11 +157,11 @@ class _SecuredBySetuBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return const Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.lock_outline, size: 14, color: SetuColors.mutedLight),
-        const SizedBox(width: 6),
+        Icon(Icons.lock_outline, size: 14, color: SetuColors.mutedLight),
+        SizedBox(width: 6),
         Text('SECURED BY SETU',
             style: TextStyle(
                 color: SetuColors.mutedLight,
@@ -234,7 +234,7 @@ class InvoiceScreen extends StatelessWidget {
                       color: SetuColors.accentLight,
                       fontWeight: FontWeight.w900)),
               const Spacer(),
-              Text('TAX INVOICE',
+              const Text('TAX INVOICE',
                   style: TextStyle(
                       color: SetuColors.mutedLight,
                       fontWeight: FontWeight.w700,
@@ -258,7 +258,7 @@ class InvoiceScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: SetuSpacing.lg),
-          Text('SUMMARY',
+          const Text('SUMMARY',
               style: TextStyle(
                   color: SetuColors.mutedLight,
                   fontSize: 11,
@@ -280,7 +280,7 @@ class InvoiceScreen extends StatelessWidget {
                 const SizedBox(height: SetuSpacing.md),
                 _row('Taxable value', _r(base)),
                 _row('GST (18%)', _r(gst)),
-                Divider(height: SetuSpacing.lg, color: SetuColors.borderLight),
+                const Divider(height: SetuSpacing.lg, color: SetuColors.borderLight),
                 Row(
                   children: [
                     const Text('Total paid',

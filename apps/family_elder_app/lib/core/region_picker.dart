@@ -147,13 +147,13 @@ class RegionPicker extends ConsumerWidget {
             ),
             if (!isLive) ...[
               const SizedBox(height: SetuSpacing.sm),
-              Row(
+              const Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.info_outline,
+                  Icon(Icons.info_outline,
                       size: 16, color: SetuColors.peachLight),
-                  const SizedBox(width: 6),
-                  const Expanded(
+                  SizedBox(width: 6),
+                  Expanded(
                     child: Text(
                         "SETU doesn't have caregivers here yet. You can still "
                         'add them and use medicines, reminders and the timeline '

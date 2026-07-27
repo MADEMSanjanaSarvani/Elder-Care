@@ -169,7 +169,7 @@ class _ChooseRoleScreenState extends ConsumerState<ChooseRoleScreen> {
                     onTap: () => _choose('caregiver'),
                   ),
                   const SizedBox(height: SetuSpacing.xl),
-                  Text('MISSION STATEMENT',
+                  const Text('MISSION STATEMENT',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           color: SetuColors.mutedLight,

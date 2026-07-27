@@ -203,7 +203,7 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                       color: SetuColors.sosLight, size: 22),
                 ),
                 const SizedBox(width: SetuSpacing.md),
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -211,8 +211,8 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
                           style: TextStyle(
                               fontWeight: FontWeight.w800,
                               color: SetuColors.sosLight)),
-                      const SizedBox(height: 2),
-                      const Text(
+                      SizedBox(height: 2),
+                      Text(
                           'This profile is automatically shared during SOS activation.',
                           style: TextStyle(
                               color: SetuColors.mutedLight, fontSize: 13)),
@@ -454,12 +454,12 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
             child: Text(_saving ? 'Saving…' : 'Save'),
           ),
           const SizedBox(height: SetuSpacing.lg),
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.verified_user_outlined,
+              Icon(Icons.verified_user_outlined,
                   size: 16, color: SetuColors.verifiedLight),
-              const SizedBox(width: 6),
+              SizedBox(width: 6),
               Text('SECURED MEDICAL DATA',
                   style: TextStyle(
                       color: SetuColors.mutedLight,

@@ -382,12 +382,12 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w800)),
                     const SizedBox(height: SetuSpacing.md),
-                    _ActiveAction(
+                    const _ActiveAction(
                         icon: Icons.family_restroom_outlined,
                         tint: SetuColors.lavenderLight,
                         title: 'Family notified',
                         subtitle: 'Your care circle has been alerted'),
-                    _ActiveAction(
+                    const _ActiveAction(
                         icon: Icons.support_agent_outlined,
                         tint: SetuColors.peachLight,
                         title: 'On-call team alerted',
@@ -421,11 +421,11 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                   color: SetuColors.accentLight,
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Column(
+                child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      children: const [
+                      children: [
                         Icon(Icons.headset_mic_outlined,
                             color: Colors.white, size: 18),
                         SizedBox(width: 8),
@@ -437,8 +437,8 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                                 letterSpacing: 0.6)),
                       ],
                     ),
-                    const SizedBox(height: SetuSpacing.sm),
-                    const Text(
+                    SizedBox(height: SetuSpacing.sm),
+                    Text(
                       'We\'re keeping your line open. If you can speak, tell us '
                       'what happened. Otherwise, just keep breathing deeply.',
                       style: TextStyle(color: Colors.white, height: 1.4),

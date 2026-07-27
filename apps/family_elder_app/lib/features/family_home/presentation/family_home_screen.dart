@@ -1072,14 +1072,14 @@ class _BentoGrid extends ConsumerWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Column(
+                    const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SetuIconChip(
+                        SetuIconChip(
                             icon: Icons.medication_outlined,
                             color: SetuColors.peachLight),
-                        const SizedBox(height: SetuSpacing.sm),
-                        const Text('DAILY TASK',
+                        SizedBox(height: SetuSpacing.sm),
+                        Text('DAILY TASK',
                             style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
@@ -1231,9 +1231,9 @@ class _MemoriesCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            Row(
+            const Row(
               mainAxisSize: MainAxisSize.min,
-              children: const [
+              children: [
                 Icon(Icons.auto_awesome, size: 16, color: Colors.white),
                 SizedBox(width: 6),
                 Text('SETU MEMORIES',
@@ -1306,7 +1306,7 @@ class _AiInsightCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(children: const [
+            const Row(children: [
               Icon(Icons.auto_awesome, size: 18, color: SetuColors.lavenderLight),
               SizedBox(width: 8),
               Text('AI INSIGHT',
@@ -1384,12 +1384,12 @@ class _HealthScoreCard extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                const Row(
                   children: [
-                    const Text('Health Score',
+                    Text('Health Score',
                         style: TextStyle(fontWeight: FontWeight.w700)),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.chevron_right,
+                    SizedBox(width: 4),
+                    Icon(Icons.chevron_right,
                         size: 18, color: SetuColors.mutedLight),
                   ],
                 ),
@@ -1463,7 +1463,7 @@ class _LiveTripBanner extends ConsumerWidget {
               children: [
                 Stack(
                   children: [
-                    SetuIconChip(
+                    const SetuIconChip(
                       icon: Icons.person,
                       color: SetuColors.lavenderLight,
                       size: 26,

@@ -191,7 +191,7 @@ class _InsightCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: SetuColors.paperRaisedLight,
         borderRadius: BorderRadius.circular(20),
-        border: Border(
+        border: const Border(
           left: BorderSide(color: SetuColors.accentLight, width: 4),
           top: BorderSide(color: SetuColors.borderLight),
           right: BorderSide(color: SetuColors.borderLight),
@@ -201,10 +201,10 @@ class _InsightCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.smart_toy, color: SetuColors.accentLight, size: 20),
-              const SizedBox(width: SetuSpacing.sm),
+              Icon(Icons.smart_toy, color: SetuColors.accentLight, size: 20),
+              SizedBox(width: SetuSpacing.sm),
               Text('DAILY INSIGHTS',
                   style: TextStyle(
                       fontSize: 12,

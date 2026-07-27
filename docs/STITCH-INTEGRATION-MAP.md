@@ -226,7 +226,20 @@ the same soft edge for nothing per frame.
 
 ---
 
+## Verified
+
+A Flutter SDK turned out to be available at `/opt/flutter` (3.44.4), so the
+whole tree is now checked rather than reasoned about:
+
+- `flutter analyze --no-fatal-infos` — **No issues found**, on both
+  `family_elder_app` and `setu_core`. The 90 analyzer infos that had been
+  carried as a known gap are gone: `dart fix --apply` made 37 fixes across 18
+  files, and analyze was re-run afterwards to confirm nothing broke.
+- `flutter test` — 33 passing in `setu_core`, 7 in `family_elder_app`.
+- `deno check` on every touched Edge Function.
+
+---
+
 ## Known gaps
 
-- **96 analyzer infos** (mostly `prefer_const_constructors`). Not fixed by hand: Flutter cannot be run in this environment, and adding `const` to an expression that is not actually constant is a compile error. This needs one `dart fix --apply` run on a machine with the SDK — it is a single command and I would rather it be run than guessed at.
 - A cancel path for an SOS raised in a previous session. `_sosEventId` is held for the screen's lifetime only; after the app is closed, standing an alert down goes through the on-call operator. Reloading the elder's open SOS on screen entry would close this.

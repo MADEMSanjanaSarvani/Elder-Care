@@ -290,10 +290,10 @@ class _DailyAtmosphereCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: SetuColors.lavenderLight.withValues(alpha: 0.3)),
       ),
-      child: Row(
+      child: const Row(
         children: [
-          const Icon(Icons.auto_awesome, size: 18, color: SetuColors.lavenderLight),
-          const SizedBox(width: SetuSpacing.sm),
+          Icon(Icons.auto_awesome, size: 18, color: SetuColors.lavenderLight),
+          SizedBox(width: SetuSpacing.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -302,7 +302,7 @@ class _DailyAtmosphereCard extends StatelessWidget {
                     style: TextStyle(
                         fontWeight: FontWeight.w800,
                         color: SetuColors.lavenderLight)),
-                const Text('The care network is currently stable and calm.',
+                Text('The care network is currently stable and calm.',
                     style: TextStyle(color: SetuColors.mutedLight, fontSize: 13)),
               ],
             ),

@@ -31,16 +31,16 @@ class OfflineBanner extends ConsumerWidget {
       duration: const Duration(milliseconds: 250),
       child: online
           ? const SizedBox(width: double.infinity)
-          : Material(
+          : const Material(
               color: SetuColors.sosLight,
               child: SafeArea(
                 bottom: false,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
+                  padding: EdgeInsets.symmetric(
                       horizontal: SetuSpacing.md, vertical: 8),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
+                    children: [
                       Icon(Icons.wifi_off_rounded,
                           color: Colors.white, size: 18),
                       SizedBox(width: 8),
