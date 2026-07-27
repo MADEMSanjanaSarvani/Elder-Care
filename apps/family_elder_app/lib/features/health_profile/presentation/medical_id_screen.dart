@@ -334,8 +334,8 @@ class _BloodGroupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final value = bloodType?.trim();
-    final known = value != null && value.isNotEmpty;
+    final value = bloodType?.trim() ?? '';
+    final known = value.isNotEmpty;
 
     return Container(
       padding: const EdgeInsets.all(SetuSpacing.lg),
