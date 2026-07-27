@@ -522,6 +522,19 @@ class _AllergyCard extends StatelessWidget {
         color: colour.withValues(alpha: none ? 0.06 : 0.10),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: colour.withValues(alpha: 0.25)),
+        // A soft red bloom, only when there is something to warn about. It is
+        // the one card on the screen allowed to draw the eye before the reader
+        // has decided where to look; giving the same treatment to "none
+        // recorded" would spend that on nothing.
+        boxShadow: none
+            ? null
+            : [
+                BoxShadow(
+                  color: colour.withValues(alpha: 0.15),
+                  blurRadius: 20,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
