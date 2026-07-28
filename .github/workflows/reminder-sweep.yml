@@ -1,57 +1,82 @@
-# Runs the reminder sweep on a schedule.
+# Runs the medicine pipeline on a schedule.
 #
-# Nothing did. `reminders-dispatch-sweep` existed, was deployed, and was never
-# called — so a dose reminder queued for 8am simply sat in the table. Together
-# with the missing FCM send, that meant CareHive's central promise (tell me when
-# to take my tablet) had no working path at all.
+# Nothing did. Two functions, both deployed, both never called:
 #
-# GitHub Actions cron rather than pg_cron: it costs nothing on this repo, the
-# runs are visible in a tab you already read, and a failure is an email rather
-# than a silent no-op inside Postgres.
+#   medications-generate-doses  turns each active medicine's schedule into
+#                               dated dose rows, and enqueues a reminder for
+#                               each new one
+#   reminders-dispatch-sweep    finds reminders that have come due, writes the
+#                               notification row and sends the push
 #
-# Every 15 minutes. Dose times land on quarter hours in practice, and a
-# reminder that arrives up to a quarter hour late is still useful — whereas
-# minute-by-minute polling would burn the free tier for no benefit.
+# Without the first there are no doses to remind about; without the second the
+# reminders sit in the table forever. Together with the missing FCM send, that
+# was three broken links in a four-link chain, each one invisible because the
+# link before it never produced anything.
 #
-# GitHub's scheduler is best-effort and runs late under load. That is fine
-# here and would not be for anything time-critical: the sweep is idempotent
-# (it flips `status` to 'sent'), so a delayed or doubled run cannot double-send.
-name: Reminder sweep
+# Order matters: generate first, dispatch second, so a medicine added a moment
+# ago can still be reminded about in this same run.
+#
+# Neither function uses Supabase API-key auth — both are verify_jwt = false and
+# check their own `x-…-secret` header instead. That is why no service_role key
+# appears here: a key that bypasses every RLS policy in the database has no
+# business sitting in a CI secret when a purpose-made shared secret does the job
+# and can be rotated without touching anything else.
+#
+# Every 15 minutes. Dose times land on quarter hours in practice, and both
+# functions are idempotent — generate-doses upserts on a unique
+# (medication_id, scheduled_at) and only enqueues reminders for genuinely new
+# rows; the dispatcher flips `status` to 'sent'. So a delayed, doubled or
+# overlapping run cannot double-send.
+name: Medicine sweep
 
 on:
   schedule:
     - cron: "*/15 * * * *"
-  # So it can be triggered by hand while testing, without waiting a quarter hour.
+  # So it can be run by hand while testing, without waiting a quarter hour.
   workflow_dispatch:
 
 concurrency:
-  # Never let a slow run overlap the next tick.
-  group: reminder-sweep
+  group: medicine-sweep
   cancel-in-progress: false
 
 jobs:
   sweep:
     runs-on: ubuntu-latest
     steps:
-      - name: Invoke reminders-dispatch-sweep
+      - name: Generate doses, then dispatch what is due
         env:
-          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          MEDICATIONS_SECRET: ${{ secrets.MEDICATIONS_SWEEP_SHARED_SECRET }}
+          REMINDERS_SECRET: ${{ secrets.REMINDERS_SWEEP_SHARED_SECRET }}
         run: |
           set -euo pipefail
-          if [ -z "${SUPABASE_PROJECT_REF:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
-            echo "Supabase secrets are not configured — nothing to do."
+
+          if [ -z "${PROJECT_REF:-}" ]; then
+            echo "SUPABASE_PROJECT_REF is not set — nothing to do."
             exit 0
           fi
 
-          # -f so a non-2xx becomes a failed step rather than a green tick over
-          # an error body. Without it this workflow would report success while
-          # silently delivering nothing, which is the failure mode it exists to
-          # prevent.
-          response=$(curl -sS -f -X POST \
-            "https://${SUPABASE_PROJECT_REF}.supabase.co/functions/v1/reminders-dispatch-sweep" \
-            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
-            -H "Content-Type: application/json" \
-            -d '{}')
+          base="https://${PROJECT_REF}.supabase.co/functions/v1"
 
-          echo "$response"
+          # -f so a non-2xx fails the step. Without it this workflow would
+          # report success while delivering nothing, which is precisely the
+          # failure it exists to prevent.
+          if [ -n "${MEDICATIONS_SECRET:-}" ]; then
+            echo "→ medications-generate-doses"
+            curl -sS -f -X POST "$base/medications-generate-doses" \
+              -H "x-medications-sweep-secret: ${MEDICATIONS_SECRET}" \
+              -H "Content-Type: application/json" -d '{}'
+            echo
+          else
+            echo "MEDICATIONS_SWEEP_SHARED_SECRET not set — skipping dose generation."
+          fi
+
+          if [ -n "${REMINDERS_SECRET:-}" ]; then
+            echo "→ reminders-dispatch-sweep"
+            curl -sS -f -X POST "$base/reminders-dispatch-sweep" \
+              -H "x-reminders-sweep-secret: ${REMINDERS_SECRET}" \
+              -H "Content-Type: application/json" -d '{}'
+            echo
+          else
+            echo "REMINDERS_SWEEP_SHARED_SECRET not set — skipping dispatch."
+          fi

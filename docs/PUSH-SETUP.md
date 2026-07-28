@@ -36,34 +36,53 @@ is for the wrong project or was mangled on paste.
 
 ---
 
-## 2. `SUPABASE_SERVICE_ROLE_KEY` — so the sweep runs every 15 minutes
+## 2. Two sweep secrets — so the reminders actually run
 
-The reminder sweep is what notices a dose is due. Nothing was calling it.
+Two Edge Functions do the work, and **nothing was calling either of them**:
 
-1. Supabase dashboard → **Project Settings → API** → copy the
-   **`service_role`** key (the secret one, *not* `anon`).
-2. GitHub → your repo → **Settings → Secrets and variables → Actions** →
-   **New repository secret**.
-   - Name: `SUPABASE_SERVICE_ROLE_KEY`
-   - Value: the key.
+- `medications-generate-doses` turns each medicine's schedule into dated doses
+  and queues a reminder for each new one
+- `reminders-dispatch-sweep` finds reminders that have come due and sends them
 
-`SUPABASE_PROJECT_REF` is already set from the deploy workflow, so that's all.
+Neither uses a Supabase API key. Both are `verify_jwt = false` and check their
+own header instead, so you invent these two values yourself.
 
-**To check it worked:** GitHub → Actions → **Reminder sweep** → *Run workflow*.
-It should finish green and print a JSON summary of what it dispatched.
+**Pick two random strings.** Anything long and unguessable — mash the keyboard,
+or run `openssl rand -hex 32`. They don't have to mean anything, and the two
+should be different.
+
+**Put each one in two places:**
+
+| Secret name | Supabase (Edge Functions → Secrets) | GitHub (Settings → Secrets → Actions) |
+|---|---|---|
+| `MEDICATIONS_SWEEP_SHARED_SECRET` | ✅ | ✅ |
+| `REMINDERS_SWEEP_SHARED_SECRET` | ✅ | ✅ |
+
+The value must be **identical in both places** — Supabase checks the header
+against its copy, GitHub sends its copy. A mismatch is a 401 and a red workflow
+run, which is exactly the loud failure you want.
+
+`SUPABASE_PROJECT_REF` is already set on the GitHub side from the deploy
+workflow, so that's everything.
+
+**To check it worked:** GitHub → Actions → **Medicine sweep** → *Run workflow*.
+Green means both functions accepted the call. A 401 means one of the four
+copies doesn't match.
 
 ---
 
-## Why the service_role key and not the anon key
+## Why not the service_role key
 
-The sweep reads every pending reminder across every user and writes
-notification rows for other people. That is precisely what RLS is there to
-prevent, so it has to run as the service role.
+An earlier draft of the workflow sent the `service_role` key. It was wrong on
+both counts: these functions don't check it, and it would have handed a key
+that bypasses **every RLS policy in the database** to CI for no reason.
 
-Which is also why it lives in a GitHub secret and runs on GitHub's servers,
-never in the app. **The service_role key must never appear in the Flutter
-code, in `google-services.json`, or in anything shipped to a phone** — it
-bypasses every row-level security policy in the database.
+The shared secrets are scoped to one function each and can be rotated by
+changing two values. That's the whole reason they exist.
+
+Either way, the rule that does not bend: **a service_role or `sb_secret_` key
+must never appear in the Flutter code, in `google-services.json`, or in
+anything shipped to a phone.**
 
 ---
 
