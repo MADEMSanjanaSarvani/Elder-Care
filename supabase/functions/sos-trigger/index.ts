@@ -12,6 +12,7 @@
 // not instead of it.
 import { supabaseAdmin, requireUser } from "../_shared/supabaseAdmin.ts";
 import { corsHeaders, jsonResponse, errorResponse } from "../_shared/cors.ts";
+import { sendPush } from "../_shared/fcm.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -157,9 +158,28 @@ Deno.serve(async (req) => {
       .select()
       .single();
 
-    // TODO(Part 3 deployment): also push via FCM here, not just write to
-    // `notifications` — the in-app row alone isn't sufficient for a
-    // life-safety alert if the recipient's app is backgrounded.
+    // The in-app row alone was never sufficient for a life-safety alert: it
+    // only surfaces while the app is open, and the whole point of an SOS is
+    // that it reaches somebody who is not looking at their phone.
+    //
+    // High priority and its own channel. High priority so Android's
+    // battery-saver batching cannot hold it, and a separate channel so that
+    // somebody who mutes daily medicine reminders has not thereby muted the
+    // emergency alert for their parent.
+    await sendPush(admin, [...notifiedUserIds, ...(opsUsers ?? []).map((o) => o.profile_id)], {
+      title: `Emergency — ${elder.display_name ?? "your family member"}`,
+      body: hasLocation
+        ? "An SOS was raised. Tap to see where they are."
+        : "An SOS was raised. Their location is not available — call them.",
+      channelId: "carehive_emergency",
+      highPriority: true,
+      data: {
+        type: "sos_triggered",
+        sos_event_id: sosEvent.id,
+        elder_id,
+      },
+    });
+
     return jsonResponse(updated ?? sosEvent, 201);
   } catch (err) {
     return errorResponse((err as Error).message, 401);

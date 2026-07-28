@@ -5,15 +5,23 @@
 // triggered externally (n8n/cron), shared-secret header, same pattern as
 // checkins-escalation-sweep and medications-generate-doses.
 //
-// Deviation from the PRD, stated plainly: the spec calls for "FCM push
-// primary, SMS fallback," but this codebase has no Firebase Cloud
-// Messaging integration anywhere — no SDK, no server key, no client
-// wiring — and no SMS provider either. Building a call to infrastructure
-// that doesn't exist would be worse than admitting it isn't built yet.
-// Delivery here uses the platform's actual, already-working notification
-// path instead: an insert into `notifications`, the same table
-// family-invite already writes to and the Flutter apps can already read
-// via Realtime. FCM/SMS remain real, named future work, not silently
+// Delivery is two things, in this order, and the order matters.
+//
+// First an insert into `notifications`, which is the durable record — it
+// survives a phone that was off, it fills the in-app inbox, and it is what the
+// app reads when it opens.
+//
+// Then an actual FCM push, which is what reaches somebody whose phone is in
+// their pocket. That second half did not exist until now: the app registered a
+// device token into `user_devices` and nothing ever sent to it, so a reminder
+// only appeared if the app happened to be open. For a medicine reminder that
+// is indistinguishable from having no reminder at all.
+//
+// The push is fire-and-forget and never fails the sweep. A dose was still due
+// whether or not Google accepted the message, and the row above is already
+// written.
+//
+// SMS fallback remains unbuilt — real, named future work, not silently
 // dropped.
 //
 // Also deviates on snooze-expiry: the PRD says the sweep must "skip
@@ -25,6 +33,7 @@
 // rather than solved by guessing.
 import { supabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { corsHeaders, jsonResponse, errorResponse } from "../_shared/cors.ts";
+import { sendPush } from "../_shared/fcm.ts";
 
 const REMINDERS_SWEEP_SHARED_SECRET = Deno.env.get("REMINDERS_SWEEP_SHARED_SECRET")!;
 
@@ -76,6 +85,22 @@ Deno.serve(async (req) => {
       continue;
     }
 
+    // The words that actually land on a lock screen. Deliberately plain and
+    // never alarming: this fires several times a day, every day, and a
+    // reminder that reads like an emergency stops being read at all.
+    const push = pushCopy(reminder.source_type);
+    await sendPush(admin, recipientIds, {
+      title: push.title,
+      body: push.body,
+      channelId: "carehive_reminders",
+      data: {
+        type: `reminder_${reminder.source_type}`,
+        reminder_id: reminder.id,
+        elder_id: reminder.elder_id,
+        source_id: reminder.source_id,
+      },
+    });
+
     await admin.from("reminders").update({ status: "sent" }).eq("id", reminder.id);
     results.push({ id: reminder.id, outcome: "sent" });
   }
@@ -106,6 +131,28 @@ async function sourceStillWarrantsReminder(
   // Unrecognized source_type — fail closed, same guardrail philosophy as
   // required_consent_for_source() treating an unknown type as "deny."
   return false;
+}
+
+function pushCopy(sourceType: string): { title: string; body: string } {
+  switch (sourceType) {
+    case "medication_dose":
+      return {
+        title: "Time for your medicine",
+        body: "Tap to see which one, and to mark it taken.",
+      };
+    case "appointment":
+      return {
+        title: "Appointment coming up",
+        body: "Tap for the time and place.",
+      };
+    case "hospital_stay":
+      return {
+        title: "Hospital stay needs attention",
+        body: "Tap to review the details.",
+      };
+    default:
+      return { title: "CareHive reminder", body: "Tap to see what's due." };
+  }
 }
 
 async function resolveRecipients(

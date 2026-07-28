@@ -1,0 +1,57 @@
+# Runs the reminder sweep on a schedule.
+#
+# Nothing did. `reminders-dispatch-sweep` existed, was deployed, and was never
+# called — so a dose reminder queued for 8am simply sat in the table. Together
+# with the missing FCM send, that meant CareHive's central promise (tell me when
+# to take my tablet) had no working path at all.
+#
+# GitHub Actions cron rather than pg_cron: it costs nothing on this repo, the
+# runs are visible in a tab you already read, and a failure is an email rather
+# than a silent no-op inside Postgres.
+#
+# Every 15 minutes. Dose times land on quarter hours in practice, and a
+# reminder that arrives up to a quarter hour late is still useful — whereas
+# minute-by-minute polling would burn the free tier for no benefit.
+#
+# GitHub's scheduler is best-effort and runs late under load. That is fine
+# here and would not be for anything time-critical: the sweep is idempotent
+# (it flips `status` to 'sent'), so a delayed or doubled run cannot double-send.
+name: Reminder sweep
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  # So it can be triggered by hand while testing, without waiting a quarter hour.
+  workflow_dispatch:
+
+concurrency:
+  # Never let a slow run overlap the next tick.
+  group: reminder-sweep
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Invoke reminders-dispatch-sweep
+        env:
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_PROJECT_REF:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
+            echo "Supabase secrets are not configured — nothing to do."
+            exit 0
+          fi
+
+          # -f so a non-2xx becomes a failed step rather than a green tick over
+          # an error body. Without it this workflow would report success while
+          # silently delivering nothing, which is the failure mode it exists to
+          # prevent.
+          response=$(curl -sS -f -X POST \
+            "https://${SUPABASE_PROJECT_REF}.supabase.co/functions/v1/reminders-dispatch-sweep" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{}')
+
+          echo "$response"

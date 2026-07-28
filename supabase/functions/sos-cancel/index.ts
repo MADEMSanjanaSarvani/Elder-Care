@@ -16,6 +16,7 @@
 // happened; 'resolved' means something did and was handled. See migration 0040.
 import { supabaseAdmin, requireUser } from "../_shared/supabaseAdmin.ts";
 import { corsHeaders, jsonResponse, errorResponse } from "../_shared/cors.ts";
+import { sendPush } from "../_shared/fcm.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -146,6 +147,20 @@ Deno.serve(async (req) => {
         })),
       );
     }
+
+    // The stand-down has to travel the same way the alarm did. Somebody who
+    // got the emergency push and is now driving across town will not see an
+    // in-app row.
+    await sendPush(admin, [
+      ...familyUserIds,
+      ...(opsUsers ?? []).map((o) => o.profile_id),
+    ], {
+      title: "False alarm — you can stand down",
+      body: `${elder.display_name ?? "Your family member"} cancelled the emergency alert. Nobody needs help.`,
+      channelId: "carehive_emergency",
+      highPriority: true,
+      data: { type: "sos_cancelled", sos_event_id, elder_id: sosEvent.elder_id },
+    });
 
     return jsonResponse(updated, 200);
   } catch (err) {
