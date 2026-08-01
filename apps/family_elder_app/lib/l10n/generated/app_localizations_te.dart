@@ -9,7 +9,7 @@ class AppLocalizationsTe extends AppLocalizations {
   AppLocalizationsTe([String locale = 'te']) : super(locale);
 
   @override
-  String get appTitle => 'సేతు';
+  String get appTitle => 'CareHive';
 
   @override
   String get loginPhoneLabel => 'ఫోన్ నంబర్';
@@ -44,15 +44,14 @@ class AppLocalizationsTe extends AppLocalizations {
   String get sosCall108 => '108కి కాల్ చేయండి (అత్యవసరం)';
 
   @override
-  String get sosNotifyPlatform => 'కుటుంబం మరియు సేతుకు కూడా తెలియజేయండి';
+  String get sosNotifyPlatform => 'నా కుటుంబానికి కూడా తెలియజేయండి';
 
   @override
   String get sosDisclaimer =>
-      'అత్యవసర వైద్య సహాయం కోసం 108కి కాల్ చేయడం అత్యంత వేగవంతమైన మార్గం. సేతుకు తెలియజేయడం వల్ల మీ కుటుంబం మరియు మా టీమ్‌కు ఒకేసారి తెలుస్తుంది — ఇది 108కి కాల్ చేయడానికి ప్రత్యామ్నాయం కాదు.';
+      'అత్యవసర వైద్య సహాయం కోసం 108కి కాల్ చేయడం అత్యంత వేగవంతమైన మార్గం. CareHive అదే సమయంలో మీ కుటుంబానికి తెలియజేస్తుంది — ఇది 108కి కాల్ చేయడానికి ప్రత్యామ్నాయం కాదు.';
 
   @override
-  String get sosNotifiedConfirmation =>
-      'మీ కుటుంబం మరియు మా టీమ్‌కు తెలియజేయబడింది.';
+  String get sosNotifiedConfirmation => 'మీ కుటుంబానికి తెలియజేయబడింది.';
 
   @override
   String get familyDashboardTitle => 'కుటుంబ డాష్‌బోర్డ్';

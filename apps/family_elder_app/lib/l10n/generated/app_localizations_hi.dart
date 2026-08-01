@@ -9,7 +9,7 @@ class AppLocalizationsHi extends AppLocalizations {
   AppLocalizationsHi([String locale = 'hi']) : super(locale);
 
   @override
-  String get appTitle => 'सेतु';
+  String get appTitle => 'CareHive';
 
   @override
   String get loginPhoneLabel => 'फ़ोन नंबर';
@@ -44,15 +44,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String get sosCall108 => '108 पर कॉल करें (आपातकाल)';
 
   @override
-  String get sosNotifyPlatform => 'परिवार और सेतु को भी सूचित करें';
+  String get sosNotifyPlatform => 'मेरे परिवार को भी सूचित करें';
 
   @override
   String get sosDisclaimer =>
-      'आपातकालीन चिकित्सा सहायता के लिए 108 पर कॉल करना सबसे तेज़ तरीका है। सेतु को सूचित करने से आपके परिवार और हमारी टीम को एक साथ पता चलता है — यह 108 पर कॉल करने का विकल्प नहीं है।';
+      'आपातकालीन चिकित्सा सहायता के लिए 108 पर कॉल करना सबसे तेज़ तरीका है। CareHive उसी समय आपके परिवार को सूचित करता है — यह 108 पर कॉल करने का विकल्प नहीं है।';
 
   @override
-  String get sosNotifiedConfirmation =>
-      'आपके परिवार और हमारी टीम को सूचित कर दिया गया है।';
+  String get sosNotifiedConfirmation => 'आपके परिवार को सूचित कर दिया गया है।';
 
   @override
   String get familyDashboardTitle => 'परिवार डैशबोर्ड';

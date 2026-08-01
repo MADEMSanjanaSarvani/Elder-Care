@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'SETU';
+  String get appTitle => 'CareHive';
 
   @override
   String get loginPhoneLabel => 'Phone number';
@@ -44,15 +44,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sosCall108 => 'Call 108 (Emergency)';
 
   @override
-  String get sosNotifyPlatform => 'Also notify family & SETU';
+  String get sosNotifyPlatform => 'Also alert my family';
 
   @override
   String get sosDisclaimer =>
-      'Calling 108 is the fastest way to get emergency medical help. Notifying SETU alerts your family and our on-call team at the same time — it does not replace calling 108.';
+      'Calling 108 is the fastest way to get emergency medical help. CareHive alerts your family at the same time — it does not replace calling 108.';
 
   @override
-  String get sosNotifiedConfirmation =>
-      'Your family and our on-call team have been notified.';
+  String get sosNotifiedConfirmation => 'Your family have been notified.';
 
   @override
   String get familyDashboardTitle => 'Family Dashboard';

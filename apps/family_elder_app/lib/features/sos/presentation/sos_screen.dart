@@ -8,11 +8,16 @@ import '../../../core/location.dart';
 import '../../../core/providers.dart';
 import '../data/sos_repository.dart';
 
-/// PRD Part 1 §04 / Part 2 §12: "Call 108" is the mandatory primary
-/// action. Platform escalation (notifying family + on-call ops) is a
-/// secondary action that runs in parallel — never instead of — calling
-/// emergency services. This screen's mere existence is itself the
-/// "108-first screen was shown" evidence the sos-trigger function requires.
+/// "Call 108" is the mandatory primary action. Alerting the family runs in
+/// parallel — never instead of — calling emergency services. This screen's
+/// mere existence is the "108-first screen was shown" evidence the sos-trigger
+/// function requires.
+///
+/// The copy used to say the alert also reached "our on-call team". There is no
+/// on-call team. sos-trigger still notifies anyone holding the sos_operator
+/// scope, and that list is empty, so the sentence promised a watching stranger
+/// who does not exist — to somebody in an emergency, which is the worst
+/// possible audience for a reassuring untruth.
 class SosScreen extends ConsumerStatefulWidget {
   const SosScreen({required this.elderId, super.key});
 
@@ -35,8 +40,8 @@ class _SosScreenState extends ConsumerState<SosScreen> {
   bool _cancelled = false;
 
   /// The row `sos-trigger` created, so it can be stood back down. Held only
-  /// for this screen's lifetime — a cancel after the app has been closed goes
-  /// through the on-call operator, which is the right escalation for that.
+  /// for this screen's lifetime; once the app is closed the alert can no
+  /// longer be cancelled from here.
   String? _sosEventId;
   String? _error;
 
@@ -488,12 +493,12 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.notifications_active_outlined),
                 label: Text(
-                    _notifying ? 'Notifying…' : 'Also notify family & CareHive'),
+                    _notifying ? 'Notifying…' : 'Also alert my family'),
               ),
             const SizedBox(height: SetuSpacing.sm),
             Text(
-              'Notifying CareHive alerts your family and our on-call team at the '
-              'same time — it does not replace calling 108.',
+              'CareHive alerts your family at the same time — it does not '
+              'replace calling 108.',
               textAlign: TextAlign.center,
               style: Theme.of(context)
                   .textTheme

@@ -50,17 +50,13 @@ final regionConfigProvider = FutureProvider<Region>((ref) async {
   return RegionConfigClient(client).fetch(Env.activeRegionCode);
 });
 
-/// Every place CareHive has a row for — all 28 states and 8 union territories,
-/// plus the Vizag pilot — with whether CareHive actually operates there yet.
+/// Every place with a row — all 28 states and 8 union territories, plus the
+/// Vizag pilot.
 ///
-/// The whole list is offered, not only the live ones, because a daughter in
-/// Kochi needs to be told CareHive isn't there yet rather than left staring at a
-/// dropdown that doesn't contain her state. `status` is what keeps that
-/// honest: 'active' means CareHive can send a verified caregiver, anything else
-/// means it cannot, and the UI has to say which.
-///
-/// Live regions sort first so the places that actually work are what a family
-/// sees without scrolling.
+/// `status` used to mean "can a verified caregiver be sent here", and the UI
+/// was obliged to say so. It gates nothing now: a medicine record works
+/// identically in Visakhapatnam and in Kochi. The column is left alone and the
+/// sort order kept so the list reads the same way it always has.
 final regionsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final client = ref.watch(supabaseClientProvider);
   final rows =
