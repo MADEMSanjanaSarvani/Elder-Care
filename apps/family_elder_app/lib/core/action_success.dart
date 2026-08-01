@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:setu_core/setu_core.dart';
 
 /// Full-screen success confirmation (Stitch `action_successful`): a soft
-/// floating check in SETU's warm brand colour, a bold headline + reassurance
+/// floating check in CareHive's warm brand colour, a bold headline + reassurance
 /// line, a primary continue action and an optional secondary action.
 /// Reusable for any "you're all set" moment — adding an elder, completing
 /// setup, finishing a booking.
@@ -68,7 +68,7 @@ class _ActionSuccessScreenState extends State<ActionSuccessScreen>
           child: Column(
             children: [
               const Spacer(flex: 2),
-              // Soft haloed check, in SETU's warm brand colour (matches the
+              // Soft haloed check, in CareHive's warm brand colour (matches the
               // Stitch design's accent-toned badge).
               // Concentric rings rising on a slow float, from the Stitch
               // success design. The rings drift at slightly different phases,

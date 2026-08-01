@@ -22,9 +22,9 @@ import 'elder_avatar.dart';
 /// back from that table; RLS decides, the UI just renders what came back.
 ///
 /// Preferred hospital is now a real field (migration 0037) — it was omitted
-/// while SETU had nowhere to put one, since inventing a hospital on an
+/// while CareHive had nowhere to put one, since inventing a hospital on an
 /// emergency screen is worse than leaving it blank. The map from the mock is
-/// still omitted: SETU geocodes clinics but has no map widget, and a picture
+/// still omitted: CareHive geocodes clinics but has no map widget, and a picture
 /// of a map that cannot be navigated helps nobody in an emergency. Emergency
 /// contacts use the real family_links data (name, relationship, and a
 /// working call button when a phone number is on file) instead of the
@@ -353,7 +353,7 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
           const SizedBox(height: SetuSpacing.md),
           // "Which hospital" is the second question a paramedic asks, right
           // after "what happened". It was left out of this screen originally
-          // because SETU had nowhere to put it and inventing a hospital would
+          // because CareHive had nowhere to put it and inventing a hospital would
           // have been worse than omitting one — that stopped being true when
           // the clinic directory landed.
           TextField(
@@ -394,7 +394,7 @@ class _HealthProfileScreenState extends ConsumerState<HealthProfileScreen> {
               style: Theme.of(context).textTheme.titleMedium),
           const Padding(
             padding: EdgeInsets.only(top: SetuSpacing.xs, bottom: SetuSpacing.sm),
-            child: Text('Never visible to caregivers.'),
+            child: Text('Kept private. Not shown on the medical ID screen.'),
           ),
           if (!_adminVisible &&
               _physicianNameController.text.isEmpty &&
@@ -915,11 +915,8 @@ class _Stat extends StatelessWidget {
 
 /// Where the elder lives, and a way to change it.
 ///
-/// This sits on the profile rather than in settings because it is a fact about
-/// the person, not a preference of the app — and because it silently decides
-/// which doctors and which caregivers the family is ever shown. A family whose
-/// parent has moved to another city needs to be able to say so without
-/// contacting support.
+/// On the profile rather than in settings, because it is a fact about the
+/// person rather than a preference of the app.
 class _WhereTheyLive extends ConsumerWidget {
   const _WhereTheyLive({required this.elderId});
 
@@ -936,9 +933,6 @@ class _WhereTheyLive extends ConsumerWidget {
           title: const Text('Where do they live?'),
           content: SizedBox(
             width: double.maxFinite,
-            // Scrollable because the "we're not there yet" note under the
-            // dropdown runs to three lines on a small phone, and an
-            // AlertDialog overflows rather than scrolling on its own.
             child: SingleChildScrollView(
               child: RegionPicker(
                 value: picked,
@@ -978,7 +972,6 @@ class _WhereTheyLive extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final region = ref.watch(elderRegionProvider(elderId)).asData?.value;
     final name = region?['display_name'] as String? ?? 'Not set';
-    final live = region?['status'] == 'active';
     return InkWell(
       borderRadius: BorderRadius.circular(14),
       onTap: () => _change(context, ref, region?['code'] as String? ?? 'vizag-ap-in'),
@@ -995,15 +988,9 @@ class _WhereTheyLive extends ConsumerWidget {
                   Text(name,
                       style: const TextStyle(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 1),
-                  Text(
-                      live
-                          ? 'Doctors and caregivers here'
-                          : 'No SETU caregivers here yet',
+                  const Text('Where they live',
                       style: TextStyle(
-                          fontSize: 12,
-                          color: live
-                              ? SetuColors.mutedLight
-                              : SetuColors.peachLight)),
+                          fontSize: 12, color: SetuColors.mutedLight)),
                 ],
               ),
             ),

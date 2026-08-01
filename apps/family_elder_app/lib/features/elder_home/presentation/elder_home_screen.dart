@@ -4,23 +4,17 @@ import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
-import '../../family_home/presentation/family_home_screen.dart'
-    show homeSummaryProvider;
+import '../../medications/presentation/today_screen.dart';
 
-// Local colour tokens lifted from the Stitch "elder_home_screen" design
-// system (SETU's Material-3 palette) — not promoted to SetuColors because
-// they're only used for this screen's bento tiles.
+// Local colour tokens for the greeting card's gradient — not promoted to
+// SetuColors because nothing else uses them.
 const _heroFrom = Color(0xFFFFDBC9); // primary-fixed
 const _heroTo = Color(0xFFFF9F66); // primary-container
 const _heroText = Color(0xFF773401); // on-primary-container
-const _aiBg = Color(0xFFBEAEFD); // secondary-container
-const _aiText = Color(0xFF4C3E84); // on-secondary-container
-const _medIconBg = Color(0xFFFFDBC9); // primary-fixed
 
-/// Elder home rebuilt to match the Stitch `elder_home_screen` design: a warm
-/// gradient greeting, a stack of big bento-style action tiles (Talk to AI,
-/// Take Medicines, Daily Wellness), and a massive SOS bar pinned to the
-/// bottom of the tab — unmissable without needing a second of searching.
+/// The elder's whole app on one screen: a warm greeting, today's doses with
+/// their Taken buttons, and a large SOS bar pinned to the bottom — reachable
+/// without reading, scrolling or choosing anything.
 class ElderHomeScreen extends ConsumerWidget {
   const ElderHomeScreen({super.key});
 
@@ -49,64 +43,37 @@ class ElderHomeScreen extends ConsumerWidget {
 
         return Stack(
           children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                  SetuSpacing.lg, SetuSpacing.lg, SetuSpacing.lg, 140),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Hero greeting (gradient card, Stitch's "Good morning, Dad.").
-                  _HeroGreeting(greeting: greeting, name: first, t: t),
-                  const SizedBox(height: SetuSpacing.md),
-
-                  // Talk to AI Assistant (priority bento tile).
-                  _BentoTile(
-                    onTap: () => context.push('/elder/${elder.id}/assistant'),
-                    color: _aiBg,
-                    foreground: _aiText,
-                    icon: Icons.smart_toy,
-                    badgeIcon: Icons.mic,
-                    title: 'Talk to AI Assistant',
-                    subtitle: '"How are you feeling today?"',
+            // The home screen *is* today's doses.
+            //
+            // It used to be three tiles you had to choose between — Talk to AI,
+            // Take Medicines, Daily Wellness — which meant the one thing this
+            // app is for was one tap away behind a menu, and the tile above it
+            // opened a chatbot that could not answer anything. The list of what
+            // is due, with the buttons on it, is the screen now. Nothing to
+            // pick, nothing to open.
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                      SetuSpacing.lg, SetuSpacing.lg, SetuSpacing.lg, 0),
+                  child: _HeroGreeting(
+                    greeting: greeting,
+                    name: first,
                     t: t,
+                    onMedicalId: () =>
+                        context.push('/elder/${elder.id}/medical-id'),
                   ),
-                  const SizedBox(height: SetuSpacing.md),
-
-                  // Take Medicines.
-                  _BentoTile(
-                    onTap: () => context.push('/elder/${elder.id}/medications'),
-                    color: SetuColors.paperRaisedLight,
-                    foreground: SetuColors.inkLight,
-                    bordered: true,
-                    icon: Icons.medical_services,
-                    iconBg: _medIconBg,
-                    iconColor: SetuColors.accentLight,
-                    title: 'Take Medicines',
-                    chipIcon: Icons.schedule,
-                    // The one fact an elder opens this card for. It used to
-                    // say "tap to see today's schedule", which made them do
-                    // work to learn it. The Stitch design showed a fixed
-                    // "Next dose: 10:30 AM"; this is the real next pending
-                    // dose, and it says so honestly when there isn't one.
-                    chipLabel: _nextDoseLabel(ref, elder.id),
-                    t: t,
+                ),
+                // 140 clears the pinned SOS bar below.
+                Expanded(
+                  child: TodayScreen(
+                    elderId: elder.id,
+                    showAppBar: false,
+                    bottomPadding: 140,
                   ),
-                  const SizedBox(height: SetuSpacing.md),
-
-                  // Daily Wellness.
-                  _BentoTile(
-                    onTap: () => context.push('/elder/${elder.id}/wellness'),
-                    color: SetuColors.verifiedLight.withValues(alpha: 0.18),
-                    foreground: SetuColors.inkLight,
-                    icon: Icons.directions_walk,
-                    iconBg: SetuColors.paperRaisedLight,
-                    iconColor: SetuColors.verifiedLight,
-                    title: 'Daily Wellness',
-                    subtitle: 'A short walk each day keeps you strong, $first.',
-                    t: t,
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
 
             // SOS — pinned to the bottom of the tab, always reachable.
@@ -130,14 +97,20 @@ class ElderHomeScreen extends ConsumerWidget {
   }
 }
 
-/// Gradient hero card with the elder's name and a warm, static tagline
-/// (matches the Stitch "Good morning, Dad. It's a beautiful day." header).
+/// Gradient hero card with the elder's name, and the one shortcut that has to
+/// be reachable without reading anything: the medical ID a paramedic opens.
 class _HeroGreeting extends StatelessWidget {
-  const _HeroGreeting({required this.greeting, required this.name, required this.t});
+  const _HeroGreeting({
+    required this.greeting,
+    required this.name,
+    required this.t,
+    required this.onMedicalId,
+  });
 
   final String greeting;
   final String name;
   final TextTheme t;
+  final VoidCallback onMedicalId;
 
   @override
   Widget build(BuildContext context) {
@@ -158,142 +131,23 @@ class _HeroGreeting extends StatelessWidget {
           Text('$greeting, $name.',
               style: t.headlineLarge
                   ?.copyWith(color: _heroText, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 4),
-          Text("It's a beautiful day.",
-              style: t.titleLarge?.copyWith(color: _heroText.withValues(alpha: 0.8))),
-        ],
-      ),
-    );
-  }
-}
-
-/// A big, square-ish bento action tile — icon (or an icon + badge for the
-/// AI tile), a headline, and either a plain subtitle or a small pill chip.
-/// Matches the Stitch dashboard's large tappable action cards.
-class _BentoTile extends StatelessWidget {
-  const _BentoTile({
-    required this.onTap,
-    required this.color,
-    required this.foreground,
-    required this.icon,
-    required this.title,
-    required this.t,
-    this.bordered = false,
-    this.badgeIcon,
-    this.iconBg,
-    this.iconColor,
-    this.subtitle,
-    this.chipIcon,
-    this.chipLabel,
-  });
-
-  final VoidCallback onTap;
-  final Color color;
-  final Color foreground;
-  final bool bordered;
-  final IconData icon;
-  final IconData? badgeIcon;
-  final Color? iconBg;
-  final Color? iconColor;
-  final String title;
-  final String? subtitle;
-  final IconData? chipIcon;
-  final String? chipLabel;
-  final TextTheme t;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: color,
-      borderRadius: BorderRadius.circular(28),
-      // The lift the designs give every bento tile. Material's own elevation
-      // is used rather than a wrapping Container so the ink splash still
-      // clips to the rounded corners.
-      elevation: 3,
-      shadowColor: SetuColors.peachLight.withValues(alpha: 0.45),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(28),
-        onTap: onTap,
-        child: Container(
-          height: 208,
-          padding: const EdgeInsets.all(SetuSpacing.lg),
-          decoration: bordered
-              ? BoxDecoration(
-                  borderRadius: BorderRadius.circular(28),
-                  border: Border.all(
-                      color: SetuColors.borderLight, width: 2),
-                )
-              : null,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  if (iconBg != null)
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                          color: iconBg, borderRadius: BorderRadius.circular(18)),
-                      child: Icon(icon, color: iconColor ?? foreground, size: 30),
-                    )
-                  else
-                    Icon(icon, color: foreground, size: 48),
-                  if (badgeIcon != null)
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.25),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(badgeIcon, color: foreground),
-                    ),
-                ],
+          const SizedBox(height: SetuSpacing.md),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: onMedicalId,
+              style: TextButton.styleFrom(
+                foregroundColor: _heroText,
+                backgroundColor: Colors.white.withValues(alpha: 0.45),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: SetuSpacing.md, vertical: SetuSpacing.sm),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      style: t.headlineSmall
-                          ?.copyWith(color: foreground, fontWeight: FontWeight.w800)),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: 4),
-                    Text(subtitle!,
-                        style: t.bodyMedium
-                            ?.copyWith(color: foreground.withValues(alpha: 0.85))),
-                  ],
-                  if (chipLabel != null) ...[
-                    const SizedBox(height: SetuSpacing.sm),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: SetuSpacing.sm, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: SetuColors.accentLight.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (chipIcon != null) ...[
-                            Icon(chipIcon, size: 18, color: SetuColors.accentLight),
-                            const SizedBox(width: 6),
-                          ],
-                          Text(chipLabel!,
-                              style: t.bodyMedium?.copyWith(
-                                  color: SetuColors.accentLight,
-                                  fontWeight: FontWeight.w700)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ],
+              icon: const Icon(Icons.badge_outlined),
+              label: Text('My medical ID',
+                  style: t.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -361,27 +215,4 @@ class _SosButtonState extends State<_SosButton> with SingleTickerProviderStateMi
       ),
     );
   }
-}
-
-
-/// "Next dose: 10:30 AM", from the real schedule.
-///
-/// Falls back to plain statements rather than a guess. An overdue dose is
-/// never described as "next" — calling a missed tablet the next one would
-/// hide the fact that it was missed, which is the opposite of what an
-/// adherence feature is for.
-String _nextDoseLabel(WidgetRef ref, String elderId) {
-  final summary = ref.watch(homeSummaryProvider(elderId)).asData?.value;
-  if (summary == null) return "Today's schedule";
-  if (summary.medsTotal == 0) return 'No medicines today';
-  final at = summary.nextDoseAt;
-  if (at == null) {
-    return summary.medsTaken >= summary.medsTotal
-        ? 'All done for today'
-        : "Tap to see today's schedule";
-  }
-  final hour = at.hour % 12 == 0 ? 12 : at.hour % 12;
-  final minute = at.minute.toString().padLeft(2, '0');
-  final period = at.hour < 12 ? 'AM' : 'PM';
-  return 'Next dose: $hour:$minute $period';
 }

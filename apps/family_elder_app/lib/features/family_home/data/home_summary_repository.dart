@@ -2,7 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// A one-glance snapshot of an elder's day for the family dashboard:
 /// medicines taken vs due today, and the latest check-in (mood).
-/// What SETU actually knows about how the day is going.
+/// What CareHive actually knows about how the day is going.
 ///
 /// Three states rather than a boolean, because "nothing has been flagged" and
 /// "we have not heard from them" are different facts, and a family deserves to

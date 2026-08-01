@@ -86,11 +86,34 @@ anything shipped to a phone.**
 
 ---
 
+## What the push path is now for
+
+**Not the dose reminder.** That moved onto the phone. The GitHub Actions cron
+above is best-effort and was observed drifting past ninety minutes between
+runs, and FCM needs a data connection the phone may not have — so dose
+reminders are exact alarms scheduled on the device itself
+(`lib/core/local_reminders.dart`). They fire on the minute, in flight mode,
+and carry the **Taken** button that records the dose without opening the app.
+
+Push is still what tells *other people*: the SOS alert and its stand-down, and
+family notifications. Those genuinely cannot happen on the elder's own phone,
+which is why `FIREBASE_SERVICE_ACCOUNT` above still matters.
+
+The sweep is kept because the server is still what generates dose rows from
+each medicine's schedule — the phone schedules alarms *from* those rows.
+
 ## What still is not built
 
-**SMS fallback.** If a phone has no data connection, no notification arrives.
-Real, named, not pretended otherwise.
+**SMS fallback.** If a phone has no data connection, family are not notified
+of an SOS. The elder's own reminders are unaffected — they are local alarms.
 
-**A "Taken" button in the notification shade.** Right now tapping the
-notification opens the app. Tapping *Taken* without opening anything needs
-`flutter_local_notifications` on the client, and is the next piece of work.
+**Reminders can only be armed two days ahead.** Android caps how many alarms
+one app may hold, so CareHive schedules the next 48 doses and re-arms on every
+open. A phone that is never opened for several days runs out of scheduled
+alarms. (A reboot is fine — `RECEIVE_BOOT_COMPLETED` and
+`ScheduledNotificationBootReceiver` are declared in the manifest, so the alarms
+are restored on restart.)
+
+**A refused permission is silent.** If notification permission or exact-alarm
+permission is denied, `LocalReminders.init()` logs and carries on. The app
+works; it just never rings, and nothing in the UI says so yet.

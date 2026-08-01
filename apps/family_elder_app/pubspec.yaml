@@ -1,10 +1,10 @@
 name: family_elder_app
 description: >
-  Project Setu — Family & Elder app. One codebase, two experience modes
-  (PRD Part 3 §17/§18): family mode (dashboard, booking, consent
-  management) and elder mode (large-text, voice-first, three-action home).
+  CareHive — the medicine record. One codebase, two experience modes: family
+  mode (dashboard, today's doses, consent management) and elder mode
+  (large-text, today's doses with SOS pinned to the bottom).
 publish_to: "none"
-version: 0.7.1+60
+version: 0.8.0+61
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -59,7 +59,7 @@ dev_dependencies:
   flutter_lints: ^4.0.0
   flutter_launcher_icons: ^0.14.1
 
-# Setu brand launcher icon (bridge + heart on terracotta). Regenerate after
+# CareHive launcher icon. Regenerate after
 # changing the source art with: dart run flutter_launcher_icons
 flutter_launcher_icons:
   android: true
@@ -74,11 +74,11 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icon/icon.png
-    # Original SETU illustrations (tools/build_illustrations.py regenerates
+    # Original CareHive illustrations (tools/build_illustrations.py regenerates
     # them). The 2.0x/ variants are picked up automatically by Flutter.
     - assets/illustrations/
 
-  # Plus Jakarta Sans — the typeface every SETU design is drawn in. Bundled
+  # Plus Jakarta Sans — the typeface every CareHive design is drawn in. Bundled
   # rather than fetched at runtime: an elder-care app has to look right on a
   # bad connection, and google_fonts downloads on first paint. It is a variable
   # font, so one 176 KB file covers every weight from 200 to 800 and the whole

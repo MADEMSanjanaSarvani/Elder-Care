@@ -5,41 +5,24 @@ import 'package:setu_core/setu_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../features/appointments/presentation/appointments_screen.dart';
-import '../features/assistant/presentation/assistant_screen.dart';
 import '../features/auth/presentation/choose_role_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/set_new_password_screen.dart';
-import '../features/booking/presentation/booking_screen.dart';
-import '../features/care_plans/presentation/care_plans_screen.dart';
-import '../features/companion_visits/presentation/companion_preferences_screen.dart';
 import '../features/consent/presentation/consent_screen.dart';
 import '../features/family_access/presentation/family_access_screen.dart';
 import '../features/health_profile/presentation/health_profile_screen.dart';
 import '../features/health_profile/presentation/medical_id_screen.dart';
-import '../features/earnings/presentation/earnings_screen.dart';
 import '../features/hospital_stays/presentation/hospital_stays_screen.dart';
 import '../features/medical_documents/presentation/medical_documents_screen.dart';
 import '../features/medications/presentation/medications_screen.dart';
-import '../features/memories/presentation/memories_screen.dart';
-import '../features/otp_visit/presentation/otp_visit_screen.dart';
-import '../features/profile/presentation/caregiver_profile_screen.dart';
 import '../features/notifications/presentation/notification_inbox_screen.dart';
 import '../features/notifications/presentation/notification_preferences_screen.dart';
 import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../features/privacy/presentation/privacy_screen.dart';
-import '../features/rating/presentation/rate_visits_screen.dart';
 import '../features/reminders/presentation/reminders_screen.dart';
-import '../features/reports/presentation/reports_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/sos/presentation/sos_screen.dart';
-import '../features/doctors/presentation/consultations_screen.dart';
-import '../features/doctors/presentation/doctors_screen.dart';
-import '../features/doctors/presentation/video_consult_screen.dart';
 import '../features/timeline/presentation/timeline_screen.dart';
-import '../features/trips/presentation/caregiver_trip_screen.dart';
-import '../features/wellness/presentation/wellness_activities_screen.dart';
-import '../features/wellness/presentation/wellness_summary_screen.dart';
-import '../features/trips/presentation/trip_tracking_screen.dart';
 import 'app_shells.dart';
 import 'providers.dart';
 
@@ -100,11 +83,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             SosScreen(elderId: state.pathParameters['elderId']!),
       ),
       GoRoute(
-        path: '/elder/:elderId/booking',
-        builder: (context, state) =>
-            BookingScreen(elderId: state.pathParameters['elderId']!),
-      ),
-      GoRoute(
         path: '/elder/:elderId/consent',
         builder: (context, state) =>
             ConsentScreen(elderId: state.pathParameters['elderId']!),
@@ -147,11 +125,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
-        path: '/elder/:elderId/rate',
-        builder: (context, state) =>
-            RateVisitsScreen(elderId: state.pathParameters['elderId']!),
-      ),
-      GoRoute(
         path: '/elder/:elderId/hospital-stays',
         builder: (context, state) =>
             HospitalStaysScreen(elderId: state.pathParameters['elderId']!),
@@ -172,91 +145,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             MedicalDocumentsScreen(elderId: state.pathParameters['elderId']!),
       ),
       GoRoute(
-        path: '/elder/:elderId/companion-preferences',
-        builder: (context, state) => CompanionPreferencesScreen(
-            elderId: state.pathParameters['elderId']!),
-      ),
-      GoRoute(
-        path: '/elder/:elderId/assistant',
-        builder: (context, state) =>
-            AssistantScreen(elderId: state.pathParameters['elderId']!),
-      ),
-      GoRoute(
-        path: '/elder/:elderId/reports',
-        builder: (context, state) =>
-            ReportsScreen(elderId: state.pathParameters['elderId']!),
-      ),
-      GoRoute(
-        path: '/elder/:elderId/memories',
-        builder: (context, state) =>
-            MemoriesScreen(elderId: state.pathParameters['elderId']!),
-      ),
-      GoRoute(
-        path: '/elder/:elderId/care-plans',
-        builder: (context, state) =>
-            CarePlansScreen(elderId: state.pathParameters['elderId']!),
-      ),
-      GoRoute(
-        path: '/elder/:elderId/wellness',
-        builder: (context, state) => WellnessActivitiesScreen(
-            elderId: state.pathParameters['elderId']!),
-      ),
-      GoRoute(
-        path: '/elder/:elderId/wellness-summary',
-        builder: (context, state) => WellnessSummaryScreen(
-            elderId: state.pathParameters['elderId']!),
-      ),
-      GoRoute(
         path: '/elder/:elderId/privacy',
         builder: (context, state) =>
             PrivacyScreen(elderId: state.pathParameters['elderId']!),
       ),
       // Caregiver-mode routes (reached when the signed-in profile's role is
       // 'caregiver'; the home screen shows the job queue for that role).
-      GoRoute(
-          path: '/earnings',
-          builder: (context, state) => const EarningsScreen()),
-      GoRoute(
-        path: '/booking/:bookingId',
-        builder: (context, state) =>
-            OtpVisitScreen(bookingId: state.pathParameters['bookingId']!),
-      ),
-      GoRoute(
-        path: '/profile/:caregiverId',
-        builder: (context, state) => CaregiverProfileScreen(
-            caregiverId: state.pathParameters['caregiverId']!),
-      ),
       // Live caregiver trips (Uber-style "on the way").
-      GoRoute(
-        path: '/caregiver/trip/:bookingId',
-        builder: (context, state) =>
-            CaregiverTripScreen(bookingId: state.pathParameters['bookingId']!),
-      ),
-      GoRoute(
-        path: '/track/:bookingId',
-        builder: (context, state) => TripTrackingScreen(
-          bookingId: state.pathParameters['bookingId']!,
-          caregiverName: state.uri.queryParameters['name'],
-        ),
-      ),
       // Doctor consultations.
-      GoRoute(
-        path: '/elder/:elderId/doctors',
-        builder: (context, state) =>
-            DoctorsScreen(elderId: state.pathParameters['elderId']!),
-      ),
-      GoRoute(
-        path: '/elder/:elderId/consultations',
-        builder: (context, state) =>
-            ConsultationsScreen(elderId: state.pathParameters['elderId']!),
-      ),
-      GoRoute(
-        path: '/elder/:elderId/consult/:consultId/video',
-        builder: (context, state) => VideoConsultScreen(
-          consultationId: state.pathParameters['consultId']!,
-          channel: state.uri.queryParameters['channel'],
-        ),
-      ),
     ],
   );
 });
@@ -288,8 +184,7 @@ class HomeRouterScreen extends ConsumerWidget {
           return const ChooseRoleScreen();
         }
         final role = profile['role'] as String?;
-        // Each role gets its own bottom-navigation shell (SETU navigation).
-        if (role == 'caregiver') return const CaregiverGate();
+        // Each role gets its own bottom-navigation shell.
         if (role == 'elder') return const ElderShell();
         return const FamilyShell();
       },

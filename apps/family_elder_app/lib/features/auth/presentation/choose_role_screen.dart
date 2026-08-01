@@ -87,14 +87,14 @@ class _ChooseRoleScreenState extends ConsumerState<ChooseRoleScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (!reselecting) const SizedBox(height: 8),
-                  Text('SETU',
+                  Text('CareHive',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.titleLarge?.copyWith(
                           color: SetuColors.accentLight,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 1)),
                   const SizedBox(height: SetuSpacing.md),
-                  Text('Welcome to SETU',
+                  Text('Welcome to CareHive',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.headlineSmall
                           ?.copyWith(fontWeight: FontWeight.w800)),
@@ -155,19 +155,9 @@ class _ChooseRoleScreenState extends ConsumerState<ChooseRoleScreen> {
                     selected: currentRole == 'elder',
                     onTap: () => _choose('elder'),
                   ),
-                  const SizedBox(height: SetuSpacing.md),
-                  _RoleCard(
-                    icon: Icons.medical_services_outlined,
-                    color: SetuColors.lavenderLight,
-                    title: 'Verified Caregiver',
-                    subtitle:
-                        'I am a professional providing care and need tools to '
-                        'efficiently coordinate and monitor tasks.',
-                    actionLabel: 'Register Credentials',
-                    busy: _busy,
-                    selected: currentRole == 'caregiver',
-                    onTap: () => _choose('caregiver'),
-                  ),
+                  // No third "Verified Caregiver" card. There is no caregiver
+                  // side of the app to sign up to, and offering the role would
+                  // put somebody through a registration that ends nowhere.
                   const SizedBox(height: SetuSpacing.xl),
                   const Text('MISSION STATEMENT',
                       textAlign: TextAlign.center,

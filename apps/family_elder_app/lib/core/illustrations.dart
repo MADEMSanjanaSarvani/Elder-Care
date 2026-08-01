@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// SETU's own illustrations — warm, flat artwork drawn for this app rather
+/// CareHive's own illustrations — warm, flat artwork drawn for this app rather
 /// than stock photography. A photo of a stranger sitting under "Priya is
 /// safe" would read as a picture of the user's actual parent; an
 /// illustration carries the warmth without making that claim.

@@ -6,7 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// private `elder-photos` bucket for it; nothing wrote to either until now, so
 /// every dashboard showed a coloured circle with two initials in it.
 ///
-/// A face is not decoration here. The families using SETU are handing their
+/// A face is not decoration here. The families using CareHive are handing their
 /// parent to someone they have not met, and a screen that shows a photo of the
 /// person reads like their mother rather than like a case file.
 ///

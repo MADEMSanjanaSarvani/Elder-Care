@@ -62,7 +62,7 @@ class SetuFamilyElderApp extends ConsumerWidget {
         prefs.highContrast ? applyHighContrast(SetuTheme.dark()) : SetuTheme.dark();
 
     return MaterialApp.router(
-      title: 'SETU',
+      title: 'CareHive',
       routerConfig: router,
       theme: lightTheme,
       darkTheme: darkTheme,

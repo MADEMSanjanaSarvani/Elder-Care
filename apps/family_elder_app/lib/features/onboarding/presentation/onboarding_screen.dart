@@ -23,17 +23,23 @@ class _Slide {
   final String body;
 }
 
-// Copy + order matched to the Stitch "Splash & Onboarding" design.
+// Three slides, three plain claims the app can actually keep. The previous
+// copy promised "real-time health insights" and "advanced AI that predicts
+// needs" — neither of which existed, and both of which set an expectation the
+// first real screen then broke.
 const _slides = <_Slide>[
-  _Slide(Icons.monitor_heart_outlined, SetuColors.accentLight,
-      'Stay Present, even when you\'re away.',
-      'Real-time health insights and emotional connection tools designed for modern caregiving families.'),
-  _Slide(Icons.auto_awesome_outlined, SetuColors.lavenderLight,
-      'Peace of mind, powered by empathy.',
-      'Advanced AI that understands patterns, predicts needs, and ensures safety without being intrusive.'),
+  _Slide(Icons.alarm_on_outlined, SetuColors.accentLight,
+      'Never wonder if you took it.',
+      'The phone rings at every dose time — on the minute, with no internet '
+      'needed — and there is a Taken button right on the notification.'),
+  _Slide(Icons.fact_check_outlined, SetuColors.lavenderLight,
+      'A record that tells the truth.',
+      'Taken, not taken, and no record are kept apart. Nothing is guessed at, '
+      'so what you show a doctor is what actually happened.'),
   _Slide(Icons.diversity_1_outlined, SetuColors.peachLight,
-      'Your Care Circle, unified in one place.',
-      'Coordinate with doctors, siblings, and caregivers seamlessly. Because care is a shared journey.'),
+      'Family can see, and can help.',
+      'Your family see the same day you do, can mark a dose themselves, and '
+      'get the alert the moment you press SOS.'),
 ];
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -120,7 +126,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           child: const Icon(Icons.badge_outlined, color: Colors.white, size: 44),
         ),
         const SizedBox(height: SetuSpacing.lg),
-        Text('SETU',
+        Text('CareHive',
             style: theme.textTheme.displaySmall?.copyWith(
                 color: SetuColors.accentLight,
                 fontWeight: FontWeight.w800,

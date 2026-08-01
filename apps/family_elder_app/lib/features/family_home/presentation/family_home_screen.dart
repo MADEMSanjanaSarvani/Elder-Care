@@ -9,19 +9,8 @@ import '../../../core/providers.dart';
 import '../../../core/region_picker.dart';
 import '../../health_profile/data/health_profile_repository.dart';
 import '../../health_profile/presentation/elder_avatar.dart';
-import '../../memories/presentation/memory_lane_card.dart';
-import '../../suggestions/presentation/suggestions_card.dart';
-import '../../trips/data/trips_repository.dart';
-import '../../wellness/presentation/weekly_activity_chart.dart';
+import '../../medications/presentation/adherence.dart';
 import '../data/home_summary_repository.dart';
-
-/// Live "your caregiver is on the way" state for an elder (null when idle).
-final activeTripProvider =
-    StreamProvider.family<CaregiverTrip?, String>((ref, elderId) {
-  ref.watch(authStateProvider);
-  return TripsRepository(ref.watch(supabaseClientProvider))
-      .watchActiveForElder(elderId);
-});
 
 /// Today-at-a-glance summary for an elder (medicines, mood, check-in).
 final homeSummaryProvider =
@@ -30,11 +19,9 @@ final homeSummaryProvider =
   return HomeSummaryRepository(ref.watch(supabaseClientProvider)).fetch(elderId);
 });
 
-/// Timeline-first dashboard (PRD Part 3 §17), matching the Stitch
-/// "family_dashboard" design: a warm greeting, a bento-style "today" grid
-/// (medicines / mood / check-in), a SETU Memories hero, live caregiver
-/// tracking, an AI insight card, then the full action grid. Consent/privacy
-/// stay one tap away (trust is a feature, not a buried setting).
+/// The family dashboard: a warm greeting, a bento "today" grid (medicines,
+/// mood, check-in), the week's real adherence, then the action grid. Consent
+/// and privacy stay one tap away — trust is a feature, not a buried setting.
 class FamilyHomeScreen extends ConsumerWidget {
   const FamilyHomeScreen({super.key});
 
@@ -112,7 +99,7 @@ class _GreetingHeader extends ConsumerWidget {
 ///
 /// Medical details are asked for here, at the one moment the family is
 /// reliably willing to fill them in, because blood group, allergies and
-/// conditions are exactly what a caregiver or a paramedic needs and nobody
+/// conditions are exactly what a doctor or a paramedic needs and nobody
 /// comes back to a settings screen to enter them later. They stay optional and
 /// the same fields remain editable on the health profile screen — a failure to
 /// save them must never lose the person who was just added.
@@ -126,11 +113,8 @@ Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
   String? gender;
   String? bloodType;
   var showMedical = false;
-  // Where they live decides which doctors and which caregivers this family
-  // will ever see, and it was hardcoded to the Vizag pilot for everyone in the
-  // country. Still defaults to the pilot, because that is where SETU actually
-  // operates — but it is a choice now, and a family outside it gets told the
-  // truth instead of being shown a clinic 700km away.
+  // Where they live. Kept because it belongs on a medical record, not because
+  // it gates anything — CareHive works identically everywhere.
   var regionCode = 'vizag-ap-in';
   const languages = {'en': 'English', 'hi': 'हिन्दी (Hindi)', 'te': 'తెలుగు (Telugu)'};
   const bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -294,8 +278,8 @@ Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
               ),
               if (showMedical) ...[
                 const Text(
-                    'Shared with a caregiver during a visit and shown on the '
-                    'emergency screen. You can add or change these any time.',
+                    'Shown on the medical ID screen — the one a paramedic or '
+                    'a doctor reads. You can add or change these any time.',
                     style: TextStyle(
                         color: SetuColors.mutedLight,
                         fontSize: 12.5,
@@ -375,7 +359,7 @@ Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
                     SizedBox(width: SetuSpacing.sm),
                     Expanded(
                       child: Text(
-                          'We use these details to help SETU\'s AI understand '
+                          'We use these details to help CareHive\'s AI understand '
                           'cultural nuances and provide better companionship.',
                           style: TextStyle(
                               color: SetuColors.mutedLight, fontSize: 12.5, height: 1.4)),
@@ -418,19 +402,9 @@ Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
     final newElderId =
         data is Map && data['elder_id'] is String ? data['elder_id'] as String : null;
 
-    // If they picked somewhere SETU hasn't reached, the sheet just told them
-    // we'd let them know when we arrive. Record that so it's a promise we can
-    // keep — and so "which city next" becomes a count rather than a guess.
-    // register_region_interest ignores regions that are already live, so this
-    // is safe to call every time.
-    final regions = await ref.read(regionsProvider.future);
-    final chosen = regions.firstWhere((r) => r['code'] == regionCode,
-        orElse: () => const <String, dynamic>{});
-    final chosenId = chosen['id'] as String?;
-    if (chosenId != null) {
-      await registerRegionInterest(ref,
-          regionId: chosenId, elderId: newElderId);
-    }
+    // No region waiting-list call any more. It existed to record "tell me when
+    // you reach my city", and there is nothing left to wait for — the medicine
+    // record works the same everywhere.
 
     final allergies = _splitList(allergiesController.text);
     final conditions = _splitList(conditionsController.text);
@@ -471,11 +445,11 @@ Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
       //
       // The primary action leads straight into medical details rather than
       // the dashboard. Blood group, allergies and conditions are what a
-      // caregiver or a paramedic sees in an emergency, and they feed the
-      // health profile, the SOS screen and every caregiver's visit view — so
-      // the moment the person is added is the only moment the family is
-      // reliably willing to fill them in. It stays skippable: nobody should
-      // be blocked from finishing because they can't remember a blood group.
+      // paramedic reads off the medical ID, and they feed the health profile
+      // and the SOS screen — so the moment the person is added is the only
+      // moment the family is reliably willing to fill them in. It stays
+      // skippable: nobody should be blocked from finishing because they
+      // can't remember a blood group.
       await Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (ctx) => ActionSuccessScreen(
           title: 'Everything is Set Up!',
@@ -487,8 +461,8 @@ Future<void> showAddElderDialog(BuildContext context, WidgetRef ref) async {
                       'medicines and doctor details whenever you have them.'
                   : '$name is now safely connected to your care circle.\n\n'
                       'Next, add their medical details — blood group, allergies '
-                      'and conditions. This is what a caregiver or paramedic sees '
-                      'if something goes wrong.',
+                      'and conditions. This is what a doctor or a paramedic '
+                      'reads if something goes wrong.',
           primaryLabel: newElderId == null
               ? 'Go to Dashboard'
               : medicalSaved
@@ -563,7 +537,7 @@ String _addElderError(Object err) {
 }
 
 /// First-run welcome. Rather than a bare empty state, this explains what
-/// SETU is for a brand-new family member and invites them to begin — so
+/// CareHive is for a brand-new family member and invites them to begin — so
 /// the very first screen after sign-in teaches the idea and feels warm.
 class _NoElders extends ConsumerWidget {
   const _NoElders();
@@ -572,18 +546,21 @@ class _NoElders extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     const features = <List<dynamic>>[
-      [Icons.volunteer_activism_outlined, SetuColors.accentLight, 'Trusted caregivers',
-        'Book background-verified helpers for visits, nursing and companionship.'],
-      [Icons.medication_outlined, SetuColors.peachLight, 'Medicines & refills',
-        'Track every dose and get a nudge before medicines run low.'],
+      [Icons.medication_outlined, SetuColors.peachLight, 'Every dose, on time',
+        'The phone rings at each dose time — offline, on the minute — with a '
+        'Taken button right on the notification.'],
+      [Icons.fact_check_outlined, SetuColors.accentLight, 'A record that is true',
+        'What was taken, what was not, and what nobody marked — kept apart, '
+        'never guessed at.'],
+      [Icons.badge_outlined, SetuColors.accentLight, 'Ready for the question',
+        'One screen with the medicines, allergies and blood group, for the '
+        'doctor who asks and the paramedic who cannot.'],
       [Icons.favorite_outline, SetuColors.lavenderLight, 'Daily check-ins',
         'A gentle "I\'m okay today" from your parent, so you never wonder.'],
-      [Icons.chat_bubble_outline, SetuColors.lavenderLight, 'AI companion',
-        'Someone for them to talk to, plus warm weekly wellbeing updates.'],
       [Icons.sos_outlined, SetuColors.sosLight, 'Emergency SOS',
         'One tap calls for help and alerts your whole family at once.'],
       [Icons.timeline_outlined, SetuColors.accentLight, 'Health & timeline',
-        'Every visit, appointment and update gathered in one calm place.'],
+        'Appointments, hospital stays and updates gathered in one calm place.'],
     ];
 
     return ListView(
@@ -602,12 +579,12 @@ class _NoElders extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: SetuSpacing.md),
-        Text('Welcome to SETU',
+        Text('Welcome to CareHive',
             textAlign: TextAlign.center, style: theme.textTheme.headlineMedium),
         const SizedBox(height: SetuSpacing.xs),
         Text(
           'A warm, simple way to look after your parents — together, from '
-          'anywhere. Here\'s everything SETU does for your family.',
+          'anywhere. Here\'s everything CareHive does for your family.',
           textAlign: TextAlign.center,
           style: theme.textTheme.bodyMedium
               ?.copyWith(color: SetuColors.mutedLight, height: 1.5),
@@ -624,8 +601,8 @@ class _NoElders extends ConsumerWidget {
                 Text('Let\'s begin', style: theme.textTheme.titleLarge),
                 const SizedBox(height: SetuSpacing.xs),
                 Text(
-                  'Add the parent or elder you care for to unlock their '
-                  'dashboard — bookings, medicines, check-ins and more.',
+                  'Add the parent or elder you care for, then add their '
+                  'medicines. The reminders start straight away.',
                   style: theme.textTheme.bodyMedium
                       ?.copyWith(color: SetuColors.mutedLight),
                 ),
@@ -678,11 +655,9 @@ class _NoElders extends ConsumerWidget {
   }
 }
 
-/// One elder's full dashboard: header, "is safe" + mini map, the day's
-/// bento grid, live caregiver tracking, health & activity, AI insight,
-/// SETU Memories, suggestions, then the action grid. Flat, stacked
-/// sections — no enclosing card — matching the Stitch family_dashboard
-/// screen's layout.
+/// One elder's full dashboard: header, status row, the day's bento grid, the
+/// week's adherence, then the action grid. Flat, stacked sections with no
+/// enclosing card.
 class _ElderSection extends ConsumerStatefulWidget {
   const _ElderSection({required this.elder});
 
@@ -710,23 +685,18 @@ class _ElderSectionState extends ConsumerState<_ElderSection> {
       // home had a button. That is the one thing that must never be buried.
       _Action(Icons.emergency_outlined, 'Emergency', 'sos',
           SetuColors.sosLight),
-      _Action(Icons.add_circle_outline, 'Book help', 'booking', sage),
-      _Action(Icons.timeline_outlined, 'Timeline', 'timeline', lav),
       _Action(Icons.medication_outlined, 'Medicines', 'medications', peach),
-      _Action(Icons.medical_services_outlined, 'Consult doctor', 'doctors', sage),
+      // Second only to SOS. The medical ID is the screen a paramedic reads off
+      // a locked phone, and it is useless if it takes four taps to find.
+      _Action(Icons.badge_outlined, 'Medical ID', 'medical-id', sage),
       _Action(Icons.event_outlined, 'Appointments', 'appointments', sage),
-      _Action(Icons.card_membership_outlined, 'Care plans', 'care-plans', lav),
-      _Action(Icons.chat_bubble_outline, 'Ask assistant', 'assistant', lav),
+      _Action(Icons.notifications_outlined, 'Reminders', 'reminders', peach),
+      _Action(Icons.timeline_outlined, 'Timeline', 'timeline', lav),
     ];
     const more = <_Action>[
-      _Action(Icons.spa_outlined, 'Wellness', 'wellness', peach),
-      _Action(Icons.notifications_outlined, 'Reminders', 'reminders', peach),
-      _Action(Icons.local_hospital_outlined, 'Hospital stays', 'hospital-stays', sage),
       _Action(Icons.favorite_outline, 'Health profile', 'health-profile', peach),
       _Action(Icons.folder_shared_outlined, 'Medical records', 'documents', lav),
-      _Action(Icons.diversity_1_outlined, 'Companion', 'companion-preferences', lav),
-      _Action(Icons.summarize_outlined, 'Weekly reports', 'reports', sage),
-      _Action(Icons.star_outline, 'Rate a visit', 'rate', peach),
+      _Action(Icons.local_hospital_outlined, 'Hospital stays', 'hospital-stays', sage),
       _Action(Icons.group_outlined, 'Family access', 'family', sage),
       _Action(Icons.privacy_tip_outlined, 'What you can see', 'consent', lav),
       _Action(Icons.shield_outlined, 'Privacy centre', 'privacy', sage),
@@ -760,24 +730,18 @@ class _ElderSectionState extends ConsumerState<_ElderSection> {
         // section).
         _StatusRow(elderId: id, name: elder.displayName),
         const SizedBox(height: SetuSpacing.md),
-        _LiveTripBanner(elderId: id),
         // Bento grid: medicines today (full width) + mood / check-in.
         _BentoGrid(elderId: id),
         const SizedBox(height: SetuSpacing.md),
-        _HealthScoreCard(elderId: id),
-        const SizedBox(height: SetuSpacing.md),
-        WeeklyActivityChart(elderId: id),
-        const SizedBox(height: SetuSpacing.md),
-        _AiInsightCard(elderId: id),
-        const SizedBox(height: SetuSpacing.md),
-        _MemoriesCard(elderId: id, name: elder.displayName),
-        const SizedBox(height: SetuSpacing.md),
-        // Memory Lane. Renders nothing at all when there is no memory old
-        // enough to offer, or when this one has been put away — an empty
-        // prompt is worse than no prompt.
-        MemoryLaneCard(elderId: id),
-        const SizedBox(height: SetuSpacing.md),
-        SuggestionsCard(elderId: id),
+        // The week's actual record, and the only summary on this screen.
+        //
+        // What used to sit here was removed rather than reworded: a "Health
+        // Score" computed as `72 + medsRatio * 20`, which could never fall
+        // below 72 no matter what the app knew, and an "AI Insight" card whose
+        // reassuring sentence about a peaceful morning was a hardcoded string
+        // shown to every family every day. A number that reads as clinical and
+        // isn't is worse than a blank space, because it gets believed.
+        MedicationAdherenceChart(elderId: id),
         const SizedBox(height: SetuSpacing.md),
         // Primary actions grid
         GridView.count(
@@ -848,7 +812,7 @@ class _ActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Properly tinted tiles, matching the SETU bento grids. These used to be
+    // Properly tinted tiles, matching the CareHive bento grids. These used to be
     // a 5%-alpha wash inside a hairline border, which read as grey at arm's
     // length — the designs colour the whole tile and drop the border, and the
     // difference on a real phone is the difference between a legible grid and
@@ -903,7 +867,7 @@ class _ActionTile extends StatelessWidget {
 /// open `sos_events` row and today's `checkin_missed` entry.
 ///
 /// And the map thumbnail beside it carried an "AT HOME" badge over a drawn
-/// grid. SETU knows an elder's location during an SOS and at no other moment,
+/// grid. CareHive knows an elder's location during an SOS and at no other moment,
 /// so that badge was a location claim with nothing behind it — on the screen
 /// a family opens precisely to ask where he is. If he had wandered out it
 /// would still have said AT HOME. It is replaced by the last check-in, which
@@ -1206,379 +1170,4 @@ class _BentoTile extends StatelessWidget {
       ),
     );
   }
-}
-
-/// SETU Memories hero card — a warm, gradient "moment" card that deep-links
-/// to the elder's full memories feed. Matches the Stitch dashboard's
-/// full-bleed memories section (no real photo asset is bundled, so a warm
-/// gradient stands in for the elder's photo).
-class _MemoriesCard extends StatelessWidget {
-  const _MemoriesCard({required this.elderId, required this.name});
-
-  final String elderId;
-  final String name;
-
-  String get _first => name.trim().split(' ').first;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(24),
-      onTap: () => context.push('/elder/$elderId/memories'),
-      child: Container(
-        height: 200,
-        width: double.infinity,
-        padding: const EdgeInsets.all(SetuSpacing.lg),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              SetuColors.lavenderLight.withValues(alpha: 0.85),
-              SetuColors.accentLight.withValues(alpha: 0.85),
-            ],
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.auto_awesome, size: 16, color: Colors.white),
-                SizedBox(width: 6),
-                Text('SETU MEMORIES',
-                    style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.6,
-                        color: Colors.white70)),
-              ],
-            ),
-            const SizedBox(height: SetuSpacing.xs),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Warm moments from $_first\'s day',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineMedium
-                              ?.copyWith(
-                                  color: Colors.white, fontWeight: FontWeight.w800)),
-                      const SizedBox(height: 4),
-                      const Text('Tap to see the highlights',
-                          style: TextStyle(color: Colors.white70, fontSize: 13)),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: SetuSpacing.md),
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: const BoxDecoration(
-                      color: Colors.white, shape: BoxShape.circle),
-                  child: const Icon(Icons.chevron_right,
-                      color: SetuColors.accentLight),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// AI Wellness Insight card (matches the Stitch dashboard's "AI Insight"
-/// panel): a warm, plain-language read on the elder's day, framed as the AI
-/// companion's voice, with a "View full report" entry into the existing
-/// wellness summary screen.
-class _AiInsightCard extends StatelessWidget {
-  const _AiInsightCard({required this.elderId});
-
-  final String elderId;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(24),
-      onTap: () => context.push('/elder/$elderId/wellness-summary'),
-      child: Container(
-        padding: const EdgeInsets.all(SetuSpacing.lg),
-        decoration: BoxDecoration(
-          color: SetuColors.lavenderLight.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: SetuColors.lavenderLight.withValues(alpha: 0.35)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(children: [
-              Icon(Icons.auto_awesome, size: 18, color: SetuColors.lavenderLight),
-              SizedBox(width: 8),
-              Text('AI INSIGHT',
-                  style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.6,
-                      color: SetuColors.lavenderLight)),
-            ]),
-            const SizedBox(height: SetuSpacing.sm),
-            Text(
-              'They had a peaceful morning, took their medicines on time, and '
-              'activity is a little higher than usual today.',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(height: 1.4, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: SetuSpacing.md),
-            Row(
-              children: [
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: SetuSpacing.md, vertical: SetuSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: SetuColors.lavenderLight,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: const Text('View full report',
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Health Score card: a single reassuring number with a ring, derived from
-/// today's medicines + check-in.
-class _HealthScoreCard extends ConsumerWidget {
-  const _HealthScoreCard({required this.elderId});
-  final String elderId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final s = ref.watch(homeSummaryProvider(elderId)).asData?.value;
-    final medsRatio = (s != null && s.medsTotal > 0)
-        ? s.medsTaken / s.medsTotal
-        : 1.0;
-    final checkedIn = s?.checkedIn ?? false;
-    final score = (72 + medsRatio * 20 + (checkedIn ? 8 : 0)).round().clamp(0, 100);
-    final label = score >= 85
-        ? 'Excellent'
-        : score >= 70
-            ? 'Good'
-            : 'Needs attention';
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
-      onTap: () => context.push('/elder/$elderId/wellness-summary'),
-      child: Container(
-      padding: const EdgeInsets.all(SetuSpacing.lg),
-      decoration: BoxDecoration(
-        color: SetuColors.paperRaisedLight,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: SetuColors.borderLight),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Text('Health Score',
-                        style: TextStyle(fontWeight: FontWeight.w700)),
-                    SizedBox(width: 4),
-                    Icon(Icons.chevron_right,
-                        size: 18, color: SetuColors.mutedLight),
-                  ],
-                ),
-                Text('$score',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: SetuColors.accentLight,
-                        fontWeight: FontWeight.w800)),
-                Text(label,
-                    style: const TextStyle(color: SetuColors.verifiedLight)),
-              ],
-            ),
-          ),
-          SizedBox(
-            width: 64,
-            height: 64,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                SizedBox(
-                  width: 64,
-                  height: 64,
-                  child: CircularProgressIndicator(
-                    value: score / 100,
-                    strokeWidth: 6,
-                    backgroundColor:
-                        SetuColors.accentLight.withValues(alpha: 0.12),
-                    valueColor: const AlwaysStoppedAnimation(
-                        SetuColors.accentLight),
-                  ),
-                ),
-                const Icon(Icons.favorite,
-                    color: SetuColors.accentLight, size: 22),
-              ],
-            ),
-          ),
-        ],
-      ),
-      ),
-    );
-  }
-}
-
-/// Live "caregiver on the way" banner — appears only while a trip is active,
-/// tapping through to the full real-time tracking view. Styled after the
-/// Stitch dashboard's dashed-border caregiver tracking card.
-class _LiveTripBanner extends ConsumerWidget {
-  const _LiveTripBanner({required this.elderId});
-  final String elderId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final trip = ref.watch(activeTripProvider(elderId)).asData?.value;
-    if (trip == null) return const SizedBox.shrink();
-    final arrived = trip.status == TripStatus.arrived;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: SetuSpacing.md),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: () => context.push('/track/${trip.bookingId}'),
-        child: CustomPaint(
-          painter: _DashedBorderPainter(
-              color: SetuColors.lavenderLight.withValues(alpha: 0.6),
-              radius: 20),
-          child: Container(
-            padding: const EdgeInsets.all(SetuSpacing.md),
-            decoration: BoxDecoration(
-              color: SetuColors.lavenderLight.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                Stack(
-                  children: [
-                    const SetuIconChip(
-                      icon: Icons.person,
-                      color: SetuColors.lavenderLight,
-                      size: 26,
-                    ),
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Container(
-                        width: 20,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          color: SetuColors.lavenderLight,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        child: Icon(
-                            arrived
-                                ? Icons.doorbell_outlined
-                                : Icons.directions_car_filled_outlined,
-                            color: Colors.white,
-                            size: 11),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: SetuSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('CAREGIVER',
-                          style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.6,
-                              color: SetuColors.lavenderLight)),
-                      Text(arrived ? 'Caregiver has arrived' : 'Caregiver on the way',
-                          style: const TextStyle(fontWeight: FontWeight.w700)),
-                      Text(
-                          arrived
-                              ? 'At the door now'
-                              : trip.etaMinutes != null
-                                  ? 'About ${trip.etaMinutes} min away'
-                                  : 'Tap to track live',
-                          style: const TextStyle(
-                              color: SetuColors.mutedLight, fontSize: 12.5)),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: SetuSpacing.sm),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: SetuSpacing.md, vertical: SetuSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: SetuColors.lavenderLight,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: const Text('Live Track',
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12.5)),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Paints a soft dashed rounded-rect border, matching the Stitch caregiver
-/// tracking card's `border-dashed` treatment (Flutter has no built-in
-/// dashed border).
-class _DashedBorderPainter extends CustomPainter {
-  const _DashedBorderPainter({required this.color, required this.radius});
-
-  final Color color;
-  final double radius;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rrect = RRect.fromRectAndRadius(
-        Offset.zero & size, Radius.circular(radius));
-    final path = Path()..addRRect(rrect);
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4;
-    const dashWidth = 6.0;
-    const dashGap = 4.0;
-    for (final metric in path.computeMetrics()) {
-      var distance = 0.0;
-      while (distance < metric.length) {
-        final next = distance + dashWidth;
-        canvas.drawPath(
-            metric.extractPath(distance, next.clamp(0, metric.length)), paint);
-        distance = next + dashGap;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) =>
-      oldDelegate.color != color || oldDelegate.radius != radius;
 }

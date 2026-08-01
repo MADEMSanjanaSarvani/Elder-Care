@@ -134,7 +134,7 @@ class _SosScreenState extends ConsumerState<SosScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Cancel this emergency?'),
         content: const Text(
-          'Your family and the SETU team will be told it was a false alarm. '
+          'Your family and the CareHive team will be told it was a false alarm. '
           'Only do this if nobody needs help.',
         ),
         actions: [
@@ -239,7 +239,7 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                                 fontWeight: FontWeight.w800)),
                     const SizedBox(height: 4),
                     const Text(
-                      'Your family and the SETU team have been told it was a '
+                      'Your family and the CareHive team have been told it was a '
                       'false alarm. Nobody is on their way.',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: SetuColors.mutedLight),
@@ -391,7 +391,7 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                         icon: Icons.support_agent_outlined,
                         tint: SetuColors.peachLight,
                         title: 'On-call team alerted',
-                        subtitle: 'SETU is coordinating help'),
+                        subtitle: 'CareHive is coordinating help'),
                     // Follows the same fix as the strip above rather than
                     // hardcoding success. This row used to claim the location
                     // had been shared while the strip six pixels higher said
@@ -488,11 +488,11 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.notifications_active_outlined),
                 label: Text(
-                    _notifying ? 'Notifying…' : 'Also notify family & SETU'),
+                    _notifying ? 'Notifying…' : 'Also notify family & CareHive'),
               ),
             const SizedBox(height: SetuSpacing.sm),
             Text(
-              'Notifying SETU alerts your family and our on-call team at the '
+              'Notifying CareHive alerts your family and our on-call team at the '
               'same time — it does not replace calling 108.',
               textAlign: TextAlign.center,
               style: Theme.of(context)

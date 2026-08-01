@@ -64,7 +64,7 @@ Future<LocationResult> captureLocation({
     }
     if (permission == LocationPermission.deniedForever) {
       return const LocationResult.failed(
-        'Location permission was turned off for SETU. You can switch it back '
+        'Location permission was turned off for CareHive. You can switch it back '
         'on in the app settings.',
         needsSettings: true,
       );
@@ -72,7 +72,7 @@ Future<LocationResult> captureLocation({
     if (permission != LocationPermission.always &&
         permission != LocationPermission.whileInUse) {
       return const LocationResult.failed(
-          'SETU needs permission to use your location.');
+          'CareHive needs permission to use your location.');
     }
 
     try {

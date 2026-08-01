@@ -350,8 +350,7 @@ class _GrowCircleCard extends StatelessWidget {
                   ?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 4),
           const Text(
-              'Invite more family members or caregivers to stay in the loop '
-              'together.',
+              'Invite more family members so everyone sees the same day.',
               style: TextStyle(color: SetuColors.mutedLight, height: 1.4)),
           const SizedBox(height: SetuSpacing.md),
           SizedBox(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
@@ -96,10 +95,6 @@ class AppointmentsScreen extends ConsumerWidget {
         title: Text(appt['title'] as String),
         children: [
           SimpleDialogOption(
-            onPressed: () => Navigator.of(context).pop('companion'),
-            child: const Text('Book a companion for this'),
-          ),
-          SimpleDialogOption(
             onPressed: () => Navigator.of(context).pop('outcome'),
             child: const Text('Log outcome (mark completed)'),
           ),
@@ -111,10 +106,6 @@ class AppointmentsScreen extends ConsumerWidget {
       ),
     );
 
-    if (action == 'companion' && context.mounted) {
-      context.push('/elder/$elderId/booking');
-      return;
-    }
     if (action == 'cancel') {
       await repo.cancel(appt['id'] as String);
       ref.invalidate(_appointmentsProvider(elderId));

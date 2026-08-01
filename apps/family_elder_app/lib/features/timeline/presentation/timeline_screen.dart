@@ -377,7 +377,7 @@ String _titleFor(String eventType) {
     case 'visit_scheduled':
       return 'Visit scheduled';
     case 'visit_started':
-      return 'Caregiver arrived';
+      return 'Visit started';
     case 'visit_completed':
       return 'Visit completed';
     case 'checkin_completed':

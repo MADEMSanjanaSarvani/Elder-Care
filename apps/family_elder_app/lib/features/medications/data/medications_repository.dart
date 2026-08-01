@@ -63,16 +63,51 @@ class MedicationsRepository {
         .order('scheduled_at');
   }
 
+  /// Midnight-to-midnight *where the person is standing*.
+  ///
+  /// This used to be built with `DateTime.utc(now.year, now.month, now.day)`,
+  /// which is a different day. At IST (+5:30) that window runs 05:30 today to
+  /// 05:30 tomorrow, so a 6am tablet showed up under "today" correctly but a
+  /// 4am one was filed under yesterday and vanished from the screen the person
+  /// was looking at. Local midnight, converted to UTC for the query, is the
+  /// boundary a human means by "today".
+  static ({String start, String end}) _todayBounds() {
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month, now.day);
+    return (
+      start: start.toUtc().toIso8601String(),
+      end: start.add(const Duration(days: 1)).toUtc().toIso8601String(),
+    );
+  }
+
   Future<List<Map<String, dynamic>>> fetchDosesForToday(String medicationId) async {
-    final now = DateTime.now().toUtc();
-    final startOfDay = DateTime.utc(now.year, now.month, now.day);
-    final endOfDay = startOfDay.add(const Duration(days: 1));
+    final bounds = _todayBounds();
     return _client
         .from('medication_doses')
         .select()
         .eq('medication_id', medicationId)
-        .gte('scheduled_at', startOfDay.toIso8601String())
-        .lt('scheduled_at', endOfDay.toIso8601String())
+        .gte('scheduled_at', bounds.start)
+        .lt('scheduled_at', bounds.end)
+        .order('scheduled_at');
+  }
+
+  /// Everything due today across *all* of an elder's medicines, with the
+  /// medicine's name and dosage attached.
+  ///
+  /// The per-medicine query above answers "how is this tablet going", which is
+  /// the wrong question first thing in the morning. This one answers "what do
+  /// I take now", which is the question the Today screen exists for — one list,
+  /// in time order, regardless of which medicine each dose belongs to.
+  Future<List<Map<String, dynamic>>> fetchTodayForElder(String elderId) async {
+    final bounds = _todayBounds();
+    return _client
+        .from('medication_doses')
+        .select(
+            'id, status, scheduled_at, taken_at, elder_medications!inner(id, elder_id, name, dosage)')
+        .eq('elder_medications.elder_id', elderId)
+        .neq('status', 'cancelled')
+        .gte('scheduled_at', bounds.start)
+        .lt('scheduled_at', bounds.end)
         .order('scheduled_at');
   }
 

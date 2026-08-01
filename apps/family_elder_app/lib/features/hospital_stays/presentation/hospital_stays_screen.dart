@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
@@ -12,16 +11,14 @@ final _staysProvider =
   return HospitalStaysRepository(client).fetchStays(elderId);
 });
 
-final _shiftsProvider =
-    FutureProvider.family<List<Map<String, dynamic>>, String>((ref, stayId) async {
-  final client = ref.watch(supabaseClientProvider);
-  return HospitalStaysRepository(client).fetchShifts(stayId);
-});
-
-/// Hospital Companion Services (PRD Part 6, Batch 3, Module 11): a stay
-/// is a grouping lens over individual hospital_companion bookings, which
-/// still appear in the normal bookings flow too. Booking a new shift
-/// deep-links into the existing, unmodified booking screen.
+/// A record of hospital admissions.
+///
+/// This screen used to be a scheduling board for paid companion shifts — book
+/// a sitter, link the booking, watch the roster. None of that exists now. What
+/// is left is the part a doctor actually asks about: was this person in
+/// hospital, which one, and when. It sits alongside the medicine record for
+/// the same reason the medicine record exists — because somebody will be asked
+/// the question months later and will not remember.
 class HospitalStaysScreen extends ConsumerWidget {
   const HospitalStaysScreen({required this.elderId, super.key});
 
@@ -44,7 +41,8 @@ class HospitalStaysScreen extends ConsumerWidget {
             return const SetuEmptyState(
               icon: Icons.local_hospital_outlined,
               title: 'No hospital stays',
-              message: 'If a stay comes up, track it here to arrange companions.',
+              message: 'If a hospital admission comes up, note it here so it '
+                  'is on the record later.',
             );
           }
           return ListView.separated(
@@ -115,7 +113,9 @@ class _StayCard extends ConsumerWidget {
     final status = stay['status'] as String;
     final active = status == 'active';
     final admissionAt = DateTime.parse(stay['admission_at'] as String).toLocal();
-    final shiftsAsync = ref.watch(_shiftsProvider(stayId));
+    final dischargeAt = stay['actual_discharge_at'] != null
+        ? DateTime.parse(stay['actual_discharge_at'] as String).toLocal()
+        : null;
 
     return Card(
       child: Padding(
@@ -126,7 +126,8 @@ class _StayCard extends ConsumerWidget {
             Row(
               children: [
                 Icon(Icons.local_hospital_outlined,
-                    color: active ? SetuColors.accentLight : SetuColors.mutedLight),
+                    color:
+                        active ? SetuColors.accentLight : SetuColors.mutedLight),
                 const SizedBox(width: SetuSpacing.sm),
                 Expanded(
                   child: Text(stay['hospital_name'] as String,
@@ -137,72 +138,23 @@ class _StayCard extends ConsumerWidget {
             ),
             Padding(
               padding: const EdgeInsets.only(top: SetuSpacing.xs),
-              child: Text('Admitted ${_formatDate(admissionAt)}'),
-            ),
-            const SizedBox(height: SetuSpacing.sm),
-            shiftsAsync.when(
-              data: (shifts) {
-                if (shifts.isEmpty) {
-                  return const Text('No shifts linked yet.',
-                      style: TextStyle(fontStyle: FontStyle.italic));
-                }
-                final sorted = [...shifts]..sort((a, b) {
-                    final aAt = (a['bookings'] as Map<String, dynamic>?)?['scheduled_at'] as String? ?? '';
-                    final bAt = (b['bookings'] as Map<String, dynamic>?)?['scheduled_at'] as String? ?? '';
-                    return aAt.compareTo(bAt);
-                  });
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: sorted.map((shift) {
-                    final booking = shift['bookings'] as Map<String, dynamic>?;
-                    final scheduledAt = booking?['scheduled_at'] != null
-                        ? DateTime.parse(booking!['scheduled_at'] as String).toLocal()
-                        : null;
-                    final note = shift['shift_note'] as String?;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: SetuSpacing.xs),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.schedule_outlined, size: 16),
-                          const SizedBox(width: SetuSpacing.xs),
-                          Expanded(
-                            child: Text([
-                              if (scheduledAt != null) _formatDate(scheduledAt),
-                              booking?['status'] as String? ?? '',
-                              if (note != null && note.isNotEmpty) '— $note',
-                            ].join(' ')),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                );
-              },
-              loading: () => const LinearProgressIndicator(),
-              error: (err, stack) => Text('Could not load shifts: $err'),
+              child: Text(
+                dischargeAt == null
+                    ? 'Admitted ${_formatDate(admissionAt)}'
+                    : 'Admitted ${_formatDate(admissionAt)} · discharged '
+                        '${_formatDate(dischargeAt)}',
+                style: const TextStyle(color: SetuColors.mutedLight),
+              ),
             ),
             if (active) ...[
               const SizedBox(height: SetuSpacing.sm),
-              Wrap(
-                spacing: SetuSpacing.sm,
-                children: [
-                  TextButton.icon(
-                    onPressed: () => context.push('/elder/$elderId/booking'),
-                    icon: const Icon(Icons.add_circle_outline, size: 18),
-                    label: const Text('Book a shift'),
-                  ),
-                  TextButton.icon(
-                    onPressed: () => _linkShift(context, ref, stayId),
-                    icon: const Icon(Icons.link, size: 18),
-                    label: const Text('Link a booking'),
-                  ),
-                  TextButton.icon(
-                    onPressed: () => _discharge(context, ref, stayId),
-                    icon: const Icon(Icons.logout, size: 18),
-                    label: const Text('Mark discharged'),
-                  ),
-                ],
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () => _discharge(context, ref, stayId),
+                  icon: const Icon(Icons.logout, size: 18),
+                  label: const Text('Mark discharged'),
+                ),
               ),
             ],
           ],
@@ -211,54 +163,14 @@ class _StayCard extends ConsumerWidget {
     );
   }
 
-  Future<void> _linkShift(BuildContext context, WidgetRef ref, String stayId) async {
-    final client = ref.read(supabaseClientProvider);
-    final repo = HospitalStaysRepository(client);
-    final linkable = await repo.fetchLinkableBookings(elderId);
-    if (!context.mounted) return;
-    if (linkable.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('No unlinked hospital companion bookings — book a shift first.')));
-      return;
-    }
-    final chosen = await showDialog<String>(
-      context: context,
-      builder: (context) => SimpleDialog(
-        title: const Text('Link a booking to this stay'),
-        children: linkable.map((b) {
-          final scheduledAt = DateTime.parse(b['scheduled_at'] as String).toLocal();
-          return SimpleDialogOption(
-            onPressed: () => Navigator.of(context).pop(b['id'] as String),
-            child: Text('${_formatDate(scheduledAt)} · ${b['status']}'),
-          );
-        }).toList(),
-      ),
-    );
-    if (chosen == null) return;
-    await repo.linkBooking(stayId, chosen);
-    ref.invalidate(_shiftsProvider(stayId));
-  }
-
-  Future<void> _discharge(BuildContext context, WidgetRef ref, String stayId) async {
-    final client = ref.read(supabaseClientProvider);
-    final repo = HospitalStaysRepository(client);
-
-    // PRD §13: a still-scheduled shift prompts confirmation, never an
-    // automatic cancel — the shift bookings themselves are left alone.
-    final shifts = await repo.fetchShifts(stayId);
-    final upcoming = shifts.where((s) {
-      final status = (s['bookings'] as Map<String, dynamic>?)?['status'] as String?;
-      return status != null && ['requested', 'matched', 'confirmed'].contains(status);
-    }).length;
-    if (!context.mounted) return;
-
+  Future<void> _discharge(
+      BuildContext context, WidgetRef ref, String stayId) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Mark discharged?'),
-        content: Text(upcoming > 0
-            ? '$upcoming shift(s) are still scheduled. They will NOT be cancelled automatically — cancel them separately if no longer needed.'
-            : 'This closes the stay.'),
+        content: const Text('This closes the stay and stamps today as the '
+            'discharge date.'),
         actions: [
           TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -270,7 +182,8 @@ class _StayCard extends ConsumerWidget {
       ),
     );
     if (confirmed != true) return;
-    await repo.markDischarged(stayId);
+    final client = ref.read(supabaseClientProvider);
+    await HospitalStaysRepository(client).markDischarged(stayId);
     ref.invalidate(_staysProvider(elderId));
   }
 }

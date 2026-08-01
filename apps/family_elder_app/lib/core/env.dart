@@ -5,7 +5,7 @@
 class Env {
   const Env._();
 
-  // Defaults point at the SETU pilot project so a plain build "just
+  // Defaults point at the CareHive pilot project so a plain build "just
   // works"; a --dart-define at build time still overrides these. The anon key
   // is a public, RLS-gated key (safe to ship in the client) — never a secret.
   static const String supabaseUrl = String.fromEnvironment(

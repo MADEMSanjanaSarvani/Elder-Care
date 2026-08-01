@@ -17,12 +17,7 @@ final elderRegionProvider =
   return null;
 });
 
-/// Moves an elder to a different region and refreshes everything keyed off it.
-///
-/// Region is not cosmetic — it decides which doctors the family is shown and
-/// which caregivers can be booked — so the change has to invalidate those
-/// reads, or a family that moved their mother to Chennai keeps being offered
-/// Vizag clinics for the rest of the session.
+/// Moves an elder to a different region and refreshes anything keyed off it.
 Future<void> setElderRegion(
   WidgetRef ref, {
   required String elderId,
@@ -36,40 +31,14 @@ Future<void> setElderRegion(
   ref.invalidate(myElderProfilesProvider);
 }
 
-/// Adds the signed-in family member to the waiting list for a region SETU
-/// hasn't reached, so the picker's "we'll let you know the moment we arrive"
-/// is a promise something can actually keep.
+/// Picks the state or city an elder lives in.
 ///
-/// Best-effort by design. This runs right after a person has been added, and
-/// failing to record a waiting-list entry must never surface as an error that
-/// makes the family think their mother wasn't saved. The function itself
-/// ignores regions that are already live, so calling it unconditionally is
-/// safe.
-Future<void> registerRegionInterest(
-  WidgetRef ref, {
-  required String regionId,
-  String? elderId,
-}) async {
-  try {
-    await ref.read(supabaseClientProvider).rpc(
-      'register_region_interest',
-      params: {'p_region_id': regionId, 'p_elder_id': elderId},
-    );
-  } catch (_) {
-    // Nothing the family can do about it, and nothing worth interrupting them
-    // for. The elder is already created either way.
-  }
-}
-
-/// Picks the state or city an elder lives in, and says plainly whether SETU
-/// operates there.
-///
-/// A dropdown of 37 places with no status would be a lie by omission: picking
-/// Kerala looks identical to picking Vizag, and the family only discovers the
-/// difference when the caregiver list comes back empty with no explanation. So
-/// the live ones sort to the top and carry a green LIVE chip, and choosing one
-/// of the rest shows what actually happens next — the person can still be
-/// added, medicines and reminders still work, there is just nobody to send yet.
+/// This used to carry LIVE chips and a "we don't have caregivers here yet"
+/// warning, because where somebody lived decided whether anyone could be sent
+/// to them. Nothing is sent now — a medicine record works identically in
+/// Visakhapatnam and in Kochi — so the chips and the warning are gone and this
+/// is what it looks like: a plain question about where they live, kept because
+/// it is worth having on a medical record.
 class RegionPicker extends ConsumerWidget {
   const RegionPicker({super.key, required this.value, required this.onChanged});
 
@@ -95,76 +64,22 @@ class RegionPicker extends ConsumerWidget {
       ),
       data: (rows) {
         final selected = rows.any((r) => r['code'] == value) ? value : null;
-        // Falls back to "live" so an unrecognised code doesn't scare a family
-        // with a "we're not there yet" warning about a place we can't identify.
-        final isLive = rows.firstWhere(
-              (r) => r['code'] == selected,
-              orElse: () => const <String, dynamic>{'status': 'active'},
-            )['status'] ==
-            'active';
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            DropdownButtonFormField<String>(
-              initialValue: selected,
-              isExpanded: true,
-              decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.place_outlined)),
-              items: [
-                for (final row in rows)
-                  DropdownMenuItem(
-                    value: row['code'] as String,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(row['display_name'] as String,
-                              overflow: TextOverflow.ellipsis),
-                        ),
-                        if (row['status'] == 'active')
-                          Container(
-                            margin: const EdgeInsets.only(left: 6),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 7, vertical: 2),
-                            decoration: BoxDecoration(
-                              color:
-                                  SetuColors.accentLight.withValues(alpha: 0.16),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: const Text('LIVE',
-                                style: TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 0.5,
-                                    color: SetuColors.accentLight)),
-                          ),
-                      ],
-                    ),
-                  ),
-              ],
-              onChanged: (v) {
-                if (v != null) onChanged(v);
-              },
-            ),
-            if (!isLive) ...[
-              const SizedBox(height: SetuSpacing.sm),
-              const Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.info_outline,
-                      size: 16, color: SetuColors.peachLight),
-                  SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                        "SETU doesn't have caregivers here yet. You can still "
-                        'add them and use medicines, reminders and the timeline '
-                        "— we'll let you know the moment we arrive.",
-                        style: TextStyle(
-                            fontSize: 12, color: SetuColors.mutedLight, height: 1.4)),
-                  ),
-                ],
+        return DropdownButtonFormField<String>(
+          initialValue: selected,
+          isExpanded: true,
+          decoration:
+              const InputDecoration(prefixIcon: Icon(Icons.place_outlined)),
+          items: [
+            for (final row in rows)
+              DropdownMenuItem(
+                value: row['code'] as String,
+                child: Text(row['display_name'] as String,
+                    overflow: TextOverflow.ellipsis),
               ),
-            ],
           ],
+          onChanged: (v) {
+            if (v != null) onChanged(v);
+          },
         );
       },
     );

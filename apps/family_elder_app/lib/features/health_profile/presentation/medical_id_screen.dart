@@ -119,7 +119,7 @@ class _MedicalIdScreenState extends ConsumerState<MedicalIdScreen> {
   /// Deliberately not JSON. The reader is a human holding a phone camera, not
   /// a parser, and a wall of braces at the roadside is worse than useless.
   String _qrPayload() {
-    final lines = <String>['SETU MEDICAL ID'];
+    final lines = <String>['CareHive MEDICAL ID'];
 
     final who = [
       if (_name.trim().isNotEmpty) _name.trim(),

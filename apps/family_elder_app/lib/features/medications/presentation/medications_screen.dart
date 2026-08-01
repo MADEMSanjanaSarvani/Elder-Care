@@ -2,12 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
-import '../../wellness/presentation/weekly_activity_chart.dart';
 import '../data/medications_repository.dart';
+import 'adherence.dart';
 import '../../../core/illustrations.dart';
 import '../../../core/local_reminders.dart';
 
@@ -149,7 +148,7 @@ class _AddMedResult {
 /// Add-medication form built to match the Stitch `add_medication` design
 /// (both frames): a hero banner, a split amount+unit dosage entry, the
 /// Morning / Afternoon / Evening / Night grid that sets the dose times, and a
-/// note on the reminder + refill-alert behaviour SETU runs automatically.
+/// note on the reminder + refill-alert behaviour CareHive runs automatically.
 /// Submits through the same repository as before — the amount+unit split is
 /// purely a visual/entry convenience, composed back into the single dosage
 /// string the backend already expects.
@@ -366,7 +365,7 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
                   color: SetuColors.mutedLight, fontSize: 13, height: 1.4),
             ),
             const SizedBox(height: SetuSpacing.md),
-            // These describe what SETU actually does, and one of them used to
+            // These describe what CareHive actually does, and one of them used to
             // not. "Voice Reminders — friendly spoken prompts" was in the
             // Stitch design and was copied straight in; nothing in this app
             // speaks. There is no text-to-speech dependency, no audio, no
@@ -613,12 +612,16 @@ class _MedicationCardState extends ConsumerState<_MedicationCard> {
                     children: [
                       Text('${onHand.toStringAsFixed(0)} ${stock['unit']} left',
                           style: TextStyle(color: low ? SetuColors.accentLight : null)),
+                      // Used to offer "Book Medicine Pickup", which sent you
+                      // into a caregiver booking flow that no longer exists.
+                      // A low-stock warning that names the fact is worth more
+                      // than a button that cannot deliver anything.
                       if (low) ...[
                         const SizedBox(width: SetuSpacing.sm),
-                        TextButton(
-                          onPressed: () => context.push('/elder/${widget.elderId}/booking'),
-                          child: const Text('Book Medicine Pickup'),
-                        ),
+                        const Text('Running low',
+                            style: TextStyle(
+                                color: SetuColors.accentLight,
+                                fontWeight: FontWeight.w700)),
                       ],
                     ],
                   ),

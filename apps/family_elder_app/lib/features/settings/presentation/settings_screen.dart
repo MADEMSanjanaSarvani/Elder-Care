@@ -8,7 +8,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/app_build.dart';
 import '../../../core/preferences.dart';
 import '../../../core/providers.dart';
-import '../../payments/presentation/payment_flow_screens.dart';
 import '../../legal/legal_content.dart';
 import '../../legal/presentation/legal_screen.dart';
 import '../../auth/data/auth_repository.dart';
@@ -21,7 +20,7 @@ import '../../auth/data/auth_repository.dart';
 /// literacy. Changes apply app-wide immediately via userPreferencesProvider.
 ///
 /// The Stitch mock also shows a "Personal Information" editor and a
-/// "Password & Authentication — last changed 3 months ago" row; SETU has
+/// "Password & Authentication — last changed 3 months ago" row; CareHive has
 /// neither a profile editor nor an auth-change timestamp, so those are
 /// replaced with the real signed-in name (from currentProfileProvider) and
 /// omitted respectively, rather than showing fabricated details.
@@ -40,9 +39,6 @@ class SettingsScreen extends ConsumerWidget {
     final notifier = ref.read(userPreferencesProvider.notifier);
     final profile = ref.watch(currentProfileProvider).asData?.value;
     final name = (profile?['display_name'] as String?)?.trim();
-    final elders = ref.watch(myElderProfilesProvider).asData?.value ?? [];
-    final elderId = elders.isNotEmpty ? elders.first.id : null;
-
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: prefsAsync.when(
@@ -86,7 +82,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 _NavRow(
                   icon: Icons.switch_account_outlined,
-                  label: 'How you use SETU',
+                  label: 'How you use CareHive',
                   trailingText: _roleLabel(profile?['role'] as String?),
                   onTap: () => _changeRole(context, ref,
                       current: profile?['role'] as String?),
@@ -95,55 +91,9 @@ class SettingsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: SetuSpacing.md),
 
-            // Care plan (standout secondary-colour card, matches "SETU Plus").
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(SetuSpacing.lg),
-              decoration: BoxDecoration(
-                color: SetuColors.lavenderLight.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                    color: SetuColors.lavenderLight.withValues(alpha: 0.3)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: const BoxDecoration(
-                            color: SetuColors.lavenderLight, shape: BoxShape.circle),
-                        child: const Icon(Icons.workspace_premium_outlined,
-                            color: Colors.white, size: 20),
-                      ),
-                      const SizedBox(width: SetuSpacing.md),
-                      Text('Care Plans',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleLarge
-                              ?.copyWith(fontWeight: FontWeight.w800)),
-                    ],
-                  ),
-                  const SizedBox(height: SetuSpacing.sm),
-                  const Text('Manage your family\'s subscription and billing.',
-                      style: TextStyle(color: SetuColors.mutedLight)),
-                  const SizedBox(height: SetuSpacing.md),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      style: FilledButton.styleFrom(
-                          backgroundColor: SetuColors.lavenderLight),
-                      onPressed: elderId == null
-                          ? null
-                          : () => context.push('/elder/$elderId/care-plans'),
-                      child: const Text('View plans'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: SetuSpacing.md),
+            // No care-plan card. CareHive has no subscription, no billing
+            // and nothing to upsell, so a "View plans" button would open a
+            // question the app has no answer to.
 
             // Accessibility
             _SettingsCard(
@@ -217,7 +167,7 @@ class SettingsScreen extends ConsumerWidget {
                   border: Border.all(color: SetuColors.borderLight),
                 ),
                 child: const Center(
-                  child: Text('SETU · $kAppBuildLabel',
+                  child: Text('CareHive · $kAppBuildLabel',
                       style: TextStyle(
                           color: SetuColors.mutedLight, fontSize: 12.5)),
                 ),
@@ -237,12 +187,10 @@ class SettingsScreen extends ConsumerWidget {
                   onTap: () => _openLegal(context,
                       title: 'Terms of Service', body: kTermsOfService),
                 ),
-                _NavRow(
-                  icon: Icons.currency_rupee,
-                  label: 'Cancellation & Refund Policy',
-                  onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => const CancellationPolicyScreen())),
-                ),
+                // No cancellation/refund policy row: nothing in CareHive is
+                // paid for. It was there for caregiver bookings, and pointing
+                // at a refund policy for a free app only raises the question
+                // of what people think they are being charged for.
                 _NavRow(
                   icon: Icons.download_outlined,
                   label: 'Export my data',
@@ -343,17 +291,16 @@ class SettingsScreen extends ConsumerWidget {
 
   static String _roleLabel(String? role) => switch (role) {
         'elder' => 'Senior',
-        'caregiver' => 'Caregiver',
         _ => 'Family member',
       };
 
-  /// Let someone change how they use SETU after sign-up.
+  /// Let someone change how they use CareHive after sign-up.
   ///
   /// The role picker only ever appeared once, on a brand-new account, so
-  /// anyone who chose wrongly — or who is both a daughter and a caregiver —
-  /// was stuck for good with no way back short of a new account. Switching
-  /// only rewrites `profiles.role`; elders, bookings and any caregiver
-  /// application all survive, so this is reversible and needs no warning.
+  /// anyone who chose wrongly was stuck for good with no way back short of a
+  /// new account. Switching only rewrites `profiles.role` — the elders, the
+  /// medicines and the record all survive — so it is reversible and needs no
+  /// warning.
   Future<void> _changeRole(BuildContext context, WidgetRef ref,
       {required String? current}) async {
     const options = {
@@ -364,13 +311,8 @@ class SettingsScreen extends ConsumerWidget {
       ),
       'elder': (
         'Senior',
-        'Use SETU for yourself, with larger text',
+        'Use CareHive for yourself, with larger text',
         Icons.elderly_outlined,
-      ),
-      'caregiver': (
-        'Caregiver',
-        'Provide care and accept visits',
-        Icons.medical_services_outlined,
       ),
     };
 
@@ -386,7 +328,7 @@ class SettingsScreen extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('How do you use SETU?',
+              Text('How do you use CareHive?',
                   style: Theme.of(ctx)
                       .textTheme
                       .titleLarge
@@ -429,7 +371,7 @@ class SettingsScreen extends ConsumerWidget {
       ref.invalidate(currentProfileProvider);
       await ref.read(currentProfileProvider.future);
       messenger.showSnackBar(SnackBar(
-          content: Text('You are now using SETU as a '
+          content: Text('You are now using CareHive as a '
               '${_roleLabel(picked).toLowerCase()}.')));
     } catch (err) {
       messenger.showSnackBar(
@@ -511,7 +453,7 @@ class SettingsScreen extends ConsumerWidget {
         builder: (context) => AlertDialog(
           title: const Text('Your data is ready'),
           content: const Text(
-              'We\'ve prepared a copy of your SETU data. Copy it to save '
+              'We\'ve prepared a copy of your CareHive data. Copy it to save '
               'or share it wherever you like.'),
           actions: [
             TextButton(

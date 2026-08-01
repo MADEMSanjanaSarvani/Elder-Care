@@ -16,7 +16,7 @@ enum _AuthMode { phone, email }
 enum _LoginStep { enter, enterCode }
 
 /// Matches the Stitch "login" / "create_account" / "forgot_password"
-/// designs: a warm circular app-icon badge, the SETU wordmark, and a
+/// designs: a warm circular app-icon badge, the CareHive wordmark, and a
 /// rounded card holding the real auth form. Every control here is the
 /// same real one from before — Email/Phone tabs, Log in/Create account
 /// toggle, the phone-OTP step, Google sign-in, password reset — just
@@ -25,7 +25,7 @@ enum _LoginStep { enter, enterCode }
 /// The Stitch login mock leads with "Get Security Code" (implying a
 /// passwordless phone-only flow) and offers Face ID / Touch ID; the
 /// create_account mock offers "Continue with Apple". None of that exists
-/// in SETU (email+password and phone-OTP are the only sign-in paths, and
+/// in CareHive (email+password and phone-OTP are the only sign-in paths, and
 /// there's no biometric or Apple sign-in wired up), so those aren't
 /// reproduced — only Google sign-in, which is real.
 class LoginScreen extends ConsumerStatefulWidget {
@@ -213,7 +213,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // The wording stays deliberately non-committal. "We've sent you a link"
       // confirms the address has an account, which turns this box into a free
       // account-enumeration oracle for anyone who wants to know whether a
-      // given person's family uses SETU.
+      // given person's family uses CareHive.
       await Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (ctx) => ActionSuccessScreen(
           tagline: 'Link sent',
@@ -404,7 +404,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: SetuSpacing.lg),
-                  Text('SETU',
+                  Text('CareHive',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.headlineLarge?.copyWith(
                           color: SetuColors.accentLight,
@@ -524,7 +524,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         TextSpan(
                             text: _signUp
                                 ? 'Already a member? '
-                                : 'New to SETU? ',
+                                : 'New to CareHive? ',
                             style: const TextStyle(color: SetuColors.mutedLight)),
                         TextSpan(
                             text: _signUp ? 'Log in' : 'Create Account',
@@ -654,7 +654,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         const Text.rich(TextSpan(
           style: TextStyle(fontSize: 12, color: SetuColors.mutedLight, height: 1.4),
           children: [
-            TextSpan(text: 'By creating an account, you agree to SETU\'s '),
+            TextSpan(text: 'By creating an account, you agree to CareHive\'s '),
             TextSpan(
                 text: 'Terms of Service',
                 style: TextStyle(

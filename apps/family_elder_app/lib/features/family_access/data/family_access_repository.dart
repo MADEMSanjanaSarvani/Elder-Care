@@ -18,7 +18,7 @@ class FamilyAccessRepository {
   /// link and no one else's, and blocks profiles rows that aren't yours — and
   /// PostgREST turns a blocked embed into a null rather than an error, so even
   /// the visible row came back nameless. Fixing it in RLS would have meant
-  /// making every SETU user's name and phone readable by every other user.
+  /// making every CareHive user's name and phone readable by every other user.
   /// See migration 0034.
   Future<List<Map<String, dynamic>>> fetchFamily(String elderId) async {
     final rows = await _client.rpc(
