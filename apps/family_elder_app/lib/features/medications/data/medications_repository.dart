@@ -43,6 +43,24 @@ class MedicationsRepository {
     await _client.from('elder_medications').update({'active': false}).eq('id', medicationId);
   }
 
+  /// Every pending dose for this elder over the next two days, newest last.
+  ///
+  /// Feeds the on-device alarm scheduler rather than any screen: it needs all
+  /// of an elder's doses at once, where the UI asks per medicine. Two days
+  /// because the app re-syncs on every open and Android caps how many alarms
+  /// one app may hold.
+  Future<List<Map<String, dynamic>>> fetchUpcomingDoses(String elderId) async {
+    final now = DateTime.now().toUtc();
+    return _client
+        .from('medication_doses')
+        .select('id, status, scheduled_at, elder_medications!inner(elder_id, name, dosage)')
+        .eq('elder_medications.elder_id', elderId)
+        .eq('status', 'pending')
+        .gte('scheduled_at', now.toIso8601String())
+        .lt('scheduled_at', now.add(const Duration(days: 2)).toIso8601String())
+        .order('scheduled_at');
+  }
+
   Future<List<Map<String, dynamic>>> fetchDosesForToday(String medicationId) async {
     final now = DateTime.now().toUtc();
     final startOfDay = DateTime.utc(now.year, now.month, now.day);

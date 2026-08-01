@@ -16,6 +16,27 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.BLUETOOTH"/>
 
+    <!-- Exact, on-device dose reminders (flutter_local_notifications).
+
+         USE_EXACT_ALARM rather than SCHEDULE_EXACT_ALARM: from Android 14 the
+         latter must be granted by the user in a settings screen most people
+         never find, and an ungranted exact alarm is silently downgraded to a
+         batched one — a dose reminder that arrives "sometime this hour", which
+         is the precise failure we moved off the server cron to avoid.
+         USE_EXACT_ALARM is granted at install for apps whose core function is
+         alarms or reminders. A medicine reminder is squarely that, and Play
+         asks you to justify it at submission; the justification is this app's
+         entire purpose.
+
+         RECEIVE_BOOT_COMPLETED so alarms survive a restart. Without it a phone
+         that reboots overnight goes quiet, and nobody notices until a dose is
+         already missed. VIBRATE so the reminder is felt when the phone is on
+         silent, which for an older user it very often is. -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+
     <application
         android:label="CareHive"
         android:name="${applicationName}"
@@ -58,6 +79,27 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- Re-registers scheduled alarms after a reboot. -->
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
+        <!-- Delivers the alarm itself. -->
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"/>
+        <!-- Handles the "Taken" button. exported=false because nothing outside
+             this app has any business recording that a dose was swallowed. -->
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver"/>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

@@ -4,7 +4,7 @@ description: >
   (PRD Part 3 §17/§18): family mode (dashboard, booking, consent
   management) and elder mode (large-text, voice-first, three-action home).
 publish_to: "none"
-version: 0.7.1+57
+version: 0.7.1+58
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -35,6 +35,12 @@ dependencies:
   # carries the emergency details themselves rather than a link, so it scans
   # with no network at all; see medical_id_screen.dart.
   qr_flutter: ^4.1.0
+  # Exact, on-device dose reminders. Server push cannot be the reminder: a
+  # GitHub Actions cron is best-effort and was observed drifting 90+ minutes,
+  # and FCM needs a data connection. An alarm scheduled on the phone fires on
+  # time, offline, and carries the "Taken" button. See core/local_reminders.dart.
+  flutter_local_notifications: ^22.2.0
+  timezone: ^0.11.1
   # Push notifications (FCM) and Google Sign-In. Bounded below the next major
   # so a CI resolve never silently pulls a breaking API change.
   firebase_core: ">=3.6.0 <4.0.0"

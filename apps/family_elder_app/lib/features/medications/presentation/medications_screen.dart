@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,11 +9,31 @@ import '../../../core/providers.dart';
 import '../../wellness/presentation/weekly_activity_chart.dart';
 import '../data/medications_repository.dart';
 import '../../../core/illustrations.dart';
+import '../../../core/local_reminders.dart';
 
 final _medicationsProvider =
     FutureProvider.family<List<Map<String, dynamic>>, String>((ref, elderId) async {
   final client = ref.watch(supabaseClientProvider);
-  return MedicationsRepository(client).fetchMedications(elderId);
+  final medications = await MedicationsRepository(client).fetchMedications(elderId);
+
+  // Re-arm the phone's alarms from whatever the server now says. This provider
+  // is invalidated whenever a medicine is added, edited or stopped, so the
+  // alarms follow the medicine list without anything else having to remember
+  // to keep them in step — and a stopped medicine stops reminding within a
+  // single screen refresh rather than at the next reboot.
+  //
+  // Deliberately not awaited: a slow or refused notification permission must
+  // never hold up the list somebody opened the app to read.
+  unawaited(() async {
+    try {
+      final doses = await MedicationsRepository(client).fetchUpcomingDoses(elderId);
+      await LocalReminders(client).syncDoses(doses);
+    } catch (err) {
+      debugPrint('Could not re-arm dose alarms: $err');
+    }
+  }());
+
+  return medications;
 });
 
 /// Medicine Management + Medicine Refill Management (PRD Part 5, Batch 2,

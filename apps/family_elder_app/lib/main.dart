@@ -7,6 +7,7 @@ import 'package:setu_core/setu_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/env.dart';
+import 'core/local_reminders.dart';
 import 'core/preferences.dart';
 import 'core/push_service.dart';
 import 'core/router.dart';
@@ -23,6 +24,16 @@ Future<void> main() async {
   // Push notifications (fail-soft — never blocks startup if Firebase is
   // absent or offline).
   unawaited(PushService(SetuSupabaseClient.instance).init());
+  // Dose alarms live on the device, not on the server — see local_reminders.dart.
+  // Flushing first sends any "Taken" taps recorded while the app was closed;
+  // they carry the time of the tap, so a late sync still records the right
+  // minute. Fail-soft and off the startup path: a phone that refuses
+  // notification permission still gets a working app, just a silent one.
+  unawaited(() async {
+    final reminders = LocalReminders(SetuSupabaseClient.instance);
+    await reminders.init();
+    await reminders.flushPendingMarks();
+  }());
   final prefs = await SharedPreferences.getInstance();
   final onboardingSeen = prefs.getBool(onboardingSeenKey) ?? false;
   runApp(ProviderScope(
