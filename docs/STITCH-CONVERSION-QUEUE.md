@@ -138,7 +138,7 @@ All paths are under `apps/family_elder_app/lib/`.
 ## After every batch
 
 1. Tell me (in the web chat) which batch you finished — I pull it in, audit it, and fix anything CI flags.
-2. Every push auto-builds an APK: **GitHub → Actions → Build APK → latest run → `setu-apk`**.
+2. Every push auto-builds an APK: **GitHub → Actions → Build APK → latest run → `carehive-apk`**.
 3. Install it and check the build stamp on the login screen matches the newest version.
 
 ## If a screen comes out worse

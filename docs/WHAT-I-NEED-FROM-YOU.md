@@ -18,7 +18,7 @@ CI, so only you can produce the installable app. GitHub builds it for free.
 4. Right side → **Run workflow** ▾ → in "Use workflow from" pick branch
    **`claude/elder-care-platform-mx27jo`** → green **Run workflow** button
 5. Wait ~8–12 min. Refresh; click the finished run (green tick).
-6. Scroll to **Artifacts** → download **`setu.apk`**
+6. Scroll to **Artifacts** → download **`carehive.apk`**
 7. Copy it to your Android phone, tap it, allow "install from unknown
    sources", install.
 

@@ -1,6 +1,6 @@
 name: Build APK
 
-# Builds an installable Android APK for the single Setu app and uploads it as
+# Builds an installable Android APK for the CareHive app and uploads it as
 # a downloadable artifact. Run it manually from the GitHub "Actions" tab
 # (Build APK -> Run workflow) whenever you want a fresh APK to share.
 #
@@ -143,11 +143,11 @@ jobs:
         working-directory: apps/family_elder_app
         run: |
           mkdir -p ../../dist
-          cp build/app/outputs/flutter-apk/app-release.apk ../../dist/setu.apk
+          cp build/app/outputs/flutter-apk/app-release.apk ../../dist/carehive.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: setu-apk
-          path: dist/setu.apk
+          name: carehive-apk
+          path: dist/carehive.apk
           if-no-files-found: error

@@ -99,12 +99,12 @@ There is now **one app** for everyone — at login the person picks their role
 3. Click the **Run workflow** button (right side) → pick the branch
    `claude/elder-care-platform-mx27jo` → **Run workflow**.
 4. Wait ~10–15 minutes. When the run finishes (green tick), open it and scroll
-   to **Artifacts** at the bottom. Download **`setu-apk`**.
-5. Unzip the download to get **`setu.apk`**.
+   to **Artifacts** at the bottom. Download **`carehive-apk`**.
+5. Unzip the download to get **`carehive.apk`**.
 
 ## Step 6 — Test it yourself, then share
 
-1. Copy `setu.apk` to your Android phone (WhatsApp to yourself, Google Drive,
+1. Copy `carehive.apk` to your Android phone (WhatsApp to yourself, Google Drive,
    or USB).
 2. Tap it to install. Android will warn "install from unknown source" — allow
    it (Settings will offer a toggle). This is normal for an APK not from the
@@ -114,7 +114,7 @@ There is now **one app** for everyone — at login the person picks their role
    open the timeline, try SOS (it will offer to call 108 — you can cancel).
    To see the caregiver side, log in with another account and pick
    **I'm a caregiver**.
-4. Once **you** are happy it works, send the same `setu.apk` file to each
+4. Once **you** are happy it works, send the same `carehive.apk` file to each
    friend with a login they can use. Tell them to install the same way.
 
 **After Part A:** friends can log in and use the whole app. The AI chat will
