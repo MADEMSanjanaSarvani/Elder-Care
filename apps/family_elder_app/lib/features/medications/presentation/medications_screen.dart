@@ -106,13 +106,26 @@ class MedicationsScreen extends ConsumerWidget {
     if (userId == null) return;
 
     try {
-      await MedicationsRepository(client).addMedication(
+      final repo = MedicationsRepository(client);
+      final medicationId = await repo.addMedication(
         elderId: elderId,
         name: result.name.trim(),
         dosage: result.dosage,
         times: result.times,
         addedBy: userId,
       );
+      // Only when a count was given. Inventing a starting quantity would make
+      // the refill warning fire on a schedule that has nothing to do with the
+      // actual strip.
+      final onHand = result.stockOnHand;
+      if (onHand != null) {
+        await repo.setStock(
+          medicationId: medicationId,
+          quantityOnHand: onHand,
+          unit: 'tablets',
+          refillThreshold: _AddMedicationSheetState._refillThresholdFor(onHand),
+        );
+      }
       ref.invalidate(_medicationsProvider(elderId));
     } catch (err) {
       if (context.mounted) {
@@ -123,10 +136,14 @@ class MedicationsScreen extends ConsumerWidget {
 }
 
 class _AddMedResult {
-  const _AddMedResult(this.name, this.dosage, this.times);
+  const _AddMedResult(this.name, this.dosage, this.times, this.stockOnHand);
   final String name;
   final String dosage;
   final List<String> times;
+
+  /// Null when the person didn't know or didn't say — in which case no stock
+  /// row is created and the form says plainly that refill alerts are off.
+  final double? stockOnHand;
 }
 
 /// Add-medication form built to match the Stitch `add_medication` design
@@ -151,6 +168,10 @@ class _AddMedicationSheet extends StatefulWidget {
 class _AddMedicationSheetState extends State<_AddMedicationSheet> {
   final _name = TextEditingController();
   final _dosageAmount = TextEditingController();
+  /// How many are in the strip or bottle right now. Optional, but without it
+  /// there is no stock row and "Refill Alerts" can never fire — which is why
+  /// that promise was empty for every medicine added through this sheet.
+  final _stockOnHand = TextEditingController();
   String _dosageUnit = 'mg';
 
   /// Which parts of the day this medicine is taken. Replaces a
@@ -202,7 +223,21 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
   void dispose() {
     _name.dispose();
     _dosageAmount.dispose();
+    _stockOnHand.dispose();
     super.dispose();
+  }
+
+  double? get _stockCount {
+    final value = double.tryParse(_stockOnHand.text.trim());
+    return value != null && value > 0 ? value : null;
+  }
+
+  /// Warn with roughly a week left, or a fifth of the pack, whichever is
+  /// larger. A fixed number would be wrong at both ends — a warning at 5 is
+  /// too late for four-a-day and far too early for a monthly tablet.
+  static double _refillThresholdFor(double onHand) {
+    final fifth = onHand / 5;
+    return fifth < 5 ? 5 : fifth.roundToDouble();
   }
 
   String get _dosage {
@@ -341,21 +376,46 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
             //
             // What actually happens is a push notification, dispatched by
             // reminders-dispatch-sweep. So that is what it now says.
-            _autoFeatureRow(Icons.notifications_active_outlined,
-                'Dose Reminders',
-                'A phone notification at each dose time, to the elder and the '
-                    'family.'),
+            const Text('How many do you have?',
+                style: TextStyle(fontWeight: FontWeight.w700)),
             const SizedBox(height: SetuSpacing.sm),
-            _autoFeatureRow(Icons.notification_important_outlined,
-                'Refill Alerts',
-                'When stock runs low, a refill suggestion appears on the '
-                    'dashboard.'),
+            TextField(
+              controller: _stockOnHand,
+              keyboardType: TextInputType.number,
+              onChanged: (_) => setState(() {}),
+              decoration: const InputDecoration(
+                labelText: 'Tablets left (optional)',
+                helperText: 'Needed for refill alerts. Skip if you are not sure.',
+                helperMaxLines: 2,
+              ),
+            ),
+            const SizedBox(height: SetuSpacing.md),
+            _autoFeatureRow(
+              Icons.notifications_active_outlined,
+              'Dose Reminders',
+              times.isEmpty
+                  ? 'No times chosen, so nothing will be sent. Pick a part of '
+                      'the day above.'
+                  : 'Your phone will remind you at ${times.join(', ')}.',
+              on: times.isNotEmpty,
+            ),
+            const SizedBox(height: SetuSpacing.sm),
+            _autoFeatureRow(
+              Icons.notification_important_outlined,
+              'Refill Alerts',
+              _stockCount == null
+                  ? 'Enter how many you have and CareHive will warn you before '
+                      'they run out.'
+                  : 'A warning appears once you are down to '
+                      '${_refillThresholdFor(_stockCount!).toStringAsFixed(0)}.',
+              on: _stockCount != null,
+            ),
             const SizedBox(height: SetuSpacing.lg),
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
                 onPressed: () => Navigator.of(context)
-                    .pop(_AddMedResult(_name.text, _dosage, times)),
+                    .pop(_AddMedResult(_name.text, _dosage, times, _stockCount)),
                 icon: const Icon(Icons.add_circle_outline),
                 label: const Text('Add Medicine'),
               ),
@@ -406,7 +466,23 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
     );
   }
 
-  Widget _autoFeatureRow(IconData icon, String title, String subtitle) {
+  /// A statement about what CareHive will do, not a setting.
+  ///
+  /// These rows used to end in `Switch(value: true, onChanged: null)`. A
+  /// disabled switch renders grey, so both read as OFF — telling somebody
+  /// their medicine reminders were switched off when they were always on — and
+  /// tapping them did nothing, because there was never a setting behind them.
+  /// A control that cannot be operated should not look like a control.
+  ///
+  /// Now it shows the real state: [on] is computed from what the form actually
+  /// contains, so the row changes as you fill it in.
+  Widget _autoFeatureRow(
+    IconData icon,
+    String title,
+    String subtitle, {
+    required bool on,
+  }) {
+    final colour = on ? SetuColors.verifiedLight : SetuColors.mutedLight;
     return Container(
       padding: const EdgeInsets.all(SetuSpacing.md),
       decoration: BoxDecoration(
@@ -429,7 +505,9 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
               ],
             ),
           ),
-          const Switch(value: true, onChanged: null),
+          const SizedBox(width: SetuSpacing.sm),
+          Icon(on ? Icons.check_circle : Icons.remove_circle_outline,
+              color: colour, size: 22),
         ],
       ),
     );

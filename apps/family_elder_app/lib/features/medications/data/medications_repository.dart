@@ -21,20 +21,22 @@ class MedicationsRepository {
         .order('created_at');
   }
 
-  Future<void> addMedication({
+  /// Returns the new medication's id so the caller can attach stock to it.
+  Future<String> addMedication({
     required String elderId,
     required String name,
     required String dosage,
     required List<String> times,
     required String addedBy,
   }) async {
-    await _client.from('elder_medications').insert({
+    final row = await _client.from('elder_medications').insert({
       'elder_id': elderId,
       'name': name,
       'dosage': dosage,
       'schedule': {'times': times},
       'added_by': addedBy,
-    });
+    }).select('id').single();
+    return row['id'] as String;
   }
 
   /// Cancels pending future doses and logs a timeline event server-side
