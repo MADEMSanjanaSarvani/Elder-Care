@@ -1,99 +1,105 @@
-# Terms of Service — Setu
+# Terms of Service — CareHive
 
-**Last updated: [DATE]**
+**Last updated: 1 August 2026**
 
 > **Fill in before publishing** — replace every `[BRACKETED]` value and host
 > this at a public URL. This is a starting draft, **not legal advice**. Because
-> Setu coordinates in-home care for elders, have a lawyer review it — in
-> particular the emergency, liability, and caregiver-relationship sections.
+> CareHive keeps a medicine record that a clinician may be shown, have a lawyer
+> review it — in particular the emergency, reliance and liability sections.
 
-These Terms govern your use of the Setu family & elder app and the Setu Care
-caregiver app (the "Apps"), operated by **[COMPANY LEGAL NAME]** ("we", "us",
-"Setu"). By using the Apps you agree to these Terms.
+These Terms govern your use of the CareHive app (the "App"), operated by
+**[COMPANY LEGAL NAME]** ("we", "us", "CareHive"). By using the App you agree
+to these Terms.
 
-## 1. What Setu is
+## 1. What CareHive is
 
-Setu is a **platform that connects** elders and their families with caregivers
-and care services (companionship, medicine pickup, appointment help, home
-nursing, and related services), and provides tools such as reminders, a care
-timeline, and an emergency alert feature. **[Choose one and delete the other:]**
-- Caregivers are independent service providers who offer services through the
-  platform; Setu facilitates the connection and payment. **OR**
-- Caregivers are engaged by Setu to deliver services.
+CareHive keeps a record of the medicines a person takes. It reminds them at
+each dose time, records what was actually marked taken or not taken, and puts
+that record — along with allergies, conditions and blood group — on one screen
+for a doctor or a paramedic. It also carries daily check-ins, appointments,
+hospital stays and an emergency SOS that alerts the family.
+
+**CareHive is free.** There is no subscription, no booking and no payment.
+Nobody is dispatched to your home; no staff, carers or clinicians are supplied
+or introduced by us.
 
 ## 2. Emergency services — important
 
-**Setu is not an emergency medical service.** The in-app SOS feature helps you
-**call 108 (emergency services)** and, in parallel, alerts your family and our
-on-call team. It does **not** replace calling emergency services. In any medical
-emergency, **call 108 or go to the nearest hospital**. Do not rely on the Apps
+**CareHive is not an emergency medical service.** The in-app SOS feature helps
+you **call 108 (emergency services)** and, in parallel, alerts your family. It
+does **not** replace calling emergency services, and no operator, monitoring
+centre or on-call team of ours is watching for your alert. In any medical
+emergency, **call 108 or go to the nearest hospital**. Do not rely on the App
 as your only means of getting emergency help. Alerts depend on your device,
 network, and location permissions and may be delayed or fail.
 
 ## 3. Not medical advice
 
-Content in the Apps, including any AI-generated summaries or assistant replies,
-is for **information and coordination only** and is **not medical advice,
-diagnosis, or treatment**. Always consult a qualified clinician for medical
-decisions. The AI features do not diagnose conditions or make medication
-decisions.
+The App is a record and a reminder. It is **not medical advice, diagnosis, or
+treatment**, and it does not decide doses. Always consult a qualified clinician
+for medical decisions. Never start, stop or change a medicine because of
+anything the App shows you.
 
-## 4. Eligibility and accounts
+## 4. What the record does and does not mean
+
+The App marks a dose as taken only when a person says so. A dose that nobody
+marked is recorded as having **no record** — not as a missed dose — because the
+App cannot know which it was. Do not read an unmarked dose as evidence a
+medicine was skipped, and do not present the record to a clinician as if it
+were.
+
+Where a family member marks a dose on the elder's behalf, the record stores
+that fact, so the two can be told apart afterwards.
+
+## 5. Reminders are best effort
+
+Dose reminders are alarms scheduled on the device. They will not ring if the
+phone is switched off, out of battery, or if notification or exact-alarm
+permission has been refused or revoked; and the App can only hold a limited
+number of future alarms, so it re-arms them each time it is opened. **Do not
+rely on CareHive as the only thing standing between someone and a missed
+medicine.**
+
+## 6. Eligibility and accounts
 
 - You must be 18+ and able to form a binding contract.
 - You are responsible for activity on your account and for keeping your login
-  (your phone/OTP) secure.
+  secure.
 - You agree to provide accurate information and to keep it updated.
-- Where you act on behalf of an elder, you confirm you are authorised to do so.
+- Where you act on behalf of an elder, or enter another person's health
+  details, you confirm you are authorised to do so.
 
-## 5. Consent and family access
+## 7. Consent and family access
 
 An elder controls what linked family members can see, per category, and may
 revoke access at any time. You agree to use any access you are granted only for
 the elder's care and welfare, and to respect the elder's privacy.
 
-## 6. Caregiver terms (Setu Care)
-
-If you use Setu Care as a caregiver:
-- You agree to complete verification (identity, background, and — for clinical
-  roles — credentials and insurance) and to keep it current.
-- You agree to provide services professionally, safely, and lawfully, and to
-  follow visit check-in/out (OTP) procedures.
-- Payouts are made to the bank/UPI details you provide, subject to the platform
-  commission and any applicable taxes, after a visit is verified complete.
-
-## 7. Payments
-
-- Prices for services and any subscription plans are shown in the app in INR.
-- Payments are processed by **[Razorpay]**; by paying you also agree to the
-  provider's terms.
-- A care plan covers its included visits for the period; anything beyond the
-  plan is billed per visit. Refunds and cancellations are handled per our
-  **[refund policy / the terms shown at booking]**.
-
 ## 8. Acceptable use
 
-You agree not to misuse the Apps, including not to: access data you are not
-authorised to see, harass caregivers or users, provide false information,
-attempt to break security, or use the platform for anything unlawful.
+You agree not to misuse the App, including not to: access data you are not
+authorised to see, enter another person's health information without authority,
+provide false information, attempt to break security, or use it for anything
+unlawful.
 
 ## 9. Availability
 
-We aim to keep the Apps available but do not guarantee uninterrupted service.
-Features that depend on third parties (payments, verification, AI, SMS) may be
-unavailable at times. We may change or discontinue features.
+We aim to keep the App available but do not guarantee uninterrupted service.
+Features that depend on third parties (push delivery, SMS/email sign-in,
+hosting) may be unavailable at times. We may change or discontinue features.
 
 ## 10. Limitation of liability
 
-To the maximum extent permitted by law, Setu is not liable for indirect or
-consequential losses, or for the acts or omissions of independent caregivers or
-third-party providers. Nothing in these Terms limits liability that cannot be
-limited by law (including for death or personal injury caused by our
+To the maximum extent permitted by law, CareHive is not liable for indirect or
+consequential losses, or for losses arising from a reminder that did not
+arrive, a record that was incomplete because a dose went unmarked, or the acts
+of third-party providers. Nothing in these Terms limits liability that cannot
+be limited by law (including for death or personal injury caused by our
 negligence). **[Confirm scope with your lawyer.]**
 
 ## 11. Termination
 
-You may stop using the Apps at any time and request deletion of your data (see
+You may stop using the App at any time and request deletion of your data (see
 the Privacy Policy). We may suspend or terminate access for breach of these
 Terms or to protect users' safety.
 
@@ -112,3 +118,14 @@ Address: [COMPANY ADDRESS]
 
 We may update these Terms; the updated version will be posted here with a new
 "Last updated" date, and material changes will be notified in the app.
+
+---
+
+### What changed on 1 August 2026
+
+CareHive stopped being a caregiver marketplace. Removed, because the App no
+longer does any of it: the caregiver relationship and verification section, the
+payments and refunds section, the second (caregiver) app, and the AI features.
+Added: sections 4 and 5, which state plainly what the record means and that the
+reminders are best effort — the two things a user could otherwise be harmed by
+assuming.

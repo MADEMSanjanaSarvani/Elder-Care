@@ -1,4 +1,4 @@
-# Getting SETU onto the Play Store
+# Getting CareHive onto the Play Store
 
 *Everything left between build 17 and a live listing, in the order to do it.*
 
@@ -11,8 +11,16 @@ hold). Steps 5–7 are already built and just need running.
 
 Honest answer — **put the APK in five real families' hands first.** A store
 listing for an app nobody has used yet gets you nothing; a week of watching
-five families use it will change what you build next. `docs/business/
-SETU-zero-to-launch-handbook.md` covers finding those first users in Vizag.
+five families use it will change what you build next.
+`docs/business/SETU-first-five-families.md` covers finding them. (The rest of
+`docs/business/` was written for the caregiver marketplace and is history now —
+see the README in that folder.)
+
+For CareHive the test is specific and easy to run: give it to somebody who
+takes three or more long-term medicines, and after a week ask them what the
+last seven days looked like. If they can answer from the app instead of from
+memory, it works. If they stopped marking doses after day two, find out why —
+that is the only failure mode that matters.
 
 Everything below will still be here when you're ready. If you'd rather
 submit now, carry on.
@@ -22,7 +30,7 @@ submit now, carry on.
 ## 1. Create your signing key ⚠️ do this once, never lose it
 
 This key **is** your app's identity on Google Play. Lose it and you can
-never update SETU again — you'd have to publish a new listing and abandon
+never update CareHive again — you'd have to publish a new listing and abandon
 every install. Back it up in two places.
 
 On your Windows machine:
@@ -87,9 +95,11 @@ A minute later your URLs are live:
 Re-run `python3 tools/build_public_site.py .` and push again whenever the
 legal text changes.
 
-**A lawyer should read the privacy policy before you take real money.** SETU
-handles health data, which is sensitive personal data under the DPDP Act.
-The draft reflects what the app genuinely does, but it isn't legal advice.
+**A lawyer should read the privacy policy before you publish.** CareHive
+handles health data, which is sensitive personal data under the DPDP Act. The
+draft reflects what the app genuinely does, but it isn't legal advice. (There
+is no money involved — the app is free and takes no payments — but the health
+data alone is reason enough.)
 
 ---
 
@@ -147,15 +157,20 @@ Edit `CAPTIONS` at the top of the script to match your screens.
 Capture these, in this order — they tell the story a worried daughter cares
 about:
 
-1. Family dashboard  2. Timeline  3. Caregiver list  4. Doctor consultations
-5. SOS  6. Memories  7. Consent/privacy  8. Care plans
+1. **Today** — a couple of doses due, Taken buttons visible. This is the app;
+   lead with it.
+2. **Last 30 days** — the adherence history, with the "no record" legend
+   showing. It is what makes CareHive different from every other pill app.
+3. **Medical ID** — the screen a paramedic reads.
+4. Add a medicine (the dose-time grid)  5. Family dashboard  6. Timeline
+7. SOS  8. Consent/privacy
 
 ---
 
 ## 7. Fill in the listing
 
 Copy from `docs/store/STORE-LISTING.md` — title, short and full description
-are written and already use the "safety net" positioning.
+are written and use the "Know what you took" positioning.
 
 Assets ready in `docs/store/`:
 
@@ -164,11 +179,16 @@ Assets ready in `docs/store/`:
 
 Play will also ask you to declare:
 
-- **Data safety form** — answer from the privacy policy: you collect health
-  data, location during visits, and contact details; it's encrypted in
-  transit; users can request deletion in-app.
-- **Health apps declaration** — SETU coordinates care, it doesn't diagnose.
-  Say so plainly.
+- **Data safety form** — the filled-in answers are in
+  `docs/store/STORE-LISTING.md`. In short: you collect health data, contact
+  details, and location *only at the moment an SOS is raised*; no payment
+  data at all; encrypted in transit; deletion can be requested in-app.
+- **Health apps declaration** — CareHive is a personal health record and a
+  medication reminder. It does not diagnose and offers no clinical decision
+  support. Say so plainly.
+- **USE_EXACT_ALARM** — expect a question. The app's core user-facing function
+  is an alarm at a specific time, which is exactly the justification Google
+  asks for.
 - **Target audience** — adults, not children.
 
 ---

@@ -1,9 +1,10 @@
-# Publishing the SETU public site
+# Publishing the CareHive public site
 
 Four static pages — home, privacy policy, terms, support. They exist because
 **Google Play will not publish an app without a publicly reachable privacy
 policy URL**, and because a family who has just been asked to trust a stranger
-with their mother will look SETU up before they install anything.
+with their mother's medicine record will look CareHive up before they install
+anything.
 
 Hosted on **Firebase Hosting**. Netlify was the other candidate and is not
 used: it needs a paid plan here, and Firebase is already on a Pro plan for this
@@ -49,8 +50,10 @@ The HTML is generated, not hand-edited:
 python3 tools/build_public_site.py
 ```
 
-Edit the copy in that script so a regeneration doesn't silently discard
-changes. The privacy text must stay in step with what the app actually does —
-if a new data type starts being collected, or the AI provider changes (see
-`docs/business/SETU-ai-provider.md`), the policy has to say so before the
-change ships.
+The privacy and terms pages come from `docs/legal/*.md`; the home and support
+pages are templates inside the script. Edit the right source, then regenerate —
+editing the built HTML directly means the next run silently discards it.
+
+The text must stay in step with what the app actually does. If a new data type
+starts being collected, or a new processor is introduced, the policy has to say
+so **before** the change ships.

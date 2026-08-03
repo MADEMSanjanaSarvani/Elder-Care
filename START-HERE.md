@@ -49,18 +49,25 @@ In order:
 
 ## Hosting your privacy policy (Play requires a public URL)
 
-The easiest free option is **GitHub Pages**:
-1. In your repo → **Settings** → **Pages**.
-2. Under "Build and deployment", Source = **Deploy from a branch**; pick your
-   branch and folder **/docs**; Save.
-3. After a minute your files are live at
-   `https://<your-username>.github.io/<repo>/legal/privacy-policy.html`
-   (and `.../legal/terms-of-service.html`).
-4. Put those URLs in the Play Console listing and in the apps if asked.
+The pages are generated from the markdown in `docs/legal/` into
+`docs/public-site/`, so the published policy and the in-app copy cannot drift:
 
-(The HTML versions — `docs/legal/privacy-policy.html` and
-`terms-of-service.html` — are already generated from the markdown and styled to
-read well on a phone.)
+```bash
+python3 tools/build_public_site.py .      # after editing docs/legal/*.md
+firebase deploy --only hosting            # see docs/public-site/README.md
+```
+
+`firebase.json` points hosting at `docs/public-site` with `cleanUrls` on, so
+the URL you paste into the Play Console is `https://<your-site>/privacy` — no
+`.html`, and stable if a file is ever renamed.
+
+**Do NOT point GitHub Pages at the whole `docs/` folder.** It also holds the
+business plans and the credentials checklist, and Pages would publish all of
+it. If you use Pages instead of Firebase, publish `docs/public-site/` only.
+
+> There used to be a second pair of HTML files at `docs/legal/*.html`. They
+> were deleted on 1 August 2026: two copies of a privacy policy is exactly how
+> the wrong one ends up published, and one of them had gone stale.
 
 ---
 

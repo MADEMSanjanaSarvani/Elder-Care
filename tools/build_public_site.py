@@ -1,4 +1,4 @@
-"""Build the public SETU site: privacy policy, terms, and a support page.
+"""Build the public CareHive site: privacy policy, terms, and a support page.
 
 Google Play requires a publicly reachable Privacy Policy URL, and a support
 contact, before it will accept a listing. This renders the canonical
@@ -20,12 +20,12 @@ import sys
 import markdown
 
 # Values substituted into the [BRACKETED] placeholders in the markdown.
-# SETU is pre-incorporation, so the data fiduciary under the DPDP Act is the
-# founder personally. Swap COMPANY once a private limited company exists.
-COMPANY = "Sanjana Sarvani Madem, sole proprietor, trading as SETU"
+# CareHive is pre-incorporation, so the data fiduciary under the DPDP Act is
+# the founder personally. Swap COMPANY once a private limited company exists.
+COMPANY = "Sanjana Sarvani Madem, sole proprietor, trading as CareHive"
 ADDRESS = "Visakhapatnam, Andhra Pradesh, India"
 CONTACT = "sanjanasarvani2111@gmail.com"
-NAME = "SETU"
+NAME = "CareHive"
 
 CSS = """
 :root{--paper:#FAF9F6;--raised:#fff;--ink:#3A322C;--muted:#7A6E64;
@@ -83,14 +83,14 @@ def page(title, body, *, active=""):
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{title} · SETU</title><style>{CSS}</style></head><body>
+<title>{title} · CareHive</title><style>{CSS}</style></head><body>
 <div class="wrap">
-<header>{MARK}<b>SETU</b>
-<span class="tag">Your parents' safety net.</span></header>
+<header>{MARK}<b>CareHive</b>
+<span class="tag">Know what you took.</span></header>
 <nav class="links">{lk('index.html', 'Home')}{lk('privacy.html', 'Privacy')}
 {lk('terms.html', 'Terms')}{lk('support.html', 'Support')}</nav>
 {body}
-<footer>SETU — a trusted elder-care ecosystem for families.<br>
+<footer>CareHive — the medicine record.<br>
 Contact: <a href="mailto:{CONTACT}">{CONTACT}</a></footer>
 </div></body></html>"""
 
@@ -111,10 +111,20 @@ def render_md(path):
                .replace("</table>", "</table></div>")
 
 
-INDEX = """<h1>SETU</h1>
-<p>SETU is a trusted elder-care ecosystem for families — daily check-ins,
-medicine reminders, verified caregivers, doctor consultations and emergency
-SOS, so adult children living away can know their parents are alright.</p>
+INDEX = """<h1>CareHive</h1>
+<p>A person taking several long-term medicines has no accurate, current record
+of what they actually take — not for themselves in the morning, not for the
+doctor who asks, and not for the paramedic who can't. CareHive is that
+record.</p>
+<p>The phone rings at every dose time, on the minute and without needing a
+connection, and the notification carries a <b>Taken</b> button. What was taken,
+what was not, and what nobody marked are kept as three separate facts, so the
+history you show a doctor is the truth rather than a guess. Allergies,
+conditions and blood group sit on one Medical ID screen a paramedic can read.
+Family can see the same day, mark a dose themselves, and get the alert the
+moment SOS is pressed.</p>
+<p>CareHive is free. Nothing is booked, nobody is dispatched, and there is no
+advertising.</p>
 <p>These pages carry the documents Google Play and India's Digital Personal
 Data Protection Act require us to publish.</p>
 <h2>Documents</h2>
@@ -122,13 +132,13 @@ Data Protection Act require us to publish.</p>
 <li><a href="privacy.html">Privacy Policy</a> — what we collect, why, who can
 see it, and how to have it deleted.</li>
 <li><a href="terms.html">Terms of Service</a> — the agreement covering use of
-the app and the care it coordinates.</li>
+the app, and what the record does and does not mean.</li>
 <li><a href="support.html">Support</a> — how to reach a human.</li>
 </ul>"""
 
 SUPPORT = f"""<h1>Support</h1>
-<p>Something not working, a question about a visit, or a request about your
-data — write to us and a person will reply.</p>
+<p>Something not working, a reminder that did not arrive, or a request about
+your data — write to us and a person will reply.</p>
 <h2>Contact</h2>
 <p><a href="mailto:{CONTACT}">{CONTACT}</a><br>
 We aim to reply within two working days.</p>
@@ -138,10 +148,17 @@ it, or ask us to delete it. Email the address above with the subject
 <code>Data request</code> and tell us which you want. You can also start both
 from inside the app: <b>Profile → Settings &amp; privacy</b>.</p>
 <h2>Emergencies</h2>
-<p><b>SETU is not an emergency service.</b> If someone is in immediate danger,
-call <b>112</b> (India's emergency number) or your local hospital first. The
-app's SOS alerts your family circle and our team — it does not replace an
-ambulance.</p>"""
+<p><b>CareHive is not an emergency service.</b> If someone is in immediate
+danger, call <b>112</b> (India's emergency number) or your local hospital
+first. The app's SOS alerts your family circle — nobody at CareHive is
+watching for it, and it does not replace an ambulance.</p>
+
+<h2>Reminders</h2>
+<p>Dose reminders are alarms set on your own phone, so they ring on time and
+work with no internet. They will not ring if the phone is off, out of battery,
+or if you refused the notification or alarm permission — open
+<b>Profile → Settings</b> if reminders have stopped arriving. CareHive should
+never be the only thing standing between someone and a missed medicine.</p>"""
 
 if __name__ == "__main__":
     root = sys.argv[1]

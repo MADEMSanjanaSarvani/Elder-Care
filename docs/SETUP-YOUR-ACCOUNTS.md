@@ -126,8 +126,9 @@ families to use it in a browser too — see the question at the bottom).
 - [ ] You'll need a **release keystore** (I'll walk you through
       `keytool` — see `docs/BUILD-ANDROID.md`). Keep it safe; it signs every
       update. Its SHA-1 also feeds Google Sign-In (section 3).
-- [ ] **Privacy Policy URL** (required): host `docs/legal/PRIVACY-POLICY.html`
-      on your domain and paste the URL in the listing + Data Safety form.
+- [ ] **Privacy Policy URL** (required): run
+      `python3 tools/build_public_site.py .`, deploy `docs/public-site/`, and
+      paste the `/privacy` URL in the listing + Data Safety form.
 
 **Send me:** your package name choice and the SHA-1 once the keystore exists.
 

@@ -150,9 +150,9 @@ feeds Google Sign-In's SHA-1.
    developer account (ID verification, ~1–2 days).
 2. Create the app → fill the store listing (I drafted copy + graphics in
    `docs/store/`).
-3. Host `docs/legal/PRIVACY-POLICY.html` at a public URL (your domain or even
-   a GitHub Pages link) and paste that URL into the listing + **Data safety**
-   form.
+3. Build and host the public site — `python3 tools/build_public_site.py .`
+   then deploy `docs/public-site/` (Firebase Hosting; see its README). Paste
+   the `/privacy` URL into the listing and the **Data safety** form.
 4. Upload the signed **.aab** (I'll set up the release build once the keystore
    exists).
 
