@@ -81,11 +81,17 @@ class _ElderSetupScreenState extends ConsumerState<ElderSetupScreen> {
     final t = Theme.of(context).textTheme.scaledForElderMode();
 
     // Their name from sign-up, so the field is usually already right and this
-    // is a one-tap screen. Done in build rather than initState because the
-    // profile arrives asynchronously.
+    // is a one-tap screen. Done here rather than in initState because the
+    // profile arrives asynchronously — but only into an empty field. On a slow
+    // connection somebody can start typing before the profile lands, and
+    // having their own name yanked out from under them mid-word is worse than
+    // not prefilling at all.
     final profile = ref.watch(currentProfileProvider).asData?.value;
     final signUpName = (profile?['display_name'] as String?)?.trim();
-    if (!_prefilled && signUpName != null && signUpName.isNotEmpty) {
+    if (!_prefilled &&
+        signUpName != null &&
+        signUpName.isNotEmpty &&
+        _name.text.isEmpty) {
       _prefilled = true;
       _name.text = signUpName;
     }
