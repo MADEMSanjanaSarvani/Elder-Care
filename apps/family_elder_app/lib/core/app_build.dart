@@ -4,4 +4,4 @@
 /// install actually update?" ambiguity.
 ///
 /// Keep it in sync with pubspec `version:`.
-const String kAppBuildLabel = 'v0.8.0 · build 61 · 1 Aug';
+const String kAppBuildLabel = 'v0.8.1 · build 62 · 3 Aug';

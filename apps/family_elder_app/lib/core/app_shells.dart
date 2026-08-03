@@ -73,16 +73,26 @@ class _NotificationBell extends ConsumerWidget {
 Widget _homeTab(Widget body) =>
     Scaffold(appBar: const _HomeTopBar(), body: SafeArea(child: body));
 
-/// Shown in an elder-scoped tab when a family member hasn't added anyone yet.
+/// Shown in a tab that needs a person before it can show anything.
+///
+/// Worded per role. Telling somebody using CareHive for themselves to "add the
+/// parent or elder you care for" is the same confusion that made the old
+/// first-run screen a dead end — they are the person, and the thing they
+/// actually need is one tap away on the Home tab.
 class _NeedElder extends StatelessWidget {
-  const _NeedElder();
+  const _NeedElder({required this.forSelf});
+
+  final bool forSelf;
+
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: SetuEmptyState(
         icon: Icons.person_add_alt_1_outlined,
-        title: 'Add someone first',
-        message: 'Add the parent or elder you care for from the Home tab.',
+        title: forSelf ? 'Finish setting up' : 'Add someone first',
+        message: forSelf
+            ? 'Open the Home tab and tap Get started — it takes one tap.'
+            : 'Add the parent or elder you care for from the Home tab.',
       ),
     );
   }
@@ -104,7 +114,7 @@ class _FamilyShellState extends ConsumerState<FamilyShell> {
   Widget build(BuildContext context) {
     final elders = ref.watch(myElderProfilesProvider).asData?.value ?? [];
     final elderId = elders.isNotEmpty ? elders.first.id : null;
-    const needElder = _NeedElder();
+    const needElder = _NeedElder(forSelf: false);
 
     final tabs = <Widget>[
       _homeTab(const FamilyHomeScreen()),
@@ -172,7 +182,7 @@ class _ElderShellState extends ConsumerState<ElderShell> {
   Widget build(BuildContext context) {
     final elders = ref.watch(myElderProfilesProvider).asData?.value ?? [];
     final elderId = elders.isNotEmpty ? elders.first.id : null;
-    const needElder = _NeedElder();
+    const needElder = _NeedElder(forSelf: true);
 
     final tabs = <Widget>[
       _homeTab(const ElderHomeScreen()),

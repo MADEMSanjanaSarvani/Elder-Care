@@ -5,6 +5,7 @@ import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
 import '../../medications/presentation/today_screen.dart';
+import 'elder_setup_screen.dart';
 
 // Local colour tokens for the greeting card's gradient — not promoted to
 // SetuColors because nothing else uses them.
@@ -25,13 +26,10 @@ class ElderHomeScreen extends ConsumerWidget {
 
     return elderProfiles.when(
       data: (elders) {
-        if (elders.isEmpty) {
-          return const SetuEmptyState(
-            icon: Icons.elderly,
-            title: 'Setting up your profile',
-            message: 'Ask your family to add you, then sign in again.',
-          );
-        }
+        // First run. This used to say "Ask your family to add you, then sign
+        // in again" — a wait that would never have ended, since nothing in the
+        // system created a self-owned record. Now they set themselves up here.
+        if (elders.isEmpty) return const ElderSetupScreen();
         final elder = elders.first;
         final first = elder.displayName.trim().split(' ').first;
         final hour = DateTime.now().hour;
