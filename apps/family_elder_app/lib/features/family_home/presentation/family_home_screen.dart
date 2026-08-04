@@ -9,6 +9,7 @@ import '../../../core/providers.dart';
 import '../../../core/region_picker.dart';
 import '../../health_profile/data/health_profile_repository.dart';
 import '../../health_profile/presentation/elder_avatar.dart';
+import '../../../core/promise_card.dart';
 import '../../medications/presentation/adherence.dart';
 import '../data/home_summary_repository.dart';
 
@@ -545,48 +546,38 @@ class _NoElders extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    // One bold line each — see PromiseCard. The long-form version of this list
+    // was six paragraphs, which is a page nobody reads on the one screen where
+    // you are still deciding whether the app is worth your time.
     const features = <List<dynamic>>[
-      [Icons.medication_outlined, SetuColors.peachLight, 'Every dose, on time',
-        'The phone rings at each dose time — offline, on the minute — with a '
-        'Taken button right on the notification.'],
-      [Icons.fact_check_outlined, SetuColors.accentLight, 'A record that is true',
-        'What was taken, what was not, and what nobody marked — kept apart, '
-        'never guessed at.'],
-      [Icons.badge_outlined, SetuColors.accentLight, 'Ready for the question',
-        'One screen with the medicines, allergies and blood group, for the '
-        'doctor who asks and the paramedic who cannot.'],
-      [Icons.favorite_outline, SetuColors.lavenderLight, 'Daily check-ins',
-        'A gentle "I\'m okay today" from your parent, so you never wonder.'],
-      [Icons.sos_outlined, SetuColors.sosLight, 'Emergency SOS',
-        'One tap calls for help and alerts your whole family at once.'],
-      [Icons.timeline_outlined, SetuColors.accentLight, 'Health & timeline',
-        'Appointments, hospital stays and updates gathered in one calm place.'],
+      [Icons.alarm_on_rounded, SetuColors.peachLight, 'Every dose, on time',
+        'The phone rings on the minute, even offline.'],
+      [Icons.fact_check_rounded, SetuColors.verifiedLight, 'A record that is true',
+        'Taken, not taken and no record stay three separate things.'],
+      [Icons.badge_rounded, SetuColors.accentLight, 'Ready for the question',
+        'Medicines, allergies and blood group on one screen.'],
+      [Icons.favorite_rounded, SetuColors.lavenderLight, 'Daily check-ins',
+        'A gentle "I\'m okay today", so you never wonder.'],
+      [Icons.sos_rounded, SetuColors.sosLight, 'Emergency SOS',
+        'One tap calls for help and alerts everyone at once.'],
+      [Icons.timeline_rounded, SetuColors.accentLight, 'Health & timeline',
+        'Appointments and hospital stays in one calm place.'],
     ];
 
     return ListView(
       padding: const EdgeInsets.all(SetuSpacing.lg),
       children: [
-        const SizedBox(height: SetuSpacing.sm),
-        Center(
-          child: Container(
-            padding: const EdgeInsets.all(SetuSpacing.lg),
-            decoration: BoxDecoration(
-              color: SetuColors.accentLight.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.holiday_village_outlined,
-                size: 44, color: SetuColors.accentLight),
-          ),
-        ),
+        const WelcomeHero(),
         const SizedBox(height: SetuSpacing.md),
         Text('Welcome to CareHive',
-            textAlign: TextAlign.center, style: theme.textTheme.headlineMedium),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.headlineMedium
+                ?.copyWith(fontWeight: FontWeight.w800)),
         const SizedBox(height: SetuSpacing.xs),
         Text(
-          'A warm, simple way to look after your parents — together, from '
-          'anywhere. Here\'s everything CareHive does for your family.',
+          'Know what your parent actually takes — and be able to show it.',
           textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium
+          style: theme.textTheme.bodyLarge
               ?.copyWith(color: SetuColors.mutedLight, height: 1.5),
         ),
         const SizedBox(height: SetuSpacing.lg),
@@ -621,33 +612,12 @@ class _NoElders extends ConsumerWidget {
         Text('What you can do', style: theme.textTheme.titleLarge),
         const SizedBox(height: SetuSpacing.sm),
         for (final f in features)
-          Padding(
-            padding: const EdgeInsets.only(bottom: SetuSpacing.sm),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(SetuSpacing.md),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SetuIconChip(icon: f[0] as IconData, color: f[1] as Color),
-                    const SizedBox(width: SetuSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(f[2] as String,
-                              style: theme.textTheme.titleMedium),
-                          const SizedBox(height: 2),
-                          Text(f[3] as String,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: SetuColors.mutedLight, height: 1.4)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          PromiseCard(
+            icon: f[0] as IconData,
+            tint: f[1] as Color,
+            title: f[2] as String,
+            body: f[3] as String,
+            elderScale: false,
           ),
         const SizedBox(height: SetuSpacing.lg),
       ],
