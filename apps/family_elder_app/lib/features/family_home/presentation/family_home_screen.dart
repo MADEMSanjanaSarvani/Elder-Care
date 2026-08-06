@@ -9,6 +9,7 @@ import '../../../core/providers.dart';
 import '../../../core/region_picker.dart';
 import '../../health_profile/data/health_profile_repository.dart';
 import '../../health_profile/presentation/elder_avatar.dart';
+import '../../../core/motion.dart';
 import '../../../core/promise_card.dart';
 import '../../medications/presentation/adherence.dart';
 import '../data/home_summary_repository.dart';
@@ -787,7 +788,10 @@ class _ActionTile extends StatelessWidget {
     // length — the designs colour the whole tile and drop the border, and the
     // difference on a real phone is the difference between a legible grid and
     // a page of faint rectangles.
-    return InkWell(
+    // Sinks under the finger and buzzes, on top of the ripple. A grid of
+    // twelve flat tiles reads as a picture of buttons; one that moves reads as
+    // buttons.
+    return Pressable(
       borderRadius: BorderRadius.circular(20),
       onTap: () => context.push('/elder/$elderId/${action.route}'),
       child: Container(

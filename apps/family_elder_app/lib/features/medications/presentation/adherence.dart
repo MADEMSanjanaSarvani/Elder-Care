@@ -27,6 +27,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:setu_core/setu_core.dart';
 
+import '../../../core/motion.dart';
 import '../../../core/providers.dart';
 
 /// One day's worth of doses, split by what is actually known about them.
@@ -277,6 +278,11 @@ class _StackedDayChart extends StatelessWidget {
     final maxY = (maxScheduled < 3 ? 3 : maxScheduled + 1).toDouble();
 
     return BarChart(
+      // The bars grow from zero when the card first appears, and re-grow when
+      // a dose is marked — so the chart visibly answers the tap you just made
+      // two cards down instead of quietly being different.
+      duration: Motion.of(context, Motion.slow),
+      curve: Curves.easeOutCubic,
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
         maxY: maxY,

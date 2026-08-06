@@ -25,6 +25,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:setu_core/setu_core.dart';
 
+import '../../../core/motion.dart';
 import '../../../core/providers.dart';
 import '../../../core/reminder_permission_banner.dart';
 import '../data/medications_repository.dart';
@@ -195,12 +196,33 @@ class _Header extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            allDone ? 'All marked for today' : '$answered of $total marked',
-            style: t.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: allDone ? SetuColors.verifiedLight : SetuColors.accentLight,
-            ),
+          // The count ticks up as doses are marked, so progress is something
+          // you watch happen rather than a number that was silently already
+          // different.
+          AnimatedSwitcher(
+            duration: Motion.of(context, Motion.normal),
+            child: allDone
+                ? Text('All marked for today',
+                    key: const ValueKey('done'),
+                    style: t.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: SetuColors.verifiedLight))
+                : Row(
+                    key: const ValueKey('progress'),
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CountUp(
+                        value: answered,
+                        style: t.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: SetuColors.accentLight),
+                      ),
+                      Text(' of $total marked',
+                          style: t.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: SetuColors.accentLight)),
+                    ],
+                  ),
           ),
           const SizedBox(height: 4),
           Text(
@@ -283,16 +305,41 @@ class _DoseCard extends ConsumerStatefulWidget {
 class _DoseCardState extends ConsumerState<_DoseCard> {
   bool _busy = false;
 
+  /// What we are showing *before* the server has confirmed it.
+  ///
+  /// The whole app asks one thing of people — press Taken — and that press used
+  /// to do nothing visible until a network round-trip finished. On a patchy
+  /// connection that is a second of a screen that looks broken, and the honest
+  /// response is to press again. Now the card changes the instant it is
+  /// touched, and this is rolled back if the write actually fails.
+  ///
+  /// Optimistic display, never an optimistic record: the row in the database
+  /// only ever says what the server confirmed. If the write fails the card
+  /// goes straight back to unanswered, because a card that claims a dose was
+  /// recorded when it was not is the one lie this app cannot afford.
+  String? _optimistic;
+
   Map<String, dynamic>? get _med =>
       widget.dose['elder_medications'] as Map<String, dynamic>?;
 
   Future<void> _mark(String status) async {
     if (_busy) return;
-    setState(() => _busy = true);
+    if (status == 'taken') {
+      Buzz.confirm();
+    } else {
+      Buzz.tap();
+    }
+    setState(() {
+      _busy = true;
+      _optimistic = status;
+    });
     final client = ref.read(supabaseClientProvider);
     final userId = client.auth.currentUser?.id;
     if (userId == null) {
-      setState(() => _busy = false);
+      setState(() {
+        _busy = false;
+        _optimistic = null;
+      });
       return;
     }
     try {
@@ -310,9 +357,18 @@ class _DoseCardState extends ConsumerState<_DoseCard> {
       );
       ref.invalidate(todayDosesProvider(widget.elderId));
     } catch (err) {
+      // Roll the card back. Leaving it looking recorded would be the one lie
+      // this app cannot afford — somebody would believe the dose was logged
+      // and it would be missing from what they show a doctor.
       if (mounted) {
+        Buzz.warn();
+        setState(() => _optimistic = null);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not save that: $err')),
+          SnackBar(
+            content: const Text('Not saved — check your connection.'),
+            action: SnackBarAction(
+                label: 'Try again', onPressed: () => _mark(status)),
+          ),
         );
       }
     } finally {
@@ -328,23 +384,35 @@ class _DoseCardState extends ConsumerState<_DoseCard> {
   @override
   Widget build(BuildContext context) {
     final t = widget.t;
-    final status = widget.dose['status'] as String? ?? 'pending';
+    // The optimistic value wins while a write is in flight, so the card
+    // reflects the tap immediately rather than the last thing the server said.
+    final status =
+        _optimistic ?? widget.dose['status'] as String? ?? 'pending';
     final at =
         DateTime.tryParse(widget.dose['scheduled_at'] as String? ?? '')?.toLocal();
     final name = _med?['name'] as String? ?? 'Medicine';
     final dosage = _med?['dosage'] as String?;
     final settled = status != 'pending';
+    final justTaken = status == 'taken';
 
-    return Container(
+    return AnimatedContainer(
+      duration: Motion.of(context, Motion.normal),
+      curve: Curves.easeOut,
       padding: const EdgeInsets.all(SetuSpacing.lg),
       decoration: BoxDecoration(
-        color: SetuColors.paperRaisedLight,
+        // Washes green the instant Taken is pressed. Colour is the fastest
+        // signal there is — it registers before any text is read.
+        color: justTaken
+            ? SetuColors.verifiedLight.withValues(alpha: 0.10)
+            : SetuColors.paperRaisedLight,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: widget.emphasis
-              ? SetuColors.accentLight.withValues(alpha: 0.55)
-              : SetuColors.borderLight,
-          width: widget.emphasis ? 2 : 1,
+          color: justTaken
+              ? SetuColors.verifiedLight.withValues(alpha: 0.45)
+              : widget.emphasis
+                  ? SetuColors.accentLight.withValues(alpha: 0.55)
+                  : SetuColors.borderLight,
+          width: widget.emphasis || justTaken ? 2 : 1,
         ),
       ),
       child: Column(
@@ -375,46 +443,59 @@ class _DoseCardState extends ConsumerState<_DoseCard> {
             ],
           ),
           const SizedBox(height: SetuSpacing.md),
-          if (settled)
-            _SettledRow(
-              status: status,
-              takenAt: DateTime.tryParse(
-                      widget.dose['taken_at'] as String? ?? '')
-                  ?.toLocal(),
-              t: t,
-              onUndo: _busy ? null : _unmark,
-            )
-          else
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton(
-                    // Big enough to hit without looking, which is how it will
-                    // actually be used.
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(56),
-                      backgroundColor: SetuColors.verifiedLight,
+          // Cross-fades between the two buttons and the settled row, so the
+          // card visibly becomes its answer instead of blinking into a
+          // different layout.
+          AnimatedSize(
+            duration: Motion.of(context, Motion.normal),
+            curve: Curves.easeOut,
+            alignment: Alignment.topCenter,
+            child: AnimatedSwitcher(
+              duration: Motion.of(context, Motion.normal),
+              child: settled
+                  ? _SettledRow(
+                      key: ValueKey('settled-$status'),
+                      status: status,
+                      takenAt: DateTime.tryParse(
+                              widget.dose['taken_at'] as String? ?? '')
+                          ?.toLocal(),
+                      t: t,
+                      onUndo: _busy ? null : _unmark,
+                    )
+                  : Row(
+                      key: const ValueKey('buttons'),
+                      children: [
+                        Expanded(
+                          child: FilledButton(
+                            // Big enough to hit without looking, which is how
+                            // it will actually be used.
+                            style: FilledButton.styleFrom(
+                              minimumSize: const Size.fromHeight(56),
+                              backgroundColor: SetuColors.verifiedLight,
+                            ),
+                            onPressed: _busy ? null : () => _mark('taken'),
+                            child: Text('Taken',
+                                style: t.titleMedium?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800)),
+                          ),
+                        ),
+                        const SizedBox(width: SetuSpacing.sm),
+                        Expanded(
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(56),
+                            ),
+                            onPressed: _busy ? null : () => _mark('skipped'),
+                            child: Text('Not taken',
+                                style: t.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w700)),
+                          ),
+                        ),
+                      ],
                     ),
-                    onPressed: _busy ? null : () => _mark('taken'),
-                    child: Text('Taken',
-                        style: t.titleMedium?.copyWith(
-                            color: Colors.white, fontWeight: FontWeight.w800)),
-                  ),
-                ),
-                const SizedBox(width: SetuSpacing.sm),
-                Expanded(
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(56),
-                    ),
-                    onPressed: _busy ? null : () => _mark('skipped'),
-                    child: Text('Not taken',
-                        style: t.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w700)),
-                  ),
-                ),
-              ],
             ),
+          ),
         ],
       ),
     );
@@ -430,6 +511,7 @@ class _DoseCardState extends ConsumerState<_DoseCard> {
 
 class _SettledRow extends StatelessWidget {
   const _SettledRow({
+    super.key,
     required this.status,
     required this.takenAt,
     required this.t,
@@ -448,8 +530,14 @@ class _SettledRow extends StatelessWidget {
 
     return Row(
       children: [
-        Icon(taken ? Icons.check_circle_rounded : Icons.remove_circle_outline,
-            color: color, size: 26),
+        // Pops in rather than appearing. This is the confirmation that the
+        // dose was recorded, and it is the only moment in CareHive that gets
+        // any celebration at all — small, because taking a tablet on time is
+        // normal rather than an achievement.
+        if (taken)
+          CheckPop(color: color)
+        else
+          Icon(Icons.remove_circle_outline, color: color, size: 26),
         const SizedBox(width: SetuSpacing.sm),
         Expanded(
           child: Text(
