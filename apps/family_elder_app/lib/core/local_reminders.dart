@@ -76,12 +76,87 @@ Future<void> _queueDoseMark(String doseId) async {
   }
 }
 
+/// Whether the phone will actually let the alarms through.
+///
+/// Both permissions are requested once on first run and can be refused, or
+/// revoked later in Android settings, with no signal to the app at all. Until
+/// this existed the failure was completely silent: CareHive would keep
+/// scheduling alarms that the OS quietly dropped, the person would keep
+/// trusting a reminder that was never going to arrive, and the record would
+/// fill up with "no record" days for a reason nobody could see.
+///
+/// A medicine app whose core promise fails silently is worse than one that
+/// says it cannot do the job.
+@immutable
+class ReminderPermissions {
+  const ReminderPermissions({
+    required this.notificationsEnabled,
+    required this.exactAlarmsAllowed,
+  });
+
+  /// Can CareHive show a notification at all? Refusing this means no reminder
+  /// ever appears.
+  final bool notificationsEnabled;
+
+  /// Can it schedule one for an exact minute? Without this Android is free to
+  /// batch the alarm into a maintenance window — "sometime in the next hour"
+  /// for a dose time, which is the drift we left the server cron to escape.
+  final bool exactAlarmsAllowed;
+
+  bool get allGood => notificationsEnabled && exactAlarmsAllowed;
+}
+
 class LocalReminders {
   LocalReminders(this._client);
 
   final SupabaseClient _client;
 
   static bool _ready = false;
+
+  /// Asks Android what it will actually permit. Assumes the best on any error
+  /// or on a platform without these gates — a false warning that reminders are
+  /// broken when they work would train people to ignore the warning that
+  /// matters.
+  Future<ReminderPermissions> checkPermissions() async {
+    try {
+      final android = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      if (android == null) {
+        return const ReminderPermissions(
+            notificationsEnabled: true, exactAlarmsAllowed: true);
+      }
+      return ReminderPermissions(
+        notificationsEnabled: await android.areNotificationsEnabled() ?? true,
+        exactAlarmsAllowed: await android.canScheduleExactNotifications() ?? true,
+      );
+    } catch (err) {
+      debugPrint('Could not read reminder permissions: $err');
+      return const ReminderPermissions(
+          notificationsEnabled: true, exactAlarmsAllowed: true);
+    }
+  }
+
+  /// Re-asks for whichever permission is missing. Android only shows the
+  /// notification dialog once per install, so when it has already been refused
+  /// this call does nothing and the UI has to send them to Settings instead —
+  /// which is why the banner offers both.
+  Future<void> requestMissing() async {
+    try {
+      final android = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      if (android == null) return;
+      final current = await checkPermissions();
+      if (!current.notificationsEnabled) {
+        await android.requestNotificationsPermission();
+      }
+      if (!current.exactAlarmsAllowed) {
+        // Opens the system's "Alarms & reminders" screen.
+        await android.requestExactAlarmsPermission();
+      }
+    } catch (err) {
+      debugPrint('Could not request reminder permissions: $err');
+    }
+  }
 
   /// Sets up channels, permissions and the timezone database. Safe to call
   /// more than once; safe to fail — a phone that refuses notification

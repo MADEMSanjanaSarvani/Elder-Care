@@ -26,6 +26,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:setu_core/setu_core.dart';
 
 import '../../../core/providers.dart';
+import '../../../core/reminder_permission_banner.dart';
 import '../data/medications_repository.dart';
 
 /// Today's doses for an elder, in time order, medicine names attached.
@@ -77,13 +78,24 @@ class TodayScreen extends ConsumerWidget {
       error: (err, stack) => const SetuErrorState(),
       data: (doses) {
         if (doses.isEmpty) {
-          return SetuEmptyState(
-            icon: Icons.medication_outlined,
-            title: 'Nothing due today',
-            message: doses.isEmpty
-                ? 'When a medicine has dose times, they appear here — and the '
-                    'phone will remind you at each one.'
-                : '',
+          // The banner belongs here too. The moment right after setup — no
+          // medicines yet — is exactly when somebody would want to be told
+          // that reminders are switched off, rather than discovering it a week
+          // later from a row of missed doses.
+          return ListView(
+            padding: EdgeInsets.fromLTRB(SetuSpacing.lg, SetuSpacing.lg,
+                SetuSpacing.lg, bottomPadding),
+            children: const [
+              ReminderPermissionBanner(),
+              SizedBox(height: SetuSpacing.xl),
+              SetuEmptyState(
+                icon: Icons.medication_outlined,
+                title: 'Nothing due today',
+                message:
+                    'When a medicine has dose times, they appear here — and '
+                    'the phone will remind you at each one.',
+              ),
+            ],
           );
         }
 
@@ -101,6 +113,11 @@ class TodayScreen extends ConsumerWidget {
             padding: EdgeInsets.fromLTRB(SetuSpacing.lg, SetuSpacing.lg,
                 SetuSpacing.lg, bottomPadding),
             children: [
+              // Above the list, and above the summary. If the phone will not
+              // ring, that is more important than anything else on this screen
+              // — every number below it is about to become wrong for a reason
+              // the person cannot otherwise see.
+              const ReminderPermissionBanner(),
               _Header(doses: doses, t: t),
               const SizedBox(height: SetuSpacing.lg),
               _Group(
