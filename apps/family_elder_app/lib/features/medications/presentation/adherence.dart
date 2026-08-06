@@ -182,7 +182,13 @@ final adherenceProvider = FutureProvider.family<AdherenceWindow,
 // ---------------------------------------------------------------------------
 const _takenColor = SetuColors.verifiedLight;
 const _notTakenColor = SetuColors.sosLight;
-const _noRecordColor = Color(0xFFCFC7BE);
+/// "No record" is the distinction this whole app is built on, so it has to be
+/// *visible* — it is a bar segment and a pip carrying meaning, which WCAG asks
+/// to clear 3:1 against its background. The old #CFC7BE managed 1.67 on a
+/// white card: the one state that says "we do not know" was the one you could
+/// not see. This reads 3.96 on card and 3.13 on the page, and still says
+/// absent rather than alarming.
+const _noRecordColor = Color(0xFF8A7E70);
 
 /// Seven days of doses, stacked by what is known. Tapping opens the full
 /// thirty-day record.

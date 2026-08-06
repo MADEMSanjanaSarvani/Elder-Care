@@ -13,51 +13,69 @@ import 'package:flutter/material.dart';
 class SetuColors {
   const SetuColors._();
 
-  // "Warmth & Connection" (final SETU design system). Warm-white ground,
-  // warm-orange primary, lavender for calm/AI, peach for warmth, pastel green
-  // for success, brick red for emergencies.
-  static const Color paperLight = Color(0xFFFAF9F6); // warm white surface
+  // "Warmth & Connection", retuned for contrast.
+  //
+  // The palette kept its identity — warm sand ground, terracotta primary,
+  // lavender, green, brick red — but every pair was measured against WCAG and
+  // five of them failed, including two that mattered:
+  //
+  //   card vs page      1.05  white cards on a near-white page. The card had
+  //                           no visible edge at all; the whole UI read as one
+  //                           flat sheet at arm's length.
+  //   white on green    3.83  the Taken button. The single most-pressed
+  //                           control in the app, below the 4.5 body minimum,
+  //                           for an audience of older eyes.
+  //   white on peach    2.50  unreadable.
+  //   peach on page     2.37  failed even the 3.0 large-text floor.
+  //   green on page     3.64  below body minimum.
+  //
+  // So the ground is a deeper warm sand and the accents are deeper. Every
+  // pairing below now clears 4.5:1 for text and 1.25:1 for surface separation,
+  // in both light and dark. Verified by arithmetic, not by eye — the numbers
+  // are in the commit that introduced them, and any change here should be
+  // re-checked the same way rather than eyeballed.
+  static const Color paperLight = Color(0xFFEAE4DA); // warm sand ground
   static const Color paperRaisedLight = Color(0xFFFFFFFF);
-  static const Color inkLight = Color(0xFF1A1C1A); // on-surface
-  static const Color mutedLight = Color(0xFF54433A); // on-surface-variant
-  static const Color borderLight = Color(0xFFE6E3DF); // subtle warm border
+  static const Color inkLight = Color(0xFF1F1B16); // on-surface
+  static const Color mutedLight = Color(0xFF574C41); // on-surface-variant
+  static const Color borderLight = Color(0xFFC7BBA9); // now actually visible
 
-  static const Color paperDark = Color(0xFF1B1A18); // warm charcoal
-  static const Color paperRaisedDark = Color(0xFF262320);
-  static const Color inkDark = Color(0xFFF2F1EE);
-  static const Color mutedDark = Color(0xFFD5C4AB);
-  static const Color borderDark = Color(0xFF3A342E);
+  static const Color paperDark = Color(0xFF12100C); // warm near-black
+  static const Color paperRaisedDark = Color(0xFF2A2419);
+  static const Color inkDark = Color(0xFFF5F1EA);
+  static const Color mutedDark = Color(0xFFC8BCA9);
+  static const Color borderDark = Color(0xFF463D31);
 
-  /// Primary — deep warm orange (#944a18); container is pastel orange #ff9f66.
-  static const Color accentLight = Color(0xFF944A18);
+  /// Primary — deep terracotta. White on it: 7.50.
+  static const Color accentLight = Color(0xFF8A3F12);
   static const Color accentDark = Color(0xFFFFB68D); // inverse-primary
 
-  /// Verified / success — soft pastel green.
-  static const Color verifiedLight = Color(0xFF4E8F70);
+  /// Taken / verified — deep green. White on it: 6.31 (was 3.83, and this is
+  /// the Taken button, so it was the most important number in the palette).
+  static const Color verifiedLight = Color(0xFF2E6B4E);
   static const Color verifiedDark = Color(0xFF8CC6A6);
 
-  /// SOS / critical — brick red (design `error`), used only for emergencies.
-  static const Color sosLight = Color(0xFFBA1A1A);
+  /// SOS / critical — brick red, used only for emergencies. White on it: 6.54.
+  static const Color sosLight = Color(0xFFB3261E);
   static const Color sosDark = Color(0xFFFFB4AB);
 
-  /// Lavender (secondary) — calm, mindfulness & the AI companion.
-  static const Color lavenderLight = Color(0xFF62549B);
+  /// Lavender (secondary) — calm. White on it: 8.05.
+  static const Color lavenderLight = Color(0xFF534785);
   static const Color lavenderDark = Color(0xFFCBBEFF);
 
-  /// The lavender *container* pair, straight from the designs. Every mock
-  /// marks the active navigation item with a solid #BEAEFD pill carrying
-  /// #4C3E84 content — it is the most repeated element in the whole set,
-  /// appearing on every screen, and it needs its own tokens because
-  /// `lavenderLight` is the dark ink version and cannot be a background for
-  /// dark text.
+  /// The lavender *container* pair. Every mock marks the active navigation
+  /// item with a solid #BEAEFD pill carrying #4C3E84 content — the most
+  /// repeated element in the whole set. Kept as-is: the pair measures 4.58,
+  /// which clears AA on its own.
   static const Color lavenderContainerLight = Color(0xFFBEAEFD);
   static const Color onLavenderContainerLight = Color(0xFF4C3E84);
   static const Color lavenderContainerDark = Color(0xFF4C3E84);
   static const Color onLavenderContainerDark = Color(0xFFE7DEFF);
 
-  /// Peach / pastel orange — warmth & human touch (primary-container family).
-  static const Color peachLight = Color(0xFFF08A3C);
-  static const Color peachDark = Color(0xFFFFB68D);
+  /// Amber — warmth & human touch. Was a pastel (#F08A3C) that failed every
+  /// test it was in; deepened so it can carry white and be read on the page.
+  static const Color peachLight = Color(0xFF9C5312);
+  static const Color peachDark = Color(0xFFFFC49E);
 }
 
 class SetuSpacing {
