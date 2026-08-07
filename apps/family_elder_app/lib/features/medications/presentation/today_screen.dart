@@ -339,6 +339,23 @@ class _DoseCardState extends ConsumerState<_DoseCard> {
   Map<String, dynamic>? get _med =>
       widget.dose['elder_medications'] as Map<String, dynamic>?;
 
+  @override
+  void didUpdateWidget(_DoseCard old) {
+    super.didUpdateWidget(old);
+    // Stand down the optimistic override the moment the server has actually
+    // spoken about this dose.
+    //
+    // Necessary *because* these cards are keyed now. Before the key, the State
+    // was thrown away when a dose moved between groups, so the override could
+    // never outlive its write. Keyed, the State follows the dose forever — so
+    // without this, a card that was optimistically marked here would keep
+    // showing its own guess and ignore the truth, including a family member
+    // undoing the dose from another phone.
+    if (old.dose['status'] != widget.dose['status']) {
+      _optimistic = null;
+    }
+  }
+
   Future<void> _mark(String status) async {
     if (_busy) return;
     if (status == 'taken') {

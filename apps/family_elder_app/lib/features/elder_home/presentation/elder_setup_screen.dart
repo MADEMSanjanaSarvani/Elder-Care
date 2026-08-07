@@ -50,9 +50,30 @@ class _ElderSetupScreenState extends ConsumerState<ElderSetupScreen> {
   bool _prefilled = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Covers the usual case: the profile is already cached by the time this
+    // screen is built, so there is nothing to wait for.
+    _prefillFrom(ref.read(currentProfileProvider).asData?.value);
+  }
+
+  @override
   void dispose() {
     _name.dispose();
     super.dispose();
+  }
+
+  /// Puts their sign-up name in the field, so this is a one-tap screen.
+  ///
+  /// Only into an empty field, and only once. On a slow connection somebody can
+  /// start typing before the profile lands, and having their own name yanked
+  /// out from under them mid-word is worse than not prefilling at all.
+  void _prefillFrom(Map<String, dynamic>? profile) {
+    if (_prefilled) return;
+    final name = (profile?['display_name'] as String?)?.trim();
+    if (name == null || name.isEmpty || _name.text.isNotEmpty) return;
+    _prefilled = true;
+    _name.text = name;
   }
 
   Future<void> _start() async {
@@ -91,21 +112,20 @@ class _ElderSetupScreenState extends ConsumerState<ElderSetupScreen> {
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme.scaledForElderMode();
 
-    // Their name from sign-up, so the field is usually already right and this
-    // is a one-tap screen. Done here rather than in initState because the
-    // profile arrives asynchronously — but only into an empty field. On a slow
-    // connection somebody can start typing before the profile lands, and
-    // having their own name yanked out from under them mid-word is worse than
-    // not prefilling at all.
-    final profile = ref.watch(currentProfileProvider).asData?.value;
-    final signUpName = (profile?['display_name'] as String?)?.trim();
-    if (!_prefilled &&
-        signUpName != null &&
-        signUpName.isNotEmpty &&
-        _name.text.isEmpty) {
-      _prefilled = true;
-      _name.text = signUpName;
-    }
+    // Catches the profile arriving after first paint, which is the whole
+    // reason this is asynchronous at all.
+    //
+    // ref.listen and not ref.watch: assigning to a TextEditingController
+    // notifies its listeners, and the TextField below is already mounted and
+    // listening by the time a late profile lands. Doing that inside build()
+    // makes the field call setState() during the build phase, which throws
+    // "setState() or markNeedsBuild() called during build" — on the very
+    // first screen a new user sees, in exactly the slow-connection case the
+    // asynchrony exists for. Riverpod runs listeners after the frame, so this
+    // is the safe place for a side effect.
+    ref.listen(currentProfileProvider, (_, next) {
+      _prefillFrom(next.asData?.value);
+    });
 
     return Column(
       children: [
