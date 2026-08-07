@@ -276,7 +276,23 @@ class _Group extends StatelessWidget {
         ],
         const SizedBox(height: SetuSpacing.sm),
         for (final dose in doses) ...[
-          _DoseCard(dose: dose, elderId: elderId, t: t, emphasis: emphasis),
+          // Keyed by dose id, and it has to be.
+          //
+          // These cards hold local state — the optimistic "I have been marked
+          // taken" that appears before the server confirms. Without a key
+          // Flutter matches children by position, so marking the first dose
+          // (which then moves to Done and shortens this list) would hand its
+          // State object to whatever dose slid up into index 0. That dose
+          // would render green, ticked, "Taken at…" — having been taken by
+          // nobody. Showing a dose as taken when it was not is the exact lie
+          // this screen exists to prevent, so the state follows the dose
+          // rather than the slot.
+          _DoseCard(
+              key: ValueKey(dose['id']),
+              dose: dose,
+              elderId: elderId,
+              t: t,
+              emphasis: emphasis),
           const SizedBox(height: SetuSpacing.sm),
         ],
         const SizedBox(height: SetuSpacing.md),
@@ -287,6 +303,7 @@ class _Group extends StatelessWidget {
 
 class _DoseCard extends ConsumerStatefulWidget {
   const _DoseCard({
+    super.key,
     required this.dose,
     required this.elderId,
     required this.t,

@@ -75,7 +75,15 @@ class MedicationsScreen extends ConsumerWidget {
               MedicationAdherenceChart(elderId: elderId),
               const SizedBox(height: SetuSpacing.lg),
               for (final medication in medications) ...[
-                _MedicationCard(elderId: elderId, medication: medication),
+                // Keyed for the same reason as the dose cards: this card holds
+                // its stock and dose futures in initState and never refreshes
+                // them on widget update, so a position-matched State would
+                // show one medicine's name above another's "8 tablets left"
+                // the moment a medicine is discontinued and the list shortens.
+                _MedicationCard(
+                    key: ValueKey(medication['id']),
+                    elderId: elderId,
+                    medication: medication),
                 const SizedBox(height: SetuSpacing.md),
               ],
             ],
@@ -514,7 +522,8 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
 }
 
 class _MedicationCard extends ConsumerStatefulWidget {
-  const _MedicationCard({required this.elderId, required this.medication});
+  const _MedicationCard(
+      {super.key, required this.elderId, required this.medication});
 
   final String elderId;
   final Map<String, dynamic> medication;
