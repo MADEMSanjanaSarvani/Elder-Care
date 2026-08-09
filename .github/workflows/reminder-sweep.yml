@@ -29,10 +29,16 @@
 # overlapping run cannot double-send.
 name: Medicine sweep
 
+# STOPPED 9 August 2026. CareHive is not being continued, so the schedule is
+# switched off: it was firing 96 times a day, burning Actions minutes and
+# waking the Supabase project for a set of users that is now empty.
+#
+# Nothing is deleted. To start it again, uncomment the two lines below — the
+# functions, the secrets and the whole pipeline are untouched and still work.
 on:
-  schedule:
-    - cron: "*/15 * * * *"
-  # So it can be run by hand while testing, without waiting a quarter hour.
+  # schedule:
+  #   - cron: "*/15 * * * *"
+  # Run by hand from the Actions tab if the sweep is ever needed once.
   workflow_dispatch:
 
 concurrency:
