@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:setu_core/setu_core.dart';
 
+import '../../../core/pill_glyph.dart';
 import '../../../core/providers.dart';
 import '../data/medications_repository.dart';
 import 'adherence.dart';
@@ -120,6 +121,8 @@ class MedicationsScreen extends ConsumerWidget {
         dosage: result.dosage,
         times: result.times,
         addedBy: userId,
+        pillColor: result.pillColor?.token,
+        pillShape: result.pillShape?.token,
       );
       // Only when a count was given. Inventing a starting quantity would make
       // the refill warning fire on a schedule that has nothing to do with the
@@ -143,10 +146,15 @@ class MedicationsScreen extends ConsumerWidget {
 }
 
 class _AddMedResult {
-  const _AddMedResult(this.name, this.dosage, this.times, this.stockOnHand);
+  const _AddMedResult(this.name, this.dosage, this.times, this.stockOnHand,
+      this.pillColor, this.pillShape);
   final String name;
   final String dosage;
   final List<String> times;
+
+  /// What the tablet looks like. Null when they did not say — never guessed.
+  final PillColor? pillColor;
+  final PillShape? pillShape;
 
   /// Null when the person didn't know or didn't say — in which case no stock
   /// row is created and the form says plainly that refill alerts are off.
@@ -180,6 +188,8 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
   /// that promise was empty for every medicine added through this sheet.
   final _stockOnHand = TextEditingController();
   String _dosageUnit = 'mg';
+  PillColor? _pillColor;
+  PillShape? _pillShape;
 
   /// Which parts of the day this medicine is taken. Replaces a
   /// once/twice/thrice frequency picker, which could only express four
@@ -396,6 +406,15 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
                 helperMaxLines: 2,
               ),
             ),
+            const SizedBox(height: SetuSpacing.lg),
+            PillAppearancePicker(
+              color: _pillColor,
+              shape: _pillShape,
+              onChanged: (c, sh) => setState(() {
+                _pillColor = c;
+                _pillShape = sh;
+              }),
+            ),
             const SizedBox(height: SetuSpacing.md),
             _autoFeatureRow(
               Icons.notifications_active_outlined,
@@ -422,7 +441,8 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
               width: double.infinity,
               child: FilledButton.icon(
                 onPressed: () => Navigator.of(context)
-                    .pop(_AddMedResult(_name.text, _dosage, times, _stockCount)),
+                    .pop(_AddMedResult(_name.text, _dosage, times, _stockCount,
+                        _pillColor, _pillShape)),
                 icon: const Icon(Icons.add_circle_outline),
                 label: const Text('Add Medicine'),
               ),
@@ -594,7 +614,12 @@ class _MedicationCardState extends ConsumerState<_MedicationCard> {
           children: [
             Row(
               children: [
-                const SetuIconChip(icon: Icons.medication_outlined),
+                PillGlyph(
+                  color: PillColor.fromToken(
+                      widget.medication['pill_color'] as String?),
+                  shape: PillShape.fromToken(
+                      widget.medication['pill_shape'] as String?),
+                ),
                 const SizedBox(width: SetuSpacing.sm),
                 Expanded(
                   child: Text('${widget.medication['name']} — ${widget.medication['dosage']}',

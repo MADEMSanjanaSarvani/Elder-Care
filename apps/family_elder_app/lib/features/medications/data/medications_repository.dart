@@ -28,6 +28,8 @@ class MedicationsRepository {
     required String dosage,
     required List<String> times,
     required String addedBy,
+    String? pillColor,
+    String? pillShape,
   }) async {
     final row = await _client.from('elder_medications').insert({
       'elder_id': elderId,
@@ -35,8 +37,26 @@ class MedicationsRepository {
       'dosage': dosage,
       'schedule': {'times': times},
       'added_by': addedBy,
+      // Omitted rather than written as null when unknown, so the columns stay
+      // "never said" rather than "said nothing". Nothing here is ever guessed
+      // — see migration 0043.
+      if (pillColor != null) 'pill_color': pillColor,
+      if (pillShape != null) 'pill_shape': pillShape,
     }).select('id').single();
     return row['id'] as String;
+  }
+
+  /// Sets or clears what a medicine looks like, for one added before anybody
+  /// had the box in front of them.
+  Future<void> setAppearance({
+    required String medicationId,
+    String? pillColor,
+    String? pillShape,
+  }) async {
+    await _client.from('elder_medications').update({
+      'pill_color': pillColor,
+      'pill_shape': pillShape,
+    }).eq('id', medicationId);
   }
 
   /// Cancels pending future doses and logs a timeline event server-side
@@ -103,7 +123,7 @@ class MedicationsRepository {
     return _client
         .from('medication_doses')
         .select(
-            'id, status, scheduled_at, taken_at, elder_medications!inner(id, elder_id, name, dosage)')
+            'id, status, scheduled_at, taken_at, elder_medications!inner(id, elder_id, name, dosage, pill_color, pill_shape)')
         .eq('elder_medications.elder_id', elderId)
         .neq('status', 'cancelled')
         .gte('scheduled_at', bounds.start)

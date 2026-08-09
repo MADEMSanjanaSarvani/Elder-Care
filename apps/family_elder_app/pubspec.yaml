@@ -4,7 +4,7 @@ description: >
   mode (dashboard, today's doses, consent management) and elder mode
   (large-text, today's doses with SOS pinned to the bottom).
 publish_to: "none"
-version: 0.9.3+68
+version: 0.10.0+69
 
 environment:
   sdk: ">=3.4.0 <4.0.0"

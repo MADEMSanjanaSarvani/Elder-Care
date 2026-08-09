@@ -26,6 +26,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:setu_core/setu_core.dart';
 
 import '../../../core/motion.dart';
+import '../../../core/pill_glyph.dart';
 import '../../../core/providers.dart';
 import '../../../core/reminder_permission_banner.dart';
 import '../data/medications_repository.dart';
@@ -455,6 +456,18 @@ class _DoseCardState extends ConsumerState<_DoseCard> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // What the tablet looks like, next to what it is called. People
+              // with several prescriptions match the strip in their hand to a
+              // picture far faster than to a name, and taking the wrong one of
+              // four white tablets is the failure this app should most want to
+              // prevent. Shows a neutral outline until somebody says.
+              Padding(
+                padding: const EdgeInsets.only(right: SetuSpacing.sm, top: 2),
+                child: PillGlyph(
+                  color: PillColor.fromToken(_med?['pill_color'] as String?),
+                  shape: PillShape.fromToken(_med?['pill_shape'] as String?),
+                ),
+              ),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
